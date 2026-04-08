@@ -22,6 +22,9 @@ load_dotenv()
 SECRET_KEY = os.getenv('SECRET_KEY')
 DEBUG = os.getenv('DEBUG', 'True') == 'True'
 
+if not SECRET_KEY:
+    raise ValueError("SECRET_KEY n'est pas définie dans le fichier .env !")
+
 ALLOWED_HOSTS = []
 
 # Application definition
