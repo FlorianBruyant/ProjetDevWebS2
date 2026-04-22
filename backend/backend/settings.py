@@ -129,5 +129,12 @@ USE_TZ = True
 STATIC_URL = "static/"
 
 
+REST_FRAMEWORK = {  # Pour accepter les users admissible
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+    ),
+}
+
+
 # On dit à Django d'utiliser NOTRE fiche d'identité, pas la sienne
 AUTH_USER_MODEL = "users.CustomUser"
