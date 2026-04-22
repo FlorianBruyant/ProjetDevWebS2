@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "rest_framework",
+    "django_filters",
     "corsheaders",
     "api",
     "users",
@@ -129,10 +130,18 @@ USE_TZ = True
 STATIC_URL = "static/"
 
 
+SIMPLE_JWT = {
+    # Cette ligne force le signal "user_logged_in" à se déclencher au login API
+    "CHECK_REVOCATION_FOR_USER_LOGOUT": True,
+}
+
+
 REST_FRAMEWORK = {  # Pour accepter les users admissible
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework_simplejwt.authentication.JWTAuthentication",
+        "rest_framework.authentication.SessionAuthentication",
     ),
+    "DEFAULT_FILTER_BACKENDS": ("django_filters.rest_framework.DjangoFilterBackend",),
 }
 
 
