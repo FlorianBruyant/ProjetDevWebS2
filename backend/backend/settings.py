@@ -40,7 +40,8 @@ INSTALLED_APPS = [
     "rest_framework",
     "corsheaders",
     "api",
-    "users",  # ajout de l'application users ici
+    "users",
+    "map",  # ajout de nos applications ici
 ]
 
 MIDDLEWARE = [
