@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
     Box,
     Typography,
@@ -13,8 +14,6 @@ import {
     ListItem,
     ListItemText,
     Paper,
-    BottomNavigation,
-    BottomNavigationAction,
 } from '@mui/material';
 import {
     Search,
@@ -30,6 +29,7 @@ import {
 import Carte from '../components/Carte';
 
 const Accueil = () => {
+    const navigate = useNavigate();
     return (
         <Box sx={{ pb: 10, bgcolor: '#f8fafd', minHeight: '100vh' }}>
             {/* HEADER */}
@@ -83,21 +83,20 @@ const Accueil = () => {
                         overflow: 'hidden',
                     }}
                 >
-                    <Carte />
+                    <Carte hauteur="200px" />
                     <Chip
                         label="Ouvrir la carte ↗"
+                        onClick={() => navigate('/carte')}
                         sx={{
                             position: 'absolute',
                             bottom: 10,
                             right: 10,
                             bgcolor: 'white',
                             fontWeight: 'bold',
-                            zIndex: 1000, // Pour passer au-dessus de la carte
+                            zIndex: 1000,
+                            cursor: 'pointer',
                             '&:hover': { bgcolor: '#f0f0f0' },
                         }}
-                        onClick={() =>
-                            console.log('Redirection vers la page Carte')
-                        }
                     />
                 </Paper>
             </Box>
@@ -185,28 +184,6 @@ const Accueil = () => {
                     />
                 </List>
             </Box>
-
-            {/* BOTTOM NAV */}
-            <Paper
-                sx={{ position: 'fixed', bottom: 0, left: 0, right: 0 }}
-                elevation={3}
-            >
-                <BottomNavigation showLabels value={0}>
-                    <BottomNavigationAction
-                        label="Accueil"
-                        icon={<HomeIcon />}
-                    />
-                    <BottomNavigationAction label="Carte" icon={<MapIcon />} />
-                    <BottomNavigationAction
-                        label="Tickets"
-                        icon={<ConfirmationNumber />}
-                    />
-                    <BottomNavigationAction
-                        label="Profil"
-                        icon={<Settings />}
-                    />
-                </BottomNavigation>
-            </Paper>
         </Box>
     );
 };
