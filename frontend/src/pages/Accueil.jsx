@@ -27,6 +27,7 @@ import {
     ConfirmationNumber,
     Settings,
 } from '@mui/icons-material';
+import Carte from '../components/Carte';
 
 const Accueil = () => {
     return (
@@ -75,19 +76,28 @@ const Accueil = () => {
                 <Paper
                     elevation={0}
                     sx={{
-                        height: 150,
+                        height: 200,
                         bgcolor: '#dbeafe',
                         borderRadius: 4,
-                        display: 'flex',
-                        alignItems: 'flex-end',
-                        justifyContent: 'flex-end',
-                        p: 2,
+                        position: 'relative',
+                        overflow: 'hidden',
                     }}
                 >
+                    <Carte />
                     <Chip
                         label="Ouvrir la carte ↗"
-                        sx={{ bgcolor: 'white', fontWeight: 'bold' }}
-                        onClick={() => {}}
+                        sx={{
+                            position: 'absolute',
+                            bottom: 10,
+                            right: 10,
+                            bgcolor: 'white',
+                            fontWeight: 'bold',
+                            zIndex: 1000, // Pour passer au-dessus de la carte
+                            '&:hover': { bgcolor: '#f0f0f0' },
+                        }}
+                        onClick={() =>
+                            console.log('Redirection vers la page Carte')
+                        }
                     />
                 </Paper>
             </Box>
