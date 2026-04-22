@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useState } from 'react';
 import {
     Box,
     Typography,
@@ -8,7 +9,9 @@ import {
     InputAdornment,
     Chip,
     Grid,
+    IconButton,
     Card,
+    InputBase,
     CardContent,
     List,
     ListItem,
@@ -30,6 +33,21 @@ import Carte from '../components/Carte';
 
 const Accueil = () => {
     const navigate = useNavigate();
+    const [saisie, setSaisie] = useState('');
+
+    const envoyerVersCarte = (e) => {
+        // Empêche le rechargement de la page si c'est un formulaire
+        if (e) e.preventDefault();
+
+        // On envoie le texte dans l'état de la navigation
+        navigate('/carte', {
+            state: {
+                focusRecherche: true,
+                texteInitial: saisie,
+            },
+        });
+    };
+
     return (
         <Box sx={{ pb: 10, bgcolor: '#f8fafd', minHeight: '100vh' }}>
             {/* HEADER */}
@@ -54,21 +72,28 @@ const Accueil = () => {
 
             {/* RECHERCHE */}
             <Box sx={{ px: 2, mb: 3 }}>
-                <TextField
-                    fullWidth
-                    placeholder="Rechercher un lieu, une ligne..."
-                    variant="outlined"
-                    sx={{ bgcolor: 'white', borderRadius: 2 }}
-                    slotProps={{
-                        input: {
-                            startAdornment: (
-                                <InputAdornment position="start">
-                                    <Search color="disabled" />
-                                </InputAdornment>
-                            ),
-                        },
+                <Paper
+                    component="form" // On le transforme en formulaire pour gérer la touche Entrée
+                    onSubmit={envoyerVersCarte}
+                    elevation={3}
+                    sx={{
+                        p: '2px 4px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        borderRadius: 30,
                     }}
-                />
+                >
+                    <IconButton sx={{ p: '10px' }} onClick={envoyerVersCarte}>
+                        <Search />
+                    </IconButton>
+                    <InputBase
+                        sx={{ ml: 1, flex: 1 }}
+                        placeholder="Où allez-vous à Cergy ?"
+                        value={saisie}
+                        onChange={(e) => setSaisie(e.target.value)}
+                        // La touche Entrée déclenchera automatiquement le onSubmit du Paper
+                    />
+                </Paper>
             </Box>
 
             {/* PREVIEW CARTE */}

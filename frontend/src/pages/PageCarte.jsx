@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useLayoutEffect, useRef } from 'react';
+import { useLocation } from 'react-router-dom';
 import {
     Box,
     Paper,
@@ -23,8 +24,27 @@ import {
 import Carte from '../components/Carte';
 
 const PageCarte = () => {
-    const [rechercheActive, setRechercheActive] = useState(false);
-    const [recherche, setRecherche] = useState('');
+    const location = useLocation();
+
+    const [rechercheActive, setRechercheActive] = useState(
+        () => location.state?.focusRecherche ?? false,
+    );
+    const [recherche, setRecherche] = useState(
+        () => location.state?.texteInitial ?? '',
+    );
+    // Création de la référence pour le champ de recherche
+    const inputRef = useRef(null);
+
+    useLayoutEffect(() => {
+        if (location.state?.focusRecherche) {
+            setTimeout(() => {
+                if (inputRef.current) {
+                    inputRef.current.focus();
+                }
+            }, 0);
+            window.history.replaceState({}, document.title);
+        }
+    }, [location]);
 
     // Simulation d'historique
     const historique = [
@@ -45,7 +65,6 @@ const PageCarte = () => {
             }}
         >
             {/* --- LA CARTE --- */}
-            {/* On peut la flouter ou la cacher quand on cherche, comme sur mobile */}
             <Box
                 sx={{
                     flex: 1,
@@ -62,7 +81,7 @@ const PageCarte = () => {
                 elevation={rechercheActive ? 0 : 3}
                 sx={{
                     position: 'absolute',
-                    top: rechercheActive ? 0 : 20, // Elle monte en haut de l'écran si active
+                    top: rechercheActive ? 0 : 20,
                     left: '50%',
                     transform: 'translateX(-50%)',
                     width: rechercheActive ? '100%' : '90%',
@@ -72,7 +91,7 @@ const PageCarte = () => {
                     pt: rechercheActive ? 2 : 0,
                     zIndex: 1000,
                     transition: 'all 0.3s ease-in-out',
-                    minHeight: rechercheActive ? '100vh' : 'auto', // Prend tout l'écran si actif
+                    minHeight: rechercheActive ? '100vh' : 'auto',
                 }}
             >
                 {/* Barre de saisie */}
@@ -96,6 +115,7 @@ const PageCarte = () => {
                         fullWidth
                         variant="standard"
                         placeholder="Rechercher à Cergy..."
+                        inputRef={inputRef}
                         onFocus={() => setRechercheActive(true)}
                         value={recherche}
                         onChange={(e) => setRecherche(e.target.value)}
@@ -114,7 +134,7 @@ const PageCarte = () => {
                 {/* --- CONTENU QUI S'AFFICHE AU CLIC --- */}
                 {rechercheActive && (
                     <Box sx={{ px: 2, animation: 'fadeIn 0.3s' }}>
-                        {/* 1. Les Filtres (Chips horizontaux) */}
+                        {/* 1. Les Filtres */}
                         <Box
                             sx={{
                                 display: 'flex',
@@ -145,7 +165,7 @@ const PageCarte = () => {
                             />
                         </Box>
 
-                        {/* 2. L'Historique (Comme sur ta wireframe) */}
+                        {/* 2. L'Historique */}
                         <Typography
                             variant="overline"
                             sx={{ color: 'text.secondary', fontWeight: 'bold' }}
