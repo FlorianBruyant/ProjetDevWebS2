@@ -3,7 +3,7 @@ import { Paper, BottomNavigation, BottomNavigationAction } from '@mui/material';
 import {
     Home as HomeIcon,
     Map as MapIcon,
-    ConfirmationNumber,
+    AccessTime, // 🚨 NOUVELLE ICÔNE (Horloge)
     Settings,
 } from '@mui/icons-material';
 import { Link, useLocation } from 'react-router-dom';
@@ -14,7 +14,7 @@ const BarreNavigation = () => {
     const getValeurActive = () => {
         if (location.pathname === '/') return 0;
         if (location.pathname === '/carte') return 1;
-        if (location.pathname === '/tickets') return 2;
+        if (location.pathname === '/horaires') return 2; // 🚨 CORRECTION ICI
         if (location.pathname === '/profil') return 3;
         return 0;
     };
@@ -81,11 +81,12 @@ const BarreNavigation = () => {
                     label="Carte"
                     icon={<MapIcon />}
                 />
+                {/* 🚨 LE BOUTON HORAIRES EST ICI */}
                 <BottomNavigationAction
                     component={Link}
-                    to="/tickets"
-                    label="Tickets"
-                    icon={<ConfirmationNumber />}
+                    to="/horaires"
+                    label="Horaires"
+                    icon={<AccessTime />}
                 />
                 <BottomNavigationAction
                     component={Link}

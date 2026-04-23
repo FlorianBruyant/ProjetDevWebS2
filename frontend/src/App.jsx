@@ -5,6 +5,7 @@ import Inscription from './pages/Inscription';
 import Profil from './pages/Profil';
 import Connexion from './pages/Connexion';
 import BarreNavigation from './components/BarreNavigation';
+import Horaires from './pages/Horaires';
 
 function App() {
     return (
@@ -17,9 +18,8 @@ function App() {
             <Routes>
                 <Route path="/" element={<Accueil />} />
                 <Route path="/carte" element={<PageCarte />} />
-
                 <Route path="/profil" element={<Profil />} />
-
+                <Route path="/horaires" element={<Horaires />} />
                 <Route path="/inscription" element={<Inscription />} />
                 <Route path="/connexion" element={<Connexion />} />
             </Routes>

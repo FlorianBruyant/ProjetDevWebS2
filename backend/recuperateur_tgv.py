@@ -1,77 +1,77 @@
-import os
-import time
-
-import django
 import requests
 
-# 1. Connexion à ton projet
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "backend.settings")
-django.setup()
+# L'URL officielle pour la requête globale des prochains passages (Format SIRI)
+URL_GLOBALE = "https://prim.iledefrance-mobilites.fr/marketplace/estimated-timetable"
 
-from map.models import Point, Vehicule
+# Ton fameux jeton d'accès PRIM
+HEADERS = {
+    "apikey": "vUB1gblQmNUwSJrp1q9moR22Cc9eIu0d ",
+    # Très important : On force le serveur à nous répondre en JSON (plus lisible que le XML)
+    "Accept": "application/json",
+}
 
-# 2. L'API magique de la SNCF (100% gratuite et sans compte)
-URL_SNCF = "https://ressources.data.sncf.com/api/explore/v2.1/catalog/datasets/geolocalisation-des-trains-en-mouvement/records?limit=100"
 
-
-def maj_tgv_france():
-    print("🛰️ Scan satellite de la SNCF en cours...")
+def lire_panneau_affichage():
+    print(
+        "📥 Téléchargement des horaires de TOUTE l'Île-de-France (patiente un peu)..."
+    )
     try:
-        reponse = requests.get(URL_SNCF)
+        reponse = requests.get(URL_GLOBALE, headers=HEADERS)
+
+        if reponse.status_code == 401:
+            print("❌ Jeton API invalide ou expiré.")
+            return
+
         donnees = reponse.json()
 
-        resultats = donnees.get("results", [])
+        # Le format SIRI est un peu complexe, il faut fouiller dans plusieurs "boîtes" (dictionnaires)
+        livraisons = (
+            donnees.get("Siri", {})
+            .get("ServiceDelivery", {})
+            .get("EstimatedTimetableDelivery", [])
+        )
+
+        print("\n🚉 --- PROCHAINS DÉPARTS ---")
         compteur = 0
 
-        for item in resultats:
-            numero_train = str(item.get("numero", "Inconnu"))
-            etat = item.get("etat", "En mouvement")
+        for livraison in livraisons:
+            trajets = livraison.get("EstimatedJourneyVersionFrame", [])
+            for trajet in trajets:
+                vehicules = trajet.get("EstimatedVehicleJourney", [])
+                for vehicule in vehicules:
+                    # On récupère l'ID de la ligne
+                    ligne = vehicule.get("LineRef", {}).get("value", "Ligne Inconnue")
 
-            # Extraction des coordonnées GPS (format officiel SNCF)
-            lat, lon = None, None
-            if "geo_point_2d" in item and item["geo_point_2d"]:
-                lat = item["geo_point_2d"].get("lat")
-                lon = item["geo_point_2d"].get("lon")
+                    # On regarde tous les prochains arrêts prévus pour ce bus/train
+                    arrets = vehicule.get("EstimatedCalls", {}).get("EstimatedCall", [])
+                    for arret in arrets:
+                        # Nom de l'arrêt et heure prévue
+                        noms_arret = arret.get("StopPointName", [])
+                        nom = (
+                            noms_arret[0].get("value", "Inconnu")
+                            if noms_arret
+                            else "Inconnu"
+                        )
 
-            if lat and lon:
-                train, a_ete_cree = Vehicule.objects.get_or_create(
-                    immatriculation=numero_train[:20],
-                    defaults={
-                        "nom": f"TGV/TER {numero_train}",
-                        "est_actif": True,
-                        "etat_actuel": etat,
-                    },
-                )
+                        heure_depart = arret.get(
+                            "ExpectedDepartureTime", "Heure inconnue"
+                        )
 
-                # Mise à jour du point GPS sur la carte
-                if not train.point_actuel:
-                    train.point_actuel = Point.objects.create(
-                        latitude=lat, longitude=lon
-                    )
-                else:
-                    # C'est ici que le train "bouge" dans ta base de données !
-                    train.point_actuel.latitude = lat
-                    train.point_actuel.longitude = lon
-                    train.point_actuel.save()
+                        print(
+                            f"🚏 Arrêt : {nom} | 🚌 Ligne : {ligne[-5:]} | ⏱️ Heure : {heure_depart[11:16]}"
+                        )
+                        compteur += 1
 
-                train.save()
-                compteur += 1
-
-        print(f"✅ {compteur} trains flashés et mis à jour sur la carte !")
+                        # 🚨 SÉCURITÉ : On s'arrête après 10 résultats pour ne pas faire exploser le PC !
+                        if compteur >= 10:
+                            print(
+                                "...\n✅ (Des dizaines de milliers d'autres résultats ont été masqués)"
+                            )
+                            return
 
     except Exception as e:
-        print(f"❌ Erreur radar : {e}")
+        print(f"❌ Erreur lors de la lecture : {e}")
 
 
 if __name__ == "__main__":
-    # On fait le ménage avant de commencer
-    print("🧹 On vide la carte de ses anciennes données...")
-    Vehicule.objects.all().delete()
-    Point.objects.all().delete()
-
-    print("🚀 Lancement du radar TGV National ! (Ctrl+C pour arrêter)")
-    while True:
-        maj_tgv_france()
-        # On attend 15 secondes (Le temps que le train avance d'un kilomètre dans la vraie vie)
-        print("⏳ Le satellite recharge... (10s)")
-        time.sleep(10)
+    lire_panneau_affichage()
