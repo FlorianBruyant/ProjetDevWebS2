@@ -14,18 +14,19 @@ const iconeParDefaut = L.icon({
     iconAnchor: [12, 41],
 });
 
-// Petit composant pour forcer le redimensionnement et le centrage
 const RecentreurDeCarte = ({ donnees }) => {
     const map = useMap();
     useEffect(() => {
         map.invalidateSize();
-        // Optionnel : Si tu veux que la carte se déplace vers le premier résultat trouvé
         if (donnees && donnees.length > 0) {
             const premier = donnees[0];
+            // 🚨 CORRECTION : On utilise point_actuel_details
             const lat =
-                premier.point_actuel?.latitude || premier.position?.latitude;
+                premier.point_actuel_details?.latitude ||
+                premier.position?.latitude;
             const lng =
-                premier.point_actuel?.longitude || premier.position?.longitude;
+                premier.point_actuel_details?.longitude ||
+                premier.position?.longitude;
             if (lat && lng) map.panTo([lat, lng]);
         }
     }, [donnees, map]);
@@ -35,10 +36,12 @@ const RecentreurDeCarte = ({ donnees }) => {
 const Carte = ({ hauteur = '100%', donnees = [] }) => {
     const positionCergy = [49.0351, 2.0799];
 
-    // Fonction pour extraire la position selon le modèle (Vehicule vs Parking/Incident)
     const extrairePosition = (item) => {
-        const lat = item.point_actuel?.latitude || item.position?.latitude;
-        const lng = item.point_actuel?.longitude || item.position?.longitude;
+        // 🚨 CORRECTION : On utilise point_actuel_details pour les véhicules
+        const lat =
+            item.point_actuel_details?.latitude || item.position?.latitude;
+        const lng =
+            item.point_actuel_details?.longitude || item.position?.longitude;
 
         if (lat !== undefined && lng !== undefined) {
             return [lat, lng];
@@ -47,31 +50,19 @@ const Carte = ({ hauteur = '100%', donnees = [] }) => {
     };
 
     return (
-        <Box
-            sx={{
-                height: hauteur,
-                width: '100%',
-                borderRadius: 0,
-                overflow: 'hidden',
-            }}
-        >
+        <Box sx={{ height: hauteur, width: '100%', overflow: 'hidden' }}>
             <MapContainer
                 center={positionCergy}
                 zoom={14}
                 style={{ height: '100%', width: '100%' }}
                 zoomControl={false}
             >
-                <TileLayer
-                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                    attribution="&copy; OpenStreetMap"
-                />
-
+                <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
                 <RecentreurDeCarte donnees={donnees} />
 
-                {/* Affichage des marqueurs dynamiques */}
                 {donnees.map((item) => {
                     const pos = extrairePosition(item);
-                    if (!pos) return null; // Sécurité si pas de coordonnées
+                    if (!pos) return null;
 
                     return (
                         <Marker
@@ -83,24 +74,14 @@ const Carte = ({ hauteur = '100%', donnees = [] }) => {
                                 <strong>{item.nom}</strong>
                                 <br />
                                 {item.immatriculation &&
-                                    `Immat: ${item.immatriculation}`}
+                                    `ID: ${item.immatriculation}`}
                                 <br />
-                                {item.etat_actuel &&
-                                    `État: ${item.etat_actuel}`}
-                                <br />
-                                {item.places_totales &&
-                                    `Places: ${item.places_occupees}/${item.places_totales}`}
+                                {item.vitesse !== undefined &&
+                                    `Vélos: ${item.vitesse}`}
                             </Popup>
                         </Marker>
                     );
                 })}
-
-                {/* Garder le marqueur de Cergy par défaut si la liste est vide */}
-                {donnees.length === 0 && (
-                    <Marker position={positionCergy} icon={iconeParDefaut}>
-                        <Popup>Cergy - Grand Centre</Popup>
-                    </Marker>
-                )}
             </MapContainer>
         </Box>
     );

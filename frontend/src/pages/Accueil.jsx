@@ -197,8 +197,8 @@ const Accueil = () => {
                 {/* GRILLE EVENEMENTS */}
                 <Box sx={{ mb: 5 }}>
                     <Grid container spacing={2}>
-                        {/* Responsive : 2 colonnes sur mobile (xs=6), 4 sur PC (md=3) */}
-                        <Grid item xs={6} md={3}>
+                        {/* 🚨 CORRECTION : On a juste retiré le mot "item" de chaque Grid ! */}
+                        <Grid xs={6} md={3}>
                             <StatusCard
                                 icon={<Traffic />}
                                 title="Trafic"
@@ -208,7 +208,7 @@ const Accueil = () => {
                                 bgColor="#ffedd5"
                             />
                         </Grid>
-                        <Grid item xs={6} md={3}>
+                        <Grid xs={6} md={3}>
                             <StatusCard
                                 icon={<LocalParking />}
                                 title="Parkings"
@@ -218,7 +218,7 @@ const Accueil = () => {
                                 bgColor="#dcfce7"
                             />
                         </Grid>
-                        <Grid item xs={6} md={3}>
+                        <Grid xs={6} md={3}>
                             <StatusCard
                                 icon={<DirectionsBus />}
                                 title="Bus C3"
@@ -228,7 +228,7 @@ const Accueil = () => {
                                 bgColor="#dcfce7"
                             />
                         </Grid>
-                        <Grid item xs={6} md={3}>
+                        <Grid xs={6} md={3}>
                             <StatusCard
                                 icon={<Train />}
                                 title="Métro A"

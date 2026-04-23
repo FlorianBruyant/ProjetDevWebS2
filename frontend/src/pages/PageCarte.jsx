@@ -1,4 +1,4 @@
-import React, { useState, useLayoutEffect, useRef } from 'react';
+import React, { useState, useLayoutEffect, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import {
     Box,
@@ -37,14 +37,19 @@ const PageCarte = () => {
     const [recherche, setRecherche] = useState(
         () => location.state?.texteInitial ?? '',
     );
+    // On garde en mémoire la catégorie actuelle pour le temps réel
+    const [categorieActuelle, setCategorieActuelle] = useState('vehicules');
 
     const inputRef = useRef(null);
 
     // FONCTION API
     const chargerDonnees = async (categorie = 'vehicules', texte = '') => {
-        setChargement(true);
+        // On évite de faire clignoter le message "chargement" à chaque mise à jour auto
+        if (vehicules.length === 0) setChargement(true);
+
         setAucunResultat(false);
         setTermeFixe(texte);
+        setCategorieActuelle(categorie);
 
         try {
             let url = `http://localhost:8000/api-map/${categorie}/?search=${texte}`;
@@ -54,24 +59,33 @@ const PageCarte = () => {
                 throw new Error(`Erreur HTTP: ${response.status}`);
             }
             const data = await response.json();
-            // On stocke les données
+
             setVehicules(data);
 
-            // Si la liste est vide, on active l'alerte
-            if (data.length === 0) {
+            if (data.length === 0 && texte !== '') {
                 setAucunResultat(true);
             } else {
-                setRechercheActive(false); // On ferme le menu seulement si on a trouvé
+                // Ne fermer la recherche que si c'est une action manuelle
+                if (chargement) setRechercheActive(false);
             }
         } catch (error) {
             console.error('Erreur API:', error);
-            setAucunResultat(true); // On affiche aussi "aucun résultat" en cas de plantage
+            if (vehicules.length === 0) setAucunResultat(true);
         } finally {
             setChargement(false);
         }
     };
 
-    // EFFETS
+    // 🕒 LE TEMPS RÉEL EST ICI : Mise à jour toutes les 5 secondes
+    useEffect(() => {
+        const intervalle = setInterval(() => {
+            chargerDonnees(categorieActuelle, recherche);
+        }, 5000);
+
+        return () => clearInterval(intervalle);
+    }, [categorieActuelle, recherche]);
+
+    // EFFETS AU DEMARRAGE
     useLayoutEffect(() => {
         if (location.state?.focusRecherche) {
             const texteInitial = location.state?.texteInitial;
@@ -79,11 +93,13 @@ const PageCarte = () => {
 
             setTimeout(() => {
                 inputRef.current?.focus();
-
                 if (texteInitial) {
                     chargerDonnees('vehicules', texteInitial);
                 }
             }, 0);
+        } else {
+            // 🚨 TRÈS IMPORTANT : Charge les véhicules dès qu'on arrive sur la page !
+            chargerDonnees('vehicules', '');
         }
     }, [location]);
 
@@ -113,7 +129,6 @@ const PageCarte = () => {
                     transition: 'filter 0.3s',
                 }}
             >
-                {/* On pourra passer les véhicules à la carte plus tard pour afficher les marqueurs */}
                 <Carte donnees={vehicules} />
             </Box>
 
@@ -154,23 +169,24 @@ const PageCarte = () => {
                     <TextField
                         fullWidth
                         variant="standard"
-                        placeholder="Rechercher à Cergy..."
+                        placeholder="Rechercher..."
                         inputRef={inputRef}
                         onFocus={() => setRechercheActive(true)}
                         value={recherche}
                         onChange={(e) => setRecherche(e.target.value)}
-                        // Déclenche la recherche sur "Entrée"
                         onKeyDown={(e) => {
                             if (e.key === 'Enter')
                                 chargerDonnees('vehicules', recherche);
                         }}
-                        InputProps={{
-                            disableUnderline: true,
-                            startAdornment: !rechercheActive && (
-                                <InputAdornment position="start">
-                                    <Search color="action" />
-                                </InputAdornment>
-                            ),
+                        slotProps={{
+                            input: {
+                                disableUnderline: true,
+                                startAdornment: !rechercheActive ? (
+                                    <InputAdornment position="start">
+                                        <Search color="action" />
+                                    </InputAdornment>
+                                ) : null,
+                            },
                         }}
                         sx={{ py: 1.5 }}
                     />
@@ -178,8 +194,7 @@ const PageCarte = () => {
 
                 {rechercheActive && (
                     <Box sx={{ px: 2, animation: 'fadeIn 0.3s' }}>
-                        {/* Loader pendant l'attente */}
-                        {chargement && (
+                        {chargement && vehicules.length === 0 && (
                             <Typography
                                 sx={{
                                     py: 2,
@@ -190,8 +205,7 @@ const PageCarte = () => {
                                 Recherche en cours...
                             </Typography>
                         )}
-                        {/* Message Aucun résultat */}
-                        {aucunResultat && !chargement && (
+                        {aucunResultat && vehicules.length === 0 && (
                             <Paper
                                 sx={{
                                     p: 2,
@@ -204,13 +218,8 @@ const PageCarte = () => {
                                     Désolé, nous n'avons rien trouvé pour "
                                     <strong>{termeFixe}</strong>".
                                 </Typography>
-                                <Typography variant="caption" display="block">
-                                    Vérifiez l'orthographe ou essayez une autre
-                                    catégorie.
-                                </Typography>
                             </Paper>
                         )}
-                        {/* 1. Les Filtres - On appelle l'API au clic */}
                         <Box
                             sx={{
                                 display: 'flex',
@@ -222,24 +231,23 @@ const PageCarte = () => {
                         >
                             <Chip
                                 icon={<DirectionsBus />}
-                                label="Bus"
+                                label="Bus & Vélibs"
                                 onClick={() => chargerDonnees('vehicules')}
                                 clickable
                             />
                             <Chip
                                 icon={<LocalParking />}
                                 label="Parkings"
-                                onClick={() => chargerDonnees('parking')}
+                                onClick={() => chargerDonnees('parkings')} // 🚨 Correction URL (parkings)
                                 clickable
                             />
                             <Chip
-                                icon={<Restaurant />} // TODO: modif icone
+                                icon={<Restaurant />}
                                 label="Incidents"
                                 onClick={() => chargerDonnees('incidents')}
                                 clickable
                             />
                         </Box>
-
                         <Typography
                             variant="overline"
                             sx={{ color: 'text.secondary', fontWeight: 'bold' }}
@@ -254,7 +262,7 @@ const PageCarte = () => {
                                     sx={{ cursor: 'pointer' }}
                                     onClick={() => {
                                         setRecherche(item);
-                                        chargerDonnees(item);
+                                        chargerDonnees('vehicules', item);
                                     }}
                                 >
                                     <ListItemIcon sx={{ minWidth: 40 }}>
