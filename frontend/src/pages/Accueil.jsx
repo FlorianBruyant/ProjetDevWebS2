@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
     Box,
@@ -36,6 +36,32 @@ const Accueil = () => {
             },
         });
     };
+
+    const [donneesMiniCarte, setDonneesMiniCarte] = useState([]);
+
+    // Charger les données dès l'arrivée sur l'accueil
+    useEffect(() => {
+        const fetchDonneesAccueil = async () => {
+            try {
+                // On récupère les véhicules par défaut pour l'accueil
+                const response = await fetch(
+                    'http://localhost:8000/api-map/vehicules/',
+                );
+                if (response.ok) {
+                    const data = await response.json();
+                    setDonneesMiniCarte(data);
+                }
+            } catch (error) {
+                console.error('Erreur chargement mini-carte:', error);
+            }
+        };
+
+        fetchDonneesAccueil();
+
+        // Optionnel : On peut aussi mettre un intervalle de 10s pour l'accueil
+        const interval = setInterval(fetchDonneesAccueil, 10000);
+        return () => clearInterval(interval);
+    }, []);
 
     return (
         <Box sx={{ bgcolor: '#f9fafb', minHeight: '100vh', pb: 12 }}>
@@ -144,7 +170,7 @@ const Accueil = () => {
                         <Box
                             sx={{ height: '100%', width: '100%', opacity: 0.9 }}
                         >
-                            <Carte hauteur="220px" />
+                            <Carte donnees={donneesMiniCarte} hauteur="220px" />
                         </Box>
 
                         {/* Bouton Overlay style Glassmorphism */}
