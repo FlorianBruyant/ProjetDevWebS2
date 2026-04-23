@@ -20,7 +20,7 @@ def lancer_simulation_robuste():
         for feu in feux:
             # --- 1. LOGIQUE DE PANNE ---
             # Proba de 5% par seconde pour tester (c'est énorme, juste pour ton test)
-            proba_panne = 0.9
+            proba_panne = 0.01
 
             if not feu.en_panne and random.random() < proba_panne:
                 feu.en_panne = True
