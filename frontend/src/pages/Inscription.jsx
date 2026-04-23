@@ -9,14 +9,14 @@ import {
     Alert,
     InputAdornment,
     IconButton,
-    Link,
+    Link as MuiLink,
 } from '@mui/material';
 import {
     Visibility,
     VisibilityOff,
     PersonAddOutlined,
 } from '@mui/icons-material';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link as RouterLink } from 'react-router-dom';
 
 const Inscription = () => {
     const navigate = useNavigate();
@@ -246,13 +246,14 @@ const Inscription = () => {
                             {chargement ? 'Inscription...' : "S'inscrire"}
                         </Button>
 
-                        <Link
-                            href="/connexion"
+                        <MuiLink
+                            component={RouterLink}
+                            to="/connexion"
                             variant="body2"
                             sx={{ cursor: 'pointer', textDecoration: 'none' }}
                         >
                             {'Déjà un compte ? Connectez-vous'}
-                        </Link>
+                        </MuiLink>
                     </form>
                 </Paper>
             </Box>
