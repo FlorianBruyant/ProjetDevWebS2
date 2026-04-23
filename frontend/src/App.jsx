@@ -7,7 +7,7 @@ import BarreNavigation from './components/BarreNavigation';
 function App() {
     return (
         <Router>
-            {/* La barre est placée ici. Comme elle est en "position: fixed", 
+            {/* La barre est placée ici. Comme elle est en "position: fixed",
                elle restera en haut de l'écran peu importe la page affichée.
             */}
             <BarreNavigation />
