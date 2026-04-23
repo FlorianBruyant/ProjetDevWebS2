@@ -7,6 +7,8 @@ import {
     Button,
     Container,
     CircularProgress,
+    Snackbar,
+    Alert,
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 
@@ -14,6 +16,14 @@ const Profil = () => {
     const navigate = useNavigate();
     const [user, setUser] = useState(null);
     const [chargement, setChargement] = useState(true);
+
+    // États pour la mise à jour de la photo
+    const [uploading, setUploading] = useState(false);
+    const [notif, setNotif] = useState({
+        open: false,
+        message: '',
+        severity: 'success',
+    });
 
     useEffect(() => {
         const fetchProfil = async () => {
@@ -24,8 +34,6 @@ const Profil = () => {
                     return;
                 }
 
-                // On appelle l'API pour récupérer les infos de l'utilisateur connecté
-                // Si ton ami n'a pas encore fait /api/me/, utilise /api/users/id/
                 const response = await fetch('http://localhost:8000/api/me/', {
                     headers: {
                         Authorization: `Bearer ${token}`,
@@ -37,7 +45,6 @@ const Profil = () => {
                     const data = await response.json();
                     setUser(data);
                 } else {
-                    // Si le token est expiré ou invalide
                     localStorage.clear();
                     navigate('/connexion');
                 }
@@ -50,6 +57,58 @@ const Profil = () => {
 
         fetchProfil();
     }, [navigate]);
+
+    // --- FONCTION DE MODIFICATION DE LA PHOTO ---
+    const handlePhotoChange = async (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        // 1. Validation rapide (Taille < 2Mo par exemple)
+        if (file.size > 2 * 1024 * 1024) {
+            setNotif({
+                open: true,
+                message: "L'image est trop lourde (max 2Mo)",
+                severity: 'error',
+            });
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('photo', file); // 'photo' doit correspondre au nom du champ dans Django
+
+        setUploading(true);
+        try {
+            const token = localStorage.getItem('access_token');
+            const response = await fetch('http://localhost:8000/api/me/', {
+                method: 'PATCH', // On utilise PATCH pour ne modifier que la photo
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    // /!\ NE PAS METTRE Content-Type, le navigateur le fait seul pour FormData
+                },
+                body: formData,
+            });
+
+            if (response.ok) {
+                const updatedUser = await response.json();
+                setUser(updatedUser);
+                setNotif({
+                    open: true,
+                    message: 'Photo mise à jour !',
+                    severity: 'success',
+                });
+            } else {
+                throw new Error("Erreur serveur lors de l'upload");
+            }
+        } catch {
+            setNotif({
+                open: true,
+                message: "Échec de l'upload",
+                severity: 'error',
+            });
+        } finally {
+            setUploading(false);
+        }
+    };
 
     const handleLogout = () => {
         localStorage.clear();
@@ -87,7 +146,6 @@ const Profil = () => {
                 <Box sx={{ display: 'flex', flexDirection: 'column', mb: 4 }}>
                     <Box sx={{ position: 'relative', width: 104, mb: 2 }}>
                         <Avatar
-                            // Utilise l'initiale si pas de photo
                             src={user?.photo_url || ''}
                             sx={{
                                 width: 104,
@@ -95,18 +153,49 @@ const Profil = () => {
                                 border: '4px solid #ffffff',
                                 bgcolor: '#3f51b5',
                                 fontSize: '2rem',
+                                opacity: uploading ? 0.5 : 1, // Effet visuel pendant l'upload
                             }}
                         >
                             {user?.username?.charAt(0).toUpperCase()}
                         </Avatar>
 
+                        {/* LOADER SUR L'AVATAR */}
+                        {uploading && (
+                            <CircularProgress
+                                size={24}
+                                sx={{ position: 'absolute', top: 40, left: 40 }}
+                            />
+                        )}
+
                         <Box
                             component="label"
                             sx={{
-                                /* ... ton style existant ... */ cursor: 'pointer',
+                                position: 'absolute',
+                                bottom: 0,
+                                right: -4,
+                                width: 34,
+                                height: 34,
+                                bgcolor: '#ffffff',
+                                border: '1px solid #e5e7eb',
+                                borderRadius: '50%',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                cursor: 'pointer',
+                                transition: 'all 0.2s',
+                                '&:hover': {
+                                    bgcolor: '#f9fafb',
+                                    transform: 'scale(1.05)',
+                                },
                             }}
                         >
-                            <input type="file" hidden accept="image/*" />
+                            <input
+                                type="file"
+                                hidden
+                                accept="image/*"
+                                onChange={handlePhotoChange}
+                                disabled={uploading}
+                            />
                             <svg
                                 width="16"
                                 height="16"
@@ -133,25 +222,14 @@ const Profil = () => {
                                 mb: 0.5,
                             }}
                         >
-                            {/* VRAIES DONNÉES ICI */}
-                            {user?.first_name} {user?.last_name}
-                            {!user?.first_name && user?.username}
+                            {user?.first_name}{' '}
+                            {user?.last_name || user?.username}
                         </Typography>
                         <Typography
                             variant="body1"
                             sx={{ color: '#6b7280', fontWeight: 500 }}
                         >
                             {user?.email}
-                        </Typography>
-                        {/* Affichage du rôle pour debug */}
-                        <Typography
-                            variant="caption"
-                            sx={{
-                                color: '#9ca3af',
-                                textTransform: 'uppercase',
-                            }}
-                        >
-                            Rôle : {user?.role || 'Utilisateur'}
                         </Typography>
                     </Box>
 
@@ -174,6 +252,7 @@ const Profil = () => {
                     sx={{ height: '1px', bgcolor: '#eaeaea', w: '100%', mb: 4 }}
                 />
 
+                {/* --- SECTIONS PARAMETRES (on garde ton design) --- */}
                 <Typography
                     variant="overline"
                     sx={{
@@ -201,37 +280,13 @@ const Profil = () => {
                     <Typography variant="body2">
                         Dernière action :{' '}
                         <strong>
-                            {new Date(
-                                user?.date_derniere_action,
-                            ).toLocaleDateString()}
+                            {user
+                                ? new Date(
+                                      user.date_derniere_action,
+                                  ).toLocaleDateString()
+                                : '--'}
                         </strong>
                     </Typography>
-                </Paper>
-
-                <Typography
-                    variant="overline"
-                    sx={{
-                        color: '#9ca3af',
-                        fontWeight: 700,
-                        ml: 1,
-                        display: 'block',
-                        mb: 1,
-                    }}
-                >
-                    Paramètres du compte
-                </Typography>
-                <Paper
-                    elevation={0}
-                    sx={{
-                        borderRadius: '16px',
-                        border: '1px solid #eaeaea',
-                        overflow: 'hidden',
-                        mb: 4,
-                    }}
-                >
-                    <MenuItem title="Informations personnelles" />
-                    <Divider />
-                    <MenuItem title="Sécurité et mot de passe" />
                 </Paper>
 
                 <Button
@@ -251,11 +306,21 @@ const Profil = () => {
                     Se déconnecter
                 </Button>
             </Container>
+
+            {/* MESSAGE DE CONFIRMATION / ERREUR */}
+            <Snackbar
+                open={notif.open}
+                autoHideDuration={4000}
+                onClose={() => setNotif({ ...notif, open: false })}
+            >
+                <Alert severity={notif.severity} sx={{ width: '100%' }}>
+                    {notif.message}
+                </Alert>
+            </Snackbar>
         </Box>
     );
 };
 
-// ... Garde tes sous-composants Divider et MenuItem tels quels ...
 const Divider = () => <Box sx={{ height: '1px', bgcolor: '#eaeaea', ml: 2 }} />;
 const MenuItem = ({ title }) => (
     <Box
