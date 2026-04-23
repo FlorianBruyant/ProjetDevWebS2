@@ -2,7 +2,8 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Accueil from './pages/Accueil';
 import PageCarte from './pages/PageCarte';
 import Inscription from './pages/Inscription';
-import Profil from './pages/Profil'; // 1. On importe la nouvelle page
+import Profil from './pages/Profil';
+import Connexion from './pages/Connexion';
 import BarreNavigation from './components/BarreNavigation';
 
 function App() {
@@ -20,6 +21,7 @@ function App() {
                 <Route path="/profil" element={<Profil />} />
 
                 <Route path="/inscription" element={<Inscription />} />
+                <Route path="/connexion" element={<Connexion />} />
             </Routes>
         </Router>
     );
