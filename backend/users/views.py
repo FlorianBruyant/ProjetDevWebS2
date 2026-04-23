@@ -1,12 +1,26 @@
-from rest_framework import generics
-from rest_framework.permissions import AllowAny
+from rest_framework import generics, permissions
 
 from .models import CustomUser
 from .serializers import UserSerializer
 
 
+# 1. Vue d'inscription
 class RegisterView(generics.CreateAPIView):
     queryset = CustomUser.objects.all()
-    # "AllowAny" car tout le monde doit pouvoir accéder à la page d'inscription !
-    permission_classes = (AllowAny,)
+    permission_classes = (permissions.AllowAny,)
     serializer_class = UserSerializer
+
+
+# 2. Vue pour récupérer les infos de l'utilisateur connecté (/api/me/)
+class UserProfileView(generics.RetrieveUpdateAPIView):
+    """
+    Permet de récupérer (GET) ou modifier (PATCH)
+    le profil de l'utilisateur actuellement connecté.
+    """
+
+    serializer_class = UserSerializer
+    permission_classes = (permissions.IsAuthenticated,)  # Obligé d'être connecté !
+
+    def get_object(self):
+        # On renvoie l'utilisateur lié au Token envoyé par React
+        return self.request.user

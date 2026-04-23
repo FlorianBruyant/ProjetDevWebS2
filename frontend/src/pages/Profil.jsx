@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     Box,
     Typography,
@@ -6,12 +6,73 @@ import {
     Paper,
     Button,
     Container,
+    CircularProgress,
 } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
 
 const Profil = () => {
+    const navigate = useNavigate();
+    const [user, setUser] = useState(null);
+    const [chargement, setChargement] = useState(true);
+
+    useEffect(() => {
+        const fetchProfil = async () => {
+            try {
+                const token = localStorage.getItem('access_token');
+                if (!token) {
+                    navigate('/connexion');
+                    return;
+                }
+
+                // On appelle l'API pour récupérer les infos de l'utilisateur connecté
+                // Si ton ami n'a pas encore fait /api/me/, utilise /api/users/id/
+                const response = await fetch('http://localhost:8000/api/me/', {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                    },
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    setUser(data);
+                } else {
+                    // Si le token est expiré ou invalide
+                    localStorage.clear();
+                    navigate('/connexion');
+                }
+            } catch (error) {
+                console.error('Erreur chargement profil:', error);
+            } finally {
+                setChargement(false);
+            }
+        };
+
+        fetchProfil();
+    }, [navigate]);
+
+    const handleLogout = () => {
+        localStorage.clear();
+        navigate('/connexion');
+    };
+
+    if (chargement) {
+        return (
+            <Box
+                sx={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    height: '100vh',
+                }}
+            >
+                <CircularProgress />
+            </Box>
+        );
+    }
+
     return (
         <Box sx={{ bgcolor: '#FAFAFA', minHeight: '100vh', pb: 12 }}>
-            {/* COUVERTURE (Cover photo style Twitter/Airbnb) */}
             <Box
                 sx={{
                     height: '140px',
@@ -23,45 +84,29 @@ const Profil = () => {
             />
 
             <Container maxWidth="sm" sx={{ mt: -6 }}>
-                {/* ZONE AVATAR & INFOS */}
                 <Box sx={{ display: 'flex', flexDirection: 'column', mb: 4 }}>
-                    {/* Conteneur de l'Avatar avec le bouton Modifier */}
                     <Box sx={{ position: 'relative', width: 104, mb: 2 }}>
                         <Avatar
-                            src="https://i.pravatar.cc/150?img=68" // Ta photo ici
+                            // Utilise l'initiale si pas de photo
+                            src={user?.photo_url || ''}
                             sx={{
                                 width: 104,
                                 height: 104,
                                 border: '4px solid #ffffff',
-                                bgcolor: '#f3f4f6',
+                                bgcolor: '#3f51b5',
+                                fontSize: '2rem',
                             }}
-                        />
-                        {/* Bouton pour changer la photo de profil */}
+                        >
+                            {user?.username?.charAt(0).toUpperCase()}
+                        </Avatar>
+
                         <Box
                             component="label"
                             sx={{
-                                position: 'absolute',
-                                bottom: 0,
-                                right: -4,
-                                width: 34,
-                                height: 34,
-                                bgcolor: '#ffffff',
-                                border: '1px solid #e5e7eb',
-                                borderRadius: '50%',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                cursor: 'pointer',
-                                transition: 'all 0.2s',
-                                '&:hover': {
-                                    bgcolor: '#f9fafb',
-                                    transform: 'scale(1.05)',
-                                },
+                                /* ... ton style existant ... */ cursor: 'pointer',
                             }}
                         >
-                            {/* Input file caché pour l'upload (fonctionnel si tu branches la logique) */}
                             <input type="file" hidden accept="image/*" />
-                            {/* Icône Appareil Photo SVG pure */}
                             <svg
                                 width="16"
                                 height="16"
@@ -78,7 +123,6 @@ const Profil = () => {
                         </Box>
                     </Box>
 
-                    {/* Informations Utilisateur */}
                     <Box>
                         <Typography
                             variant="h4"
@@ -89,17 +133,28 @@ const Profil = () => {
                                 mb: 0.5,
                             }}
                         >
-                            Alex Dubois
+                            {/* VRAIES DONNÉES ICI */}
+                            {user?.first_name} {user?.last_name}
+                            {!user?.first_name && user?.username}
                         </Typography>
                         <Typography
                             variant="body1"
                             sx={{ color: '#6b7280', fontWeight: 500 }}
                         >
-                            alex.dubois@email.com
+                            {user?.email}
+                        </Typography>
+                        {/* Affichage du rôle pour debug */}
+                        <Typography
+                            variant="caption"
+                            sx={{
+                                color: '#9ca3af',
+                                textTransform: 'uppercase',
+                            }}
+                        >
+                            Rôle : {user?.role || 'Utilisateur'}
                         </Typography>
                     </Box>
 
-                    {/* Bouton Éditer le profil */}
                     <Button
                         variant="outlined"
                         sx={{
@@ -108,31 +163,56 @@ const Profil = () => {
                             borderRadius: '8px',
                             textTransform: 'none',
                             fontWeight: 600,
-                            color: '#111827',
-                            borderColor: '#d1d5db',
                             px: 3,
-                            '&:hover': {
-                                bgcolor: '#f3f4f6',
-                                borderColor: '#d1d5db',
-                            },
                         }}
                     >
                         Éditer le profil
                     </Button>
                 </Box>
 
-                {/* SÉPARATEUR */}
                 <Box
                     sx={{ height: '1px', bgcolor: '#eaeaea', w: '100%', mb: 4 }}
                 />
 
-                {/* SECTION : MON COMPTE (Style iOS / Linear) */}
                 <Typography
                     variant="overline"
                     sx={{
                         color: '#9ca3af',
                         fontWeight: 700,
-                        letterSpacing: 1.2,
+                        ml: 1,
+                        display: 'block',
+                        mb: 1,
+                    }}
+                >
+                    Statistiques de connexion
+                </Typography>
+                <Paper
+                    elevation={0}
+                    sx={{
+                        borderRadius: '16px',
+                        border: '1px solid #eaeaea',
+                        p: 2,
+                        mb: 4,
+                    }}
+                >
+                    <Typography variant="body2">
+                        Nombre d'accès : <strong>{user?.nb_acces}</strong>
+                    </Typography>
+                    <Typography variant="body2">
+                        Dernière action :{' '}
+                        <strong>
+                            {new Date(
+                                user?.date_derniere_action,
+                            ).toLocaleDateString()}
+                        </strong>
+                    </Typography>
+                </Paper>
+
+                <Typography
+                    variant="overline"
+                    sx={{
+                        color: '#9ca3af',
+                        fontWeight: 700,
                         ml: 1,
                         display: 'block',
                         mb: 1,
@@ -140,7 +220,6 @@ const Profil = () => {
                 >
                     Paramètres du compte
                 </Typography>
-
                 <Paper
                     elevation={0}
                     sx={{
@@ -152,43 +231,12 @@ const Profil = () => {
                 >
                     <MenuItem title="Informations personnelles" />
                     <Divider />
-                    <MenuItem title="Moyens de paiement" />
-                    <Divider />
                     <MenuItem title="Sécurité et mot de passe" />
                 </Paper>
 
-                {/* SECTION : PRÉFÉRENCES */}
-                <Typography
-                    variant="overline"
-                    sx={{
-                        color: '#9ca3af',
-                        fontWeight: 700,
-                        letterSpacing: 1.2,
-                        ml: 1,
-                        display: 'block',
-                        mb: 1,
-                    }}
-                >
-                    Préférences
-                </Typography>
-
-                <Paper
-                    elevation={0}
-                    sx={{
-                        borderRadius: '16px',
-                        border: '1px solid #eaeaea',
-                        overflow: 'hidden',
-                        mb: 5,
-                    }}
-                >
-                    <MenuItem title="Notifications" />
-                    <Divider />
-                    <MenuItem title="Aide et support" />
-                </Paper>
-
-                {/* BOUTON DÉCONNEXION */}
                 <Button
                     fullWidth
+                    onClick={handleLogout}
                     sx={{
                         py: 2,
                         borderRadius: '12px',
@@ -207,12 +255,8 @@ const Profil = () => {
     );
 };
 
-// --- SOUS-COMPOSANTS PURS ---
-
-// Séparateur ultra fin pour les listes
+// ... Garde tes sous-composants Divider et MenuItem tels quels ...
 const Divider = () => <Box sx={{ height: '1px', bgcolor: '#eaeaea', ml: 2 }} />;
-
-// Composant de menu avec icône SVG Chevron "Apple style"
 const MenuItem = ({ title }) => (
     <Box
         sx={{
@@ -223,7 +267,6 @@ const MenuItem = ({ title }) => (
             justifyContent: 'space-between',
             bgcolor: '#ffffff',
             cursor: 'pointer',
-            transition: 'background-color 0.2s',
             '&:hover': { bgcolor: '#fafafa' },
         }}
     >
@@ -232,8 +275,6 @@ const MenuItem = ({ title }) => (
         >
             {title}
         </Typography>
-
-        {/* Chevron pure SVG (zéro import MUI) */}
         <svg
             width="20"
             height="20"
