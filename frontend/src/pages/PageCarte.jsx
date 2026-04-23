@@ -175,8 +175,12 @@ const PageCarte = () => {
                         value={recherche}
                         onChange={(e) => setRecherche(e.target.value)}
                         onKeyDown={(e) => {
-                            if (e.key === 'Enter')
+                            if (e.key === 'Enter') {
                                 chargerDonnees('vehicules', recherche);
+                                setRechercheActive(false);
+                                // On enlève le focus du champ pour cacher le clavier sur mobile
+                                inputRef.current?.blur();
+                            }
                         }}
                         slotProps={{
                             input: {
