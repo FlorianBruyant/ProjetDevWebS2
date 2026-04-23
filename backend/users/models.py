@@ -4,7 +4,7 @@ from django.db import models
 from django.dispatch import receiver
 
 
-# 1. Ton modèle Utilisateur
+# Modèle Utilisateur
 class CustomUser(AbstractUser):
     ROLE_CHOICES = (
         ("VISITEUR", "Visiteur"),
@@ -15,6 +15,8 @@ class CustomUser(AbstractUser):
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default="VISITEUR")
     nb_acces = models.IntegerField(default=0, help_text="Nombre total de connexions")
     date_derniere_action = models.DateTimeField(auto_now=True)
+
+    photo = models.ImageField(upload_to="profils/", null=True, blank=True)
 
     def __str__(self):
         return f"{self.username} ({self.role})"

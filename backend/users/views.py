@@ -19,8 +19,13 @@ class UserProfileView(generics.RetrieveUpdateAPIView):
     """
 
     serializer_class = UserSerializer
-    permission_classes = (permissions.IsAuthenticated,)  # Obligé d'être connecté !
+    permission_classes = [permissions.IsAuthenticated]  # Obligé d'être connecté !
 
     def get_object(self):
         # On renvoie l'utilisateur lié au Token envoyé par React
         return self.request.user
+
+    def patch(self, request, *args, **kwargs):
+        # Cette méthode permet de logger ou d'ajouter une logique
+        # spécifique lors de la modification du profil
+        return super().patch(request, *args, **kwargs)

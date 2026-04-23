@@ -147,3 +147,7 @@ REST_FRAMEWORK = {  # Pour accepter les users admissible
 
 # On dit à Django d'utiliser NOTRE fiche d'identité, pas la sienne
 AUTH_USER_MODEL = "users.CustomUser"
+
+# Dossier où les photos de profil
+MEDIA_URL = "/media/"
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")
