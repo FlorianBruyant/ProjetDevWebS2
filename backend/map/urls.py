@@ -1,16 +1,16 @@
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
-from . import views  # 👈 TRÈS IMPORTANT : Importe tes vues ici
+from . import views
 
 router = DefaultRouter()
-router.register(r"vehicules", views.VehiculeViewSet)
 router.register(r"zones", views.ZoneViewSet)
+router.register(r"vehicules", views.VehiculeViewSet)  # 👈 L'erreur venait d'ici
+router.register(r"feux", views.FeuViewSet)
+router.register(r"parkings", views.ParkingViewSet)
 
 urlpatterns = [
-    # Tes routes automatiques du router
     path("", include(router.urls)),
-    # 🚨 LA LIGNE MANQUANTE EST ICI :
-    # Attention : ne mets pas de "/" au début, mais mets-en un à la fin
-    path("horaires/", views.get_horaires_gare, name="horaires-gare"),
+    path("horaires/", views.get_horaires_gare),
+    path("global/", views.get_global_data),  # 👈 Route pour charger tout d'un coup
 ]

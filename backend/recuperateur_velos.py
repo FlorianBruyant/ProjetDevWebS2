@@ -56,13 +56,13 @@ def maj_carte_en_temps_reel():
 
 
 if __name__ == "__main__":
-    # Avant de commencer, on vide l'entrepôt pour avoir une carte propre
-    print("🧹 Nettoyage des anciennes données...")
-    Vehicule.objects.all().delete()
-    Point.objects.all().delete()
+    print("🧹 Nettoyage uniquement des anciennes stations Velib...")
+    # On ne supprime que les objets dont le nom contient "Station"
+    Vehicule.objects.filter(nom__icontains="Station").delete()
 
-    print("🚀 Décollage du récupérateur (Ctrl+C pour arrêter)")
+    # NE SURTOUT PAS FAIRE : Point.objects.all().delete()
+    # car cela supprimerait les positions de tes feux et parkings !
+
     while True:
         maj_carte_en_temps_reel()
-        print("⏳ Pause de 10 secondes pour voir la mise à jour sur React...")
-        time.sleep(10)
+        time.sleep(30)  # Augmente à 30 sec pour laisser respirer l'API

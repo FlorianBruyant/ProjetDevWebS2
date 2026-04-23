@@ -1,12 +1,12 @@
 from rest_framework import serializers
 
-from .models import Point, Vehicule, Zone
+from .models import Feu, Parking, Point, Vehicule, Zone
 
 
 class ZoneSerializer(serializers.ModelSerializer):
     class Meta:
         model = Zone
-        fields = "__all__"  # On traduit toutes les cases de la fiche
+        fields = "__all__"
 
 
 class PointSerializer(serializers.ModelSerializer):
@@ -15,9 +15,10 @@ class PointSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
+# --- Sérialiseur pour les Véhicules ---
 class VehiculeSerializer(serializers.ModelSerializer):
-    # On veut aussi voir les détails du point où se trouve la voiture
     point_actuel_details = PointSerializer(source="point_actuel", read_only=True)
+    type_objet = serializers.ReadOnlyField(default="VEHICULE")
 
     class Meta:
         model = Vehicule
@@ -27,6 +28,46 @@ class VehiculeSerializer(serializers.ModelSerializer):
             "immatriculation",
             "vitesse",
             "est_actif",
+            "en_panne",
             "point_actuel",
             "point_actuel_details",
+            "type_objet",
+        ]
+
+
+# --- Sérialiseur pour les Feux ---
+class FeuSerializer(serializers.ModelSerializer):
+    # On utilise le même nom que pour les véhicules pour ne pas perdre React
+    point_actuel_details = PointSerializer(source="position", read_only=True)
+    type_objet = serializers.ReadOnlyField(default="FEU")
+
+    class Meta:
+        model = Feu
+        fields = [
+            "id",
+            "nom",
+            "etat_actuel",
+            "est_actif",
+            "en_panne",
+            "position",
+            "point_actuel_details",
+            "type_objet",
+        ]
+
+
+# --- Sérialiseur pour les Parkings ---
+class ParkingSerializer(serializers.ModelSerializer):
+    point_actuel_details = PointSerializer(source="position", read_only=True)
+    type_objet = serializers.ReadOnlyField(default="PARKING")
+
+    class Meta:
+        model = Parking
+        fields = [
+            "id",
+            "nom",
+            "places_occupees",
+            "places_totales",
+            "position",
+            "point_actuel_details",
+            "type_objet",
         ]

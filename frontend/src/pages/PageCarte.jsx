@@ -12,6 +12,7 @@ import {
     ListItemText,
     Typography,
     IconButton,
+    Stack,
 } from '@mui/material';
 import {
     Search,
@@ -19,15 +20,17 @@ import {
     Close,
     DirectionsBus,
     LocalParking,
-    Restaurant,
+    Traffic,
+    ReportProblem,
+    Map as MapIcon,
 } from '@mui/icons-material';
 import Carte from '../components/Carte';
 
 const PageCarte = () => {
     const location = useLocation();
 
-    // ÉTATS
-    const [vehicules, setVehicules] = useState([]);
+    // --- ÉTATS ---
+    const [donneesMap, setDonneesMap] = useState([]); // Contiendra tous les objets (Vélos, Feux, etc.)
     const [termeFixe, setTermeFixe] = useState('');
     const [chargement, setChargement] = useState(false);
     const [aucunResultat, setAucunResultat] = useState(false);
@@ -37,22 +40,26 @@ const PageCarte = () => {
     const [recherche, setRecherche] = useState(
         () => location.state?.texteInitial ?? '',
     );
-    // On garde en mémoire la catégorie actuelle pour le temps réel
-    const [categorieActuelle, setCategorieActuelle] = useState('vehicules');
+
+    // On commence par "global" pour charger toute la ville d'un coup
+    const [categorieActuelle, setCategorieActuelle] = useState('global');
 
     const inputRef = useRef(null);
 
-    // FONCTION API
-    const chargerDonnees = async (categorie = 'vehicules', texte = '') => {
-        // On évite de faire clignoter le message "chargement" à chaque mise à jour auto
-        if (vehicules.length === 0) setChargement(true);
+    // --- FONCTION DE CHARGEMENT API ---
+    const chargerDonnees = async (categorie = 'global', texte = '') => {
+        // On affiche le chargement seulement si on n'a pas encore de données
+        if (donneesMap.length === 0) setChargement(true);
 
         setAucunResultat(false);
         setTermeFixe(texte);
         setCategorieActuelle(categorie);
 
         try {
-            let url = `http://localhost:8000/api-map/${categorie}/?search=${texte}`;
+            // Détermination de l'URL (si global on tape /global/, sinon /categorie/)
+            const endpoint = categorie === 'global' ? 'global' : categorie;
+            let url = `http://localhost:8000/api-map/${endpoint}/?search=${texte}`;
+
             const response = await fetch(url);
 
             if (!response.ok) {
@@ -60,23 +67,20 @@ const PageCarte = () => {
             }
             const data = await response.json();
 
-            setVehicules(data);
+            setDonneesMap(data);
 
             if (data.length === 0 && texte !== '') {
                 setAucunResultat(true);
-            } else {
-                // Ne fermer la recherche que si c'est une action manuelle
-                if (chargement) setRechercheActive(false);
             }
         } catch (error) {
             console.error('Erreur API:', error);
-            if (vehicules.length === 0) setAucunResultat(true);
+            if (donneesMap.length === 0) setAucunResultat(true);
         } finally {
             setChargement(false);
         }
     };
 
-    // 🕒 LE TEMPS RÉEL EST ICI : Mise à jour toutes les 5 secondes
+    // --- TEMPS RÉEL (Refresh toutes les 5 secondes) ---
     useEffect(() => {
         const intervalle = setInterval(() => {
             chargerDonnees(categorieActuelle, recherche);
@@ -85,7 +89,7 @@ const PageCarte = () => {
         return () => clearInterval(intervalle);
     }, [categorieActuelle, recherche]);
 
-    // EFFETS AU DEMARRAGE
+    // --- EFFETS AU DÉMARRAGE ---
     useLayoutEffect(() => {
         if (location.state?.focusRecherche) {
             const texteInitial = location.state?.texteInitial;
@@ -94,12 +98,12 @@ const PageCarte = () => {
             setTimeout(() => {
                 inputRef.current?.focus();
                 if (texteInitial) {
-                    chargerDonnees('vehicules', texteInitial);
+                    chargerDonnees('global', texteInitial);
                 }
             }, 0);
         } else {
-            // 🚨 TRÈS IMPORTANT : Charge les véhicules dès qu'on arrive sur la page !
-            chargerDonnees('vehicules', '');
+            // Charge toute la ville par défaut
+            chargerDonnees('global', '');
         }
     }, [location]);
 
@@ -129,7 +133,7 @@ const PageCarte = () => {
                     transition: 'filter 0.3s',
                 }}
             >
-                <Carte donnees={vehicules} />
+                <Carte donnees={donneesMap} />
             </Box>
 
             {/* --- ZONE DE RECHERCHE --- */}
@@ -169,27 +173,26 @@ const PageCarte = () => {
                     <TextField
                         fullWidth
                         variant="standard"
-                        placeholder="Rechercher..."
+                        placeholder="Rechercher un objet, une rue..."
                         inputRef={inputRef}
                         onFocus={() => setRechercheActive(true)}
                         value={recherche}
                         onChange={(e) => setRecherche(e.target.value)}
                         onKeyDown={(e) => {
                             if (e.key === 'Enter') {
-                                chargerDonnees('vehicules', recherche);
+                                chargerDonnees(categorieActuelle, recherche);
                                 setRechercheActive(false);
-                                // On enlève le focus du champ pour cacher le clavier sur mobile
                                 inputRef.current?.blur();
                             }
                         }}
                         slotProps={{
                             input: {
                                 disableUnderline: true,
-                                startAdornment: !rechercheActive ? (
+                                startAdornment: !rechercheActive && (
                                     <InputAdornment position="start">
                                         <Search color="action" />
                                     </InputAdornment>
-                                ) : null,
+                                ),
                             },
                         }}
                         sx={{ py: 1.5 }}
@@ -198,7 +201,71 @@ const PageCarte = () => {
 
                 {rechercheActive && (
                     <Box sx={{ px: 2, animation: 'fadeIn 0.3s' }}>
-                        {chargement && vehicules.length === 0 && (
+                        {/* FILTRES PAR CATÉGORIE */}
+                        <Stack
+                            direction="row"
+                            spacing={1}
+                            sx={{ mb: 3, overflowX: 'auto', pb: 1 }}
+                        >
+                            <Chip
+                                icon={<MapIcon />}
+                                label="Toute la ville"
+                                onClick={() => {
+                                    chargerDonnees('global');
+                                    setRechercheActive(false);
+                                }}
+                                color={
+                                    categorieActuelle === 'global'
+                                        ? 'primary'
+                                        : 'default'
+                                }
+                                clickable
+                            />
+                            <Chip
+                                icon={<DirectionsBus />}
+                                label="Bus & Vélibs"
+                                onClick={() => {
+                                    chargerDonnees('vehicules');
+                                    setRechercheActive(false);
+                                }}
+                                color={
+                                    categorieActuelle === 'vehicules'
+                                        ? 'primary'
+                                        : 'default'
+                                }
+                                clickable
+                            />
+                            <Chip
+                                icon={<LocalParking />}
+                                label="Parkings"
+                                onClick={() => {
+                                    chargerDonnees('parkings');
+                                    setRechercheActive(false);
+                                }}
+                                color={
+                                    categorieActuelle === 'parkings'
+                                        ? 'primary'
+                                        : 'default'
+                                }
+                                clickable
+                            />
+                            <Chip
+                                icon={<Traffic />}
+                                label="Feux"
+                                onClick={() => {
+                                    chargerDonnees('feux');
+                                    setRechercheActive(false);
+                                }}
+                                color={
+                                    categorieActuelle === 'feux'
+                                        ? 'primary'
+                                        : 'default'
+                                }
+                                clickable
+                            />
+                        </Stack>
+
+                        {chargement && donneesMap.length === 0 && (
                             <Typography
                                 sx={{
                                     py: 2,
@@ -206,10 +273,11 @@ const PageCarte = () => {
                                     color: 'text.secondary',
                                 }}
                             >
-                                Recherche en cours...
+                                Analyse de la ville en cours...
                             </Typography>
                         )}
-                        {aucunResultat && vehicules.length === 0 && (
+
+                        {aucunResultat && (
                             <Paper
                                 sx={{
                                     p: 2,
@@ -219,39 +287,12 @@ const PageCarte = () => {
                                 }}
                             >
                                 <Typography color="error" variant="body2">
-                                    Désolé, nous n'avons rien trouvé pour "
+                                    Aucun objet trouvé pour "
                                     <strong>{termeFixe}</strong>".
                                 </Typography>
                             </Paper>
                         )}
-                        <Box
-                            sx={{
-                                display: 'flex',
-                                gap: 1,
-                                mb: 3,
-                                overflowX: 'auto',
-                                pb: 1,
-                            }}
-                        >
-                            <Chip
-                                icon={<DirectionsBus />}
-                                label="Bus & Vélibs"
-                                onClick={() => chargerDonnees('vehicules')}
-                                clickable
-                            />
-                            <Chip
-                                icon={<LocalParking />}
-                                label="Parkings"
-                                onClick={() => chargerDonnees('parkings')} // 🚨 Correction URL (parkings)
-                                clickable
-                            />
-                            <Chip
-                                icon={<Restaurant />}
-                                label="Incidents"
-                                onClick={() => chargerDonnees('incidents')}
-                                clickable
-                            />
-                        </Box>
+
                         <Typography
                             variant="overline"
                             sx={{ color: 'text.secondary', fontWeight: 'bold' }}
@@ -266,7 +307,8 @@ const PageCarte = () => {
                                     sx={{ cursor: 'pointer' }}
                                     onClick={() => {
                                         setRecherche(item);
-                                        chargerDonnees('vehicules', item);
+                                        chargerDonnees('global', item);
+                                        setRechercheActive(false);
                                     }}
                                 >
                                     <ListItemIcon sx={{ minWidth: 40 }}>
