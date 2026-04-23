@@ -26,27 +26,67 @@ import Carte from '../components/Carte';
 const PageCarte = () => {
     const location = useLocation();
 
+    // ÉTATS
+    const [vehicules, setVehicules] = useState([]);
+    const [termeFixe, setTermeFixe] = useState('');
+    const [chargement, setChargement] = useState(false);
+    const [aucunResultat, setAucunResultat] = useState(false);
     const [rechercheActive, setRechercheActive] = useState(
         () => location.state?.focusRecherche ?? false,
     );
     const [recherche, setRecherche] = useState(
         () => location.state?.texteInitial ?? '',
     );
-    // Création de la référence pour le champ de recherche
+
     const inputRef = useRef(null);
 
+    // FONCTION API
+    const chargerDonnees = async (categorie = 'vehicules', texte = '') => {
+        setChargement(true);
+        setAucunResultat(false);
+        setTermeFixe(texte);
+
+        try {
+            let url = `http://localhost:8000/api/${categorie}/?search=${texte}`;
+            const response = await fetch(url);
+
+            if (!response.ok) {
+                throw new Error(`Erreur HTTP: ${response.status}`);
+            }
+            const data = await response.json();
+            // On stocke les données
+            setVehicules(data);
+
+            // Si la liste est vide, on active l'alerte
+            if (data.length === 0) {
+                setAucunResultat(true);
+            } else {
+                setRechercheActive(false); // On ferme le menu seulement si on a trouvé
+            }
+        } catch (error) {
+            console.error('Erreur API:', error);
+            setAucunResultat(true); // On affiche aussi "aucun résultat" en cas de plantage
+        } finally {
+            setChargement(false);
+        }
+    };
+
+    // EFFETS
     useLayoutEffect(() => {
         if (location.state?.focusRecherche) {
+            const texteInitial = location.state?.texteInitial;
+            window.history.replaceState({}, document.title);
+
             setTimeout(() => {
-                if (inputRef.current) {
-                    inputRef.current.focus();
+                inputRef.current?.focus();
+
+                if (texteInitial) {
+                    chargerDonnees('vehicule', texteInitial);
                 }
             }, 0);
-            window.history.replaceState({}, document.title);
         }
     }, [location]);
 
-    // Simulation d'historique
     const historique = [
         'Gare de Cergy Préfecture',
         'ESSEC Business School',
@@ -73,10 +113,11 @@ const PageCarte = () => {
                     transition: 'filter 0.3s',
                 }}
             >
-                <Carte />
+                {/* On pourra passer les véhicules à la carte plus tard pour afficher les marqueurs */}
+                <Carte donnees={vehicules} />
             </Box>
 
-            {/* --- ZONE DE RECHERCHE DYNAMIQUE --- */}
+            {/* --- ZONE DE RECHERCHE --- */}
             <Paper
                 elevation={rechercheActive ? 0 : 3}
                 sx={{
@@ -94,7 +135,6 @@ const PageCarte = () => {
                     minHeight: rechercheActive ? '100vh' : 'auto',
                 }}
             >
-                {/* Barre de saisie */}
                 <Box
                     sx={{
                         display: 'flex',
@@ -119,6 +159,11 @@ const PageCarte = () => {
                         onFocus={() => setRechercheActive(true)}
                         value={recherche}
                         onChange={(e) => setRecherche(e.target.value)}
+                        // Déclenche la recherche sur "Entrée"
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter')
+                                chargerDonnees('vehicule', recherche);
+                        }}
                         InputProps={{
                             disableUnderline: true,
                             startAdornment: !rechercheActive && (
@@ -131,10 +176,41 @@ const PageCarte = () => {
                     />
                 </Box>
 
-                {/* --- CONTENU QUI S'AFFICHE AU CLIC --- */}
                 {rechercheActive && (
                     <Box sx={{ px: 2, animation: 'fadeIn 0.3s' }}>
-                        {/* 1. Les Filtres */}
+                        {/* Loader pendant l'attente */}
+                        {chargement && (
+                            <Typography
+                                sx={{
+                                    py: 2,
+                                    textAlign: 'center',
+                                    color: 'text.secondary',
+                                }}
+                            >
+                                Recherche en cours...
+                            </Typography>
+                        )}
+                        {/* Message Aucun résultat */}
+                        {aucunResultat && !chargement && (
+                            <Paper
+                                sx={{
+                                    p: 2,
+                                    mt: 1,
+                                    bgcolor: '#fff5f5',
+                                    borderRadius: 2,
+                                }}
+                            >
+                                <Typography color="error" variant="body2">
+                                    Désolé, nous n'avons rien trouvé pour "
+                                    <strong>{termeFixe}</strong>".
+                                </Typography>
+                                <Typography variant="caption" display="block">
+                                    Vérifiez l'orthographe ou essayez une autre
+                                    catégorie.
+                                </Typography>
+                            </Paper>
+                        )}
+                        {/* 1. Les Filtres - On appelle l'API au clic */}
                         <Box
                             sx={{
                                 display: 'flex',
@@ -142,30 +218,28 @@ const PageCarte = () => {
                                 mb: 3,
                                 overflowX: 'auto',
                                 pb: 1,
-                                '&::-webkit-scrollbar': { display: 'none' },
                             }}
                         >
                             <Chip
                                 icon={<DirectionsBus />}
                                 label="Bus"
-                                onClick={() => {}}
+                                onClick={() => chargerDonnees('vehicules')}
                                 clickable
                             />
                             <Chip
                                 icon={<LocalParking />}
                                 label="Parkings"
-                                onClick={() => {}}
+                                onClick={() => chargerDonnees('parking')}
                                 clickable
                             />
                             <Chip
-                                icon={<Restaurant />}
-                                label="Restos"
-                                onClick={() => {}}
+                                icon={<Restaurant />} // TODO: modif icone
+                                label="Incidents"
+                                onClick={() => chargerDonnees('incidents')}
                                 clickable
                             />
                         </Box>
 
-                        {/* 2. L'Historique */}
                         <Typography
                             variant="overline"
                             sx={{ color: 'text.secondary', fontWeight: 'bold' }}
@@ -180,7 +254,7 @@ const PageCarte = () => {
                                     sx={{ cursor: 'pointer' }}
                                     onClick={() => {
                                         setRecherche(item);
-                                        setRechercheActive(false);
+                                        chargerDonnees(item);
                                     }}
                                 >
                                     <ListItemIcon sx={{ minWidth: 40 }}>
