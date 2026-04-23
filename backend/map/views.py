@@ -38,7 +38,7 @@ class VehiculeViewSet(viewsets.ModelViewSet):
 # =====================================================================
 @api_view(["GET"])
 def get_horaires_gare(request):
-    # On récupère l'ID de la gare depuis l'URL (Cergy Préfecture par défaut)
+    # On récupère l'ID de la gare depuis l'URL (Chatelet par defaut)
     # Plus tard, ton Frontend pourra envoyer d'autres ID pour voir d'autres gares !
     # ID de Châtelet-Les Halles (RER)
     gare_id = request.query_params.get("gare", "STIF:StopPoint:Q:474151:")

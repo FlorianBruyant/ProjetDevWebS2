@@ -11,27 +11,33 @@ import {
     TableRow,
     Chip,
     CircularProgress,
+    Stack,
+    Button,
 } from '@mui/material';
-import { AccessTime, DirectionsBus, Train } from '@mui/icons-material';
+import { AccessTime, Train, LocationOn, Refresh } from '@mui/icons-material';
+
+// 🔒 ID UNIQUE : Châtelet Les Halles
+const ID_CHATELET = 'STIF:StopPoint:Q:474151:';
 
 const Horaires = () => {
     const [passages, setPassages] = useState([]);
     const [chargement, setChargement] = useState(true);
+    const [derniereMaj, setDerniereMaj] = useState(new Date());
 
     const fetchHoraires = async () => {
+        setChargement(true);
         try {
             const response = await fetch(
-                'http://localhost:8000/api-map/horaires/',
+                `http://localhost:8000/api-map/horaires/?gare=${ID_CHATELET}`,
             );
             const data = await response.json();
-
-            // On descend dans l'arborescence complexe de l'API PRIM (SIRI Lite)
             const list =
-                data.Siri?.ServiceDelivery?.StopMonitoringDelivery[0]
+                data.Siri?.ServiceDelivery?.StopMonitoringDelivery?.[0]
                     ?.MonitoredStopVisit || [];
             setPassages(list);
+            setDerniereMaj(new Date());
         } catch (error) {
-            console.error('Erreur horaires:', error);
+            console.error('Erreur API:', error);
         } finally {
             setChargement(false);
         }
@@ -39,144 +45,218 @@ const Horaires = () => {
 
     useEffect(() => {
         fetchHoraires();
-        const timer = setInterval(fetchHoraires, 30000); // MaJ toutes les 30 sec
+        const timer = setInterval(fetchHoraires, 20000); // MaJ toutes les 20 secondes
         return () => clearInterval(timer);
     }, []);
 
     return (
-        <Box sx={{ p: 4, bgcolor: '#f5f5f5', minHeight: '100vh', mt: 8 }}>
-            <Typography
-                variant="h4"
-                sx={{ mb: 3, fontWeight: 'bold', color: '#1a237e' }}
+        <Box
+            sx={{ p: 4, bgcolor: '#f8f9fa', minHeight: '100vh', mt: 8, pb: 12 }}
+        >
+            {/* Header Unique pour Châtelet */}
+            <Paper
+                sx={{
+                    p: 3,
+                    mb: 4,
+                    borderRadius: 4,
+                    background:
+                        'linear-gradient(135deg, #1a237e 30%, #283593 90%)',
+                    color: 'white',
+                }}
             >
-                🚉 Prochains Passages - Cergy Préfecture
-            </Typography>
+                <Stack
+                    direction="row"
+                    justifyContent="space-between"
+                    alignItems="center"
+                >
+                    <Box>
+                        <Typography
+                            variant="h4"
+                            sx={{
+                                fontWeight: 'bold',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 2,
+                            }}
+                        >
+                            <Train fontSize="large" /> Châtelet Les Halles
+                        </Typography>
+                        <Typography
+                            variant="subtitle1"
+                            sx={{
+                                opacity: 0.8,
+                                mt: 1,
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 1,
+                            }}
+                        >
+                            <LocationOn fontSize="small" /> Hub RER A, B, D
+                        </Typography>
+                    </Box>
+                    <Box sx={{ textAlign: 'right' }}>
+                        <Typography
+                            variant="caption"
+                            sx={{ display: 'block', opacity: 0.8, mb: 1 }}
+                        >
+                            Dernière mise à jour :{' '}
+                            {derniereMaj.toLocaleTimeString()}
+                        </Typography>
+                        <Button
+                            variant="contained"
+                            size="small"
+                            startIcon={<Refresh />}
+                            onClick={fetchHoraires}
+                            sx={{
+                                bgcolor: 'rgba(255,255,255,0.2)',
+                                '&:hover': { bgcolor: 'rgba(255,255,255,0.3)' },
+                            }}
+                        >
+                            Actualiser
+                        </Button>
+                    </Box>
+                </Stack>
+            </Paper>
 
             <TableContainer
                 component={Paper}
-                sx={{ borderRadius: 3, boxShadow: 3 }}
+                sx={{
+                    borderRadius: 4,
+                    boxShadow: '0 10px 30px rgba(0,0,0,0.05)',
+                }}
             >
                 <Table>
-                    <TableHead sx={{ bgcolor: '#1a237e' }}>
+                    <TableHead sx={{ bgcolor: '#eeeeee' }}>
                         <TableRow>
-                            <TableCell
-                                sx={{ color: 'white', fontWeight: 'bold' }}
-                            >
+                            <TableCell sx={{ fontWeight: 'bold' }}>
                                 Ligne
                             </TableCell>
-                            <TableCell
-                                sx={{ color: 'white', fontWeight: 'bold' }}
-                            >
+                            <TableCell sx={{ fontWeight: 'bold' }}>
                                 Destination
                             </TableCell>
-                            <TableCell
-                                sx={{ color: 'white', fontWeight: 'bold' }}
-                            >
-                                Heure prévue
+                            <TableCell sx={{ fontWeight: 'bold' }}>
+                                Horaire
                             </TableCell>
-                            <TableCell
-                                sx={{ color: 'white', fontWeight: 'bold' }}
-                            >
+                            <TableCell sx={{ fontWeight: 'bold' }}>
                                 État
                             </TableCell>
                         </TableRow>
                     </TableHead>
                     <TableBody>
-                        {chargement ? (
+                        {chargement && passages.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={4} align="center">
+                                <TableCell
+                                    colSpan={4}
+                                    align="center"
+                                    sx={{ py: 10 }}
+                                >
                                     <CircularProgress />
                                 </TableCell>
                             </TableRow>
                         ) : passages.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={4} align="center">
-                                    <Typography
-                                        sx={{ py: 3, color: 'text.secondary' }}
-                                    >
-                                        Aucun passage prévu pour le moment.
+                                <TableCell
+                                    colSpan={4}
+                                    align="center"
+                                    sx={{ py: 10 }}
+                                >
+                                    <Typography color="text.secondary">
+                                        Aucun train en approche.
                                     </Typography>
                                 </TableCell>
                             </TableRow>
                         ) : (
-                            // 🚨 VERIFIE BIEN CETTE LIGNE : Une seule accolade '{' au début !
                             passages.map((p, index) => {
                                 const info = p.MonitoredVehicleJourney;
-                                if (!info) return null;
+                                const call = info?.MonitoredCall;
+                                if (!info || !call) return null;
 
+                                // Sécurité horaire : Temps réel ou Théorique
                                 const dateBrute =
-                                    info.MonitoredCall?.ExpectedArrivalTime ||
-                                    info.MonitoredCall?.AimedArrivalTime;
-                                const heure = dateBrute
+                                    call.ExpectedArrivalTime ||
+                                    call.AimedArrivalTime ||
+                                    call.ExpectedDepartureTime;
+                                const heureObj = dateBrute
                                     ? new Date(dateBrute)
                                     : null;
+                                const estTempsReel = !!call.ExpectedArrivalTime;
 
                                 return (
                                     <TableRow key={index} hover>
                                         <TableCell>
                                             <Chip
-                                                icon={
-                                                    info.VehicleMode ===
-                                                    'bus' ? (
-                                                        <DirectionsBus />
-                                                    ) : (
-                                                        <Train />
-                                                    )
-                                                }
                                                 label={
                                                     info.PublishedLineName?.[0]
                                                         ?.value ?? '?'
                                                 }
-                                                variant="outlined"
+                                                sx={{
+                                                    fontWeight: 'bold',
+                                                    bgcolor: '#1a237e',
+                                                    color: 'white',
+                                                    width: 55,
+                                                }}
                                             />
                                         </TableCell>
-                                        <TableCell sx={{ fontWeight: '500' }}>
+                                        <TableCell sx={{ fontWeight: '600' }}>
                                             {info.DestinationName?.[0]?.value ??
-                                                'Direction inconnue'}
+                                                'Direction Inconnue'}
                                         </TableCell>
                                         <TableCell>
-                                            <Box
-                                                sx={{
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    gap: 1,
-                                                }}
+                                            <Stack
+                                                direction="row"
+                                                alignItems="center"
+                                                spacing={1}
                                             >
                                                 <AccessTime
                                                     fontSize="small"
-                                                    color="action"
+                                                    color={
+                                                        estTempsReel
+                                                            ? 'success'
+                                                            : 'warning'
+                                                    }
                                                 />
-                                                {heure
-                                                    ? heure.toLocaleTimeString(
-                                                          [],
-                                                          {
-                                                              hour: '2-digit',
-                                                              minute: '2-digit',
-                                                          },
-                                                      )
-                                                    : '--:--'}
-                                            </Box>
+                                                <Typography
+                                                    sx={{
+                                                        fontWeight: 'bold',
+                                                        color: estTempsReel
+                                                            ? '#2e7d32'
+                                                            : '#ed6c02',
+                                                    }}
+                                                >
+                                                    {heureObj
+                                                        ? heureObj.toLocaleTimeString(
+                                                              [],
+                                                              {
+                                                                  hour: '2-digit',
+                                                                  minute: '2-digit',
+                                                              },
+                                                          )
+                                                        : '--:--'}
+                                                </Typography>
+                                            </Stack>
                                         </TableCell>
                                         <TableCell>
                                             <Chip
                                                 label={
-                                                    info.MonitoredCall
-                                                        ?.ArrivalStatus ||
-                                                    "À l'heure"
+                                                    call.ArrivalStatus ===
+                                                    'onTime'
+                                                        ? "À l'heure"
+                                                        : call.ArrivalStatus ||
+                                                          'Normal'
                                                 }
+                                                size="small"
                                                 color={
-                                                    info.MonitoredCall
-                                                        ?.ArrivalStatus ===
+                                                    call.ArrivalStatus ===
                                                     'delayed'
                                                         ? 'error'
                                                         : 'success'
                                                 }
-                                                size="small"
+                                                variant="outlined"
                                             />
                                         </TableCell>
                                     </TableRow>
                                 );
-                            }) // 🚨 Fin du .map
+                            })
                         )}
                     </TableBody>
                 </Table>
