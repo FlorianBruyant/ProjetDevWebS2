@@ -217,6 +217,18 @@ const Connexion = () => {
                             >
                                 {"Pas encore de compte ? S'inscrire"}
                             </MuiLink>
+                            <MuiLink
+                                component={RouterLink}
+                                to="/mot-de-passe-oublie"
+                                variant="body2"
+                                sx={{
+                                    mt: 1,
+                                    display: 'block',
+                                    textAlign: 'right',
+                                }}
+                            >
+                                Mot de passe oublié ?
+                            </MuiLink>
                         </Grid>
                     </form>
                 </Paper>

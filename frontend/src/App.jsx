@@ -7,6 +7,8 @@ import Connexion from './pages/Connexion';
 import BarreNavigation from './components/BarreNavigation';
 import Horaires from './pages/Horaires';
 import ConfirmEmail from './components/ConfirmEmail';
+import DemandeReset from './pages/DemandeReset';
+import NouveauMotDePasse from './components/NouveauMotDePasse';
 
 function App() {
     return (
@@ -26,6 +28,11 @@ function App() {
                 <Route
                     path="/confirmer-email/:uid/:token"
                     element={<ConfirmEmail />}
+                />
+                <Route path="/mot-de-passe-oublie" element={<DemandeReset />} />
+                <Route
+                    path="/reset-password/:uid/:token"
+                    element={<NouveauMotDePasse />}
                 />
             </Routes>
         </Router>
