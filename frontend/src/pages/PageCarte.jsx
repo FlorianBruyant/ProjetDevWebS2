@@ -47,7 +47,7 @@ const PageCarte = () => {
         setTermeFixe(texte);
 
         try {
-            let url = `http://localhost:8000/api/${categorie}/?search=${texte}`;
+            let url = `http://localhost:8000/api-map/${categorie}/?search=${texte}`;
             const response = await fetch(url);
 
             if (!response.ok) {
@@ -81,7 +81,7 @@ const PageCarte = () => {
                 inputRef.current?.focus();
 
                 if (texteInitial) {
-                    chargerDonnees('vehicule', texteInitial);
+                    chargerDonnees('vehicules', texteInitial);
                 }
             }, 0);
         }
@@ -162,7 +162,7 @@ const PageCarte = () => {
                         // Déclenche la recherche sur "Entrée"
                         onKeyDown={(e) => {
                             if (e.key === 'Enter')
-                                chargerDonnees('vehicule', recherche);
+                                chargerDonnees('vehicules', recherche);
                         }}
                         InputProps={{
                             disableUnderline: true,
