@@ -6,6 +6,7 @@ import Profil from './pages/Profil';
 import Connexion from './pages/Connexion';
 import BarreNavigation from './components/BarreNavigation';
 import Horaires from './pages/Horaires';
+import ConfirmEmail from './components/ConfirmEmail';
 
 function App() {
     return (
@@ -22,6 +23,10 @@ function App() {
                 <Route path="/horaires" element={<Horaires />} />
                 <Route path="/inscription" element={<Inscription />} />
                 <Route path="/connexion" element={<Connexion />} />
+                <Route
+                    path="/confirmer-email/:uid/:token"
+                    element={<ConfirmEmail />}
+                />
             </Routes>
         </Router>
     );
