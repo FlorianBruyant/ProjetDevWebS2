@@ -36,10 +36,9 @@ class VehiculeSerializer(serializers.ModelSerializer):
 
 
 # --- Sérialiseur pour les Feux ---
+# map/serializers.py
 class FeuSerializer(serializers.ModelSerializer):
-    # On utilise le même nom que pour les véhicules pour ne pas perdre React
     point_actuel_details = PointSerializer(source="position", read_only=True)
-    type_objet = serializers.ReadOnlyField(default="FEU")
 
     class Meta:
         model = Feu
@@ -47,11 +46,9 @@ class FeuSerializer(serializers.ModelSerializer):
             "id",
             "nom",
             "etat_actuel",
-            "est_actif",
-            "en_panne",
-            "position",
+            "temps_avant_changement",
             "point_actuel_details",
-            "type_objet",
+            "est_actif",
         ]
 
 
