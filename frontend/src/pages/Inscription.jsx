@@ -87,7 +87,7 @@ const Inscription = () => {
                     "Erreur lors de l'inscription";
                 setErreur(Array.isArray(message) ? message[0] : message);
             }
-        } catch (err) {
+        } catch {
             setErreur(
                 'Impossible de joindre le serveur. Vérifiez que le Backend est lancé.',
             );
