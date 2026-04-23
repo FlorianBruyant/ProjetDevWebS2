@@ -1,4 +1,6 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useState } from 'react';
 import {
     Box,
     Typography,
@@ -7,14 +9,14 @@ import {
     InputAdornment,
     Chip,
     Grid,
+    IconButton,
     Card,
+    InputBase,
     CardContent,
     List,
     ListItem,
     ListItemText,
     Paper,
-    BottomNavigation,
-    BottomNavigationAction,
 } from '@mui/material';
 import {
     Search,
@@ -30,6 +32,22 @@ import {
 import Carte from '../components/Carte';
 
 const Accueil = () => {
+    const navigate = useNavigate();
+    const [saisie, setSaisie] = useState('');
+
+    const envoyerVersCarte = (e) => {
+        // Empêche le rechargement de la page si c'est un formulaire
+        if (e) e.preventDefault();
+
+        // On envoie le texte dans l'état de la navigation
+        navigate('/carte', {
+            state: {
+                focusRecherche: true,
+                texteInitial: saisie,
+            },
+        });
+    };
+
     return (
         <Box sx={{ pb: 10, bgcolor: '#f8fafd', minHeight: '100vh' }}>
             {/* HEADER */}
@@ -54,21 +72,28 @@ const Accueil = () => {
 
             {/* RECHERCHE */}
             <Box sx={{ px: 2, mb: 3 }}>
-                <TextField
-                    fullWidth
-                    placeholder="Rechercher un lieu, une ligne..."
-                    variant="outlined"
-                    sx={{ bgcolor: 'white', borderRadius: 2 }}
-                    slotProps={{
-                        input: {
-                            startAdornment: (
-                                <InputAdornment position="start">
-                                    <Search color="disabled" />
-                                </InputAdornment>
-                            ),
-                        },
+                <Paper
+                    component="form" // On le transforme en formulaire pour gérer la touche Entrée
+                    onSubmit={envoyerVersCarte}
+                    elevation={3}
+                    sx={{
+                        p: '2px 4px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        borderRadius: 30,
                     }}
-                />
+                >
+                    <IconButton sx={{ p: '10px' }} onClick={envoyerVersCarte}>
+                        <Search />
+                    </IconButton>
+                    <InputBase
+                        sx={{ ml: 1, flex: 1 }}
+                        placeholder="Où allez-vous à Cergy ?"
+                        value={saisie}
+                        onChange={(e) => setSaisie(e.target.value)}
+                        // La touche Entrée déclenchera automatiquement le onSubmit du Paper
+                    />
+                </Paper>
             </Box>
 
             {/* PREVIEW CARTE */}
@@ -83,21 +108,20 @@ const Accueil = () => {
                         overflow: 'hidden',
                     }}
                 >
-                    <Carte />
+                    <Carte hauteur="200px" />
                     <Chip
                         label="Ouvrir la carte ↗"
+                        onClick={() => navigate('/carte')}
                         sx={{
                             position: 'absolute',
                             bottom: 10,
                             right: 10,
                             bgcolor: 'white',
                             fontWeight: 'bold',
-                            zIndex: 1000, // Pour passer au-dessus de la carte
+                            zIndex: 1000,
+                            cursor: 'pointer',
                             '&:hover': { bgcolor: '#f0f0f0' },
                         }}
-                        onClick={() =>
-                            console.log('Redirection vers la page Carte')
-                        }
                     />
                 </Paper>
             </Box>
@@ -185,28 +209,6 @@ const Accueil = () => {
                     />
                 </List>
             </Box>
-
-            {/* BOTTOM NAV */}
-            <Paper
-                sx={{ position: 'fixed', bottom: 0, left: 0, right: 0 }}
-                elevation={3}
-            >
-                <BottomNavigation showLabels value={0}>
-                    <BottomNavigationAction
-                        label="Accueil"
-                        icon={<HomeIcon />}
-                    />
-                    <BottomNavigationAction label="Carte" icon={<MapIcon />} />
-                    <BottomNavigationAction
-                        label="Tickets"
-                        icon={<ConfirmationNumber />}
-                    />
-                    <BottomNavigationAction
-                        label="Profil"
-                        icon={<Settings />}
-                    />
-                </BottomNavigation>
-            </Paper>
         </Box>
     );
 };
