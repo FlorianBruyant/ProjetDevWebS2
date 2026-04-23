@@ -7,8 +7,8 @@ from rest_framework_simplejwt.views import (
     TokenRefreshView,
 )
 
-# On importe ta vue d'inscription "fait maison"
-from users.views import RegisterView
+# On importe vues d'inscription et de profil
+from users.views import RegisterView, UserProfileView
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -16,6 +16,8 @@ urlpatterns = [
     path("api/register/", RegisterView.as_view(), name="auth_register"),
     # Connexion (Obtenir le badge)
     path("api/login/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
+    # Profil
+    path("api/me/", UserProfileView.as_view(), name="user_profile"),
     # Refresh (Renouveler le badge)
     path("api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
     # Tes autres APIs

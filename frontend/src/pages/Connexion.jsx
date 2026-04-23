@@ -10,12 +10,12 @@ import {
     InputAdornment,
     IconButton,
     Grid,
-    Link,
+    Link as MuiLink,
     Checkbox,
     FormControlLabel,
 } from '@mui/material';
 import { Visibility, VisibilityOff, LockOutlined } from '@mui/icons-material';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Link as RouterLink } from 'react-router-dom';
 
 const Connexion = () => {
     const navigate = useNavigate();
@@ -209,13 +209,14 @@ const Connexion = () => {
                         </Button>
 
                         <Grid container justifyContent="center">
-                            <Link
-                                href="/inscription"
+                            <MuiLink
+                                component={RouterLink}
+                                to="/inscription"
                                 variant="body2"
                                 sx={{ textDecoration: 'none' }}
                             >
                                 {"Pas encore de compte ? S'inscrire"}
-                            </Link>
+                            </MuiLink>
                         </Grid>
                     </form>
                 </Paper>
