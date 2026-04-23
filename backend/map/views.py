@@ -49,17 +49,25 @@ class ParkingViewSet(viewsets.ModelViewSet):
 
 @api_view(["GET"])
 def get_global_data(request):
+    # 1. On va chercher TOUT le monde dans la base de données
     vehicules = Vehicule.objects.all()
     feux = Feu.objects.all()
     parkings = Parking.objects.all()
 
-    # On sérialise chaque groupe
-    v_json = VehiculeSerializer(vehicules, many=True).data
-    f_json = FeuSerializer(feux, many=True).data
-    p_json = ParkingSerializer(parkings, many=True).data
+    # 2. On les transforme en texte JSON
+    v_data = VehiculeSerializer(vehicules, many=True).data
+    f_data = FeuSerializer(feux, many=True).data
+    p_data = ParkingSerializer(parkings, many=True).data
 
-    # IMPORTANT : On fusionne les trois listes en une seule !
-    return Response(v_json + f_json + p_json)
+    # 3. 🚨 LE MOMENT CRUCIAL : On fusionne les 3 listes
+    # Si tu as juste écrit "return Response(v_data)", tu n'auras QUE les vélos.
+    tout_le_monde = v_data + f_data + p_data
+
+    print(
+        f"📦 Envoi de {len(tout_le_monde)} objets à la carte"
+    )  # Regarde ton terminal !
+
+    return Response(tout_le_monde)
 
 
 # --- VUE POUR LES HORAIRES PRIM ---
