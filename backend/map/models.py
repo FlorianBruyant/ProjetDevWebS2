@@ -32,6 +32,7 @@ class Point(models.Model):
 
 class TrafficObject(models.Model):
     nom = models.CharField(max_length=100)
+    type_objet = models.CharField(max_length=50, blank=True)  # Ex: "Feu tricolore"
     description = models.TextField(blank=True)
     zone = models.ForeignKey(
         Zone,
@@ -41,14 +42,19 @@ class TrafficObject(models.Model):
         related_name="%(class)s_set",
     )
 
-    marque = models.CharField(max_length=50, blank=True, default="Non spécifiée")
-    type_objet = models.CharField(max_length=50, default="Non défini")
-    mots_cles = models.CharField(max_length=255, blank=True)
+    # --- SURVEILLANCE & RESSOURCES ---
+    niveau_batterie = models.IntegerField(null=True, blank=True, help_text="En %")
+    consommation_actuelle = models.FloatField(default=0.0, help_text="Watts/h")
+    temperature_actuelle = models.FloatField(null=True, blank=True, help_text="En °C")
+
+    # --- CONFIGURATION & SERVICES ---
+    # Permet de stocker {'temp_cible': 22, 'mode': 'auto'} ou {'cycle_vert': 45}
+    parametres_service = models.JSONField(default=dict, blank=True)
+    horaires_fonctionnement = models.JSONField(default=dict, blank=True)
+
+    # --- ÉTATS ---
     est_actif = models.BooleanField(default=True)
-    est_connecte = models.BooleanField(default=True)
     en_panne = models.BooleanField(default=False)
-    connectivite = models.CharField(max_length=50, default="Wi-Fi")
-    niveau_batterie = models.IntegerField(null=True, blank=True)
     derniere_mise_a_jour = models.DateTimeField(auto_now=True)
 
     class Meta:
@@ -170,3 +176,31 @@ class Incident(models.Model):
 
     def __str__(self):
         return f"{self.type_incident} à {self.position}"
+
+
+class Scenario(models.Model):
+    CATEGORIES = (
+        ("TRAFFIC", "Gestion du Trafic"),
+        ("SAFETY", "Sécurité & Incidents"),
+        ("ENERGY", "Optimisation Énergie"),
+        ("MAINTENANCE", "Maintenance Automatique"),
+    )
+
+    nom = models.CharField(max_length=100)
+    categorie = models.CharField(max_length=20, choices=CATEGORIES, default="TRAFFIC")
+
+    # --- LA CONDITION (IF) ---
+    declencheur_champ = models.CharField(max_length=50)
+    operateur = models.CharField(
+        max_length=5, choices=[(">", ">"), ("<", "<"), ("==", "=="), ("in", "Contient")]
+    )
+    valeur_seuil = models.CharField(max_length=100)
+
+    # --- L'ACTION (THEN) ---
+    action_champ = models.CharField(max_length=50)
+    action_valeur = models.CharField(max_length=100)
+
+    est_actif = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f"[{self.categorie}] {self.nom}"

@@ -8,12 +8,13 @@ from users.models import ActionLog
 from users.permissions import IsAdminOrReadOnly
 
 # Import des modèles et serializers
-# 👇 AJOUT DE 'Point'
-from .models import Feu, Parking, Point, Vehicule, Zone
+# 👇 AJOUT DE 'Scenario'
+from .models import Feu, Parking, Point, Scenario, Vehicule, Zone
 from .serializers import (
     FeuSerializer,
     ParkingSerializer,
-    PointSerializer,  # 👇 AJOUT DE 'PointSerializer'
+    PointSerializer,
+    ScenarioSerializer,  # 👇 AJOUT DE 'ScenarioSerializer'
     VehiculeSerializer,
     ZoneSerializer,
 )
@@ -21,7 +22,6 @@ from .serializers import (
 # --- VIEWSETS (CRUD AUTOMATIQUE) ---
 
 
-# 👇 LE NOUVEAU VIEWSET QUI MANQUAIT
 class PointViewSet(viewsets.ModelViewSet):
     queryset = Point.objects.all()
     serializer_class = PointSerializer
@@ -55,6 +55,13 @@ class ParkingViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAdminOrReadOnly]
 
 
+# 👇 NOUVEAU VIEWSET POUR LES SCÉNARIOS
+class ScenarioViewSet(viewsets.ModelViewSet):
+    queryset = Scenario.objects.all()
+    serializer_class = ScenarioSerializer
+    permission_classes = [IsAdminOrReadOnly]
+
+
 # --- VUE GLOBALE POUR LA CARTE ---
 
 
@@ -72,7 +79,6 @@ def get_global_data(request):
         f_data = FeuSerializer(feux, many=True).data
         p_data = ParkingSerializer(parkings, many=True).data
 
-        # On transforme en listes simples pour être sûr de pouvoir modifier
         v_list = list(v_data)
         f_list = list(f_data)
         p_list = list(p_data)
@@ -87,7 +93,6 @@ def get_global_data(request):
         print(
             f"✅ Data Global : {len(v_list)} véhicules, {len(f_list)} feux, {len(p_list)} parkings"
         )
-
         return Response(v_list + f_list + p_list)
     except Exception as e:
         print(f"❌ ERREUR DANS GET_GLOBAL_DATA : {str(e)}")

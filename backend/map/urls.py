@@ -8,8 +8,9 @@ router.register(r"zones", views.ZoneViewSet)
 router.register(r"vehicules", views.VehiculeViewSet)
 router.register(r"feux", views.FeuViewSet)
 router.register(r"parkings", views.ParkingViewSet)
-# 👇 LA NOUVELLE LIGNE QUI DÉBLOQUE TOUT
 router.register(r"points", views.PointViewSet)
+# 👇 AJOUT DE L'ENDPOINT SCENARIOS
+router.register(r"scenarios", views.ScenarioViewSet, basename="scenario")
 
 urlpatterns = [
     path("", include(router.urls)),

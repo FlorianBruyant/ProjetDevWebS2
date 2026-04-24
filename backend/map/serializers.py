@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from users.models import ActionLog
 
-from .models import Feu, Parking, Point, Vehicule, Zone
+from .models import Feu, Parking, Point, Scenario, Vehicule, Zone
 
 
 # --- Sérialiseur pour l'historique (Stats) ---
@@ -103,3 +103,9 @@ class ParkingSerializer(serializers.ModelSerializer):
             "-date"
         )[:5]
         return ActionLogSerializer(logs, many=True).data
+
+
+class ScenarioSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Scenario
+        fields = "__all__"
