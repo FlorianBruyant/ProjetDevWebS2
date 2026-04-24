@@ -61,20 +61,37 @@ class TrafficObject(models.Model):
         abstract = True
 
     def determiner_zone_auto(self, lat, lon):
-        """Appelle l'API Géo pour récupérer le nom de la commune/quartier"""
         try:
-            # On interroge l'API officielle française
-            url = f"https://geo.api.gouv.fr/communes?lat={lat}&lon={lon}&fields=nom"
-            reponse = requests.get(url, timeout=2)
+            url = f"https://api-adresse.data.gouv.fr/reverse/?lon={lon}&lat={lat}"
+            reponse = requests.get(url, timeout=5)
             data = reponse.json()
 
-            if data and len(data) > 0:
-                nom_commune = data[0]["nom"]
-                # On récupère la zone si elle existe, sinon on la crée
-                zone_obj, created = Zone.objects.get_or_create(nom=nom_commune)
+            if data and "features" in data and len(data["features"]) > 0:
+                props = data["features"][0]["properties"]
+
+                # --- STRATÉGIE DE NOMMAGE ---
+                # 1. District : À Paris, c'est l'Arrondissement (ex: Paris 15e)
+                # 2. Street : Le nom de la rue SANS le numéro (ex: Avenue de la Porte de Sèvres)
+                # 3. City : En dernier recours
+
+                arrondissement = props.get("district")
+                rue_seule = props.get("street")
+                ville = props.get("city")
+
+                if arrondissement:
+                    # Résultat : "Paris 15e Arrondissement"
+                    nom_final = arrondissement
+                elif rue_seule:
+                    # Résultat : "Secteur Avenue de la Porte de Sèvres"
+                    nom_final = f"Secteur {rue_seule}"
+                else:
+                    nom_final = ville
+
+                # Création de la zone
+                zone_obj, created = Zone.objects.get_or_create(nom=nom_final)
                 return zone_obj
         except Exception as e:
-            print(f"Erreur API Géo : {e}")
+            print(f"Erreur : {e}")
         return None
 
     def save(self, *args, **kwargs):
