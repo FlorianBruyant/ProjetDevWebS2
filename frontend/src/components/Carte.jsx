@@ -25,35 +25,10 @@ import {
     Error as ErrorIcon,
 } from '@mui/icons-material';
 
-const creerIconeSmart = (item) => {
-    let IconeMUI = DirectionsBus;
-    let couleur = '#1a237e';
+const ICON_CACHE = {};
 
-    switch (item.type_api) {
-        case 'feux':
-            IconeMUI = Traffic;
-            if (item.etat_actuel === 'VERT') couleur = '#4caf50';
-            else if (item.etat_actuel === 'ORANGE') couleur = '#ff9800';
-            else couleur = '#f44336';
-            break;
-        case 'parkings':
-            IconeMUI = LocalParking;
-            couleur = '#455a64';
-            break;
-        case 'vehicules':
-            IconeMUI = item.immatriculation ? DirectionsCar : DirectionsBus;
-            couleur = '#2e7d32';
-            break;
-        default:
-            IconeMUI = Warning;
-            couleur = '#d32f2f';
-    }
-
-    if (item.en_panne || item.est_actif === false) {
-        couleur = '#9e9e9e';
-    }
-
-    const htmlIcone = renderToStaticMarkup(
+const generateIconHtml = (IconeMUI, couleur) => {
+    return renderToStaticMarkup(
         <div
             style={{
                 color: 'white',
@@ -68,13 +43,53 @@ const creerIconeSmart = (item) => {
             <IconeMUI style={{ fontSize: '20px' }} />
         </div>,
     );
+};
 
-    return L.divIcon({
-        html: htmlIcone,
+const creerIconeSmart = (item) => {
+    // On crée une clé unique basée sur ce qui change (type + état)
+    // Ex: "feux-VERT", "parkings-MAINTENANCE", "vehicules-OK"
+    const etat =
+        item.en_panne || item.est_actif === false
+            ? 'HS'
+            : item.etat_actuel || 'OK';
+    const cle = `${item.type_api}-${etat}`;
+
+    // Si l'icône est déjà dans le cache, on la renvoie immédiatement (0ms de calcul JS)
+    if (ICON_CACHE[cle]) {
+        return ICON_CACHE[cle];
+    }
+
+    // Sinon (seulement la toute première fois), on la calcule
+    let IconeMUI = DirectionsBus;
+    let couleur = '#1a237e';
+
+    if (item.type_api === 'feux') {
+        IconeMUI = Traffic;
+        if (item.etat_actuel === 'VERT') couleur = '#4caf50';
+        else if (item.etat_actuel === 'ORANGE') couleur = '#ff9800';
+        else couleur = '#f44336';
+    } else if (item.type_api === 'parkings') {
+        IconeMUI = LocalParking;
+        couleur = '#455a64';
+    } else {
+        IconeMUI = item.immatriculation ? DirectionsCar : DirectionsBus;
+        couleur = '#2e7d32';
+    }
+
+    if (item.en_panne || item.est_actif === false) couleur = '#9e9e9e';
+
+    const html = generateIconHtml(IconeMUI, couleur);
+
+    const newIcon = L.divIcon({
+        html: html,
         className: 'smart-marker-icon',
         iconSize: [34, 34],
         iconAnchor: [17, 17],
     });
+
+    // On la stocke pour la prochaine fois
+    ICON_CACHE[cle] = newIcon;
+    return newIcon;
 };
 
 // --- RECENTREUR AUTOMATIQUE ---
