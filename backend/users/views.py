@@ -195,12 +195,45 @@ class UserProfileView(generics.RetrieveUpdateAPIView):
         return super().update(request, *args, **kwargs)
 
 
-# Vue pour consulter le profil d'un autre membre (Lecture seule)
-class MemberProfileView(generics.RetrieveAPIView):
+class MemberProfileView(generics.RetrieveUpdateAPIView):
     queryset = CustomUser.objects.all()
     serializer_class = UserSerializer
     permission_classes = [permissions.IsAuthenticated]
     lookup_field = "id"
+
+    def update(self, request, *args, **kwargs):
+        # 1. Sécurité Admin
+        if request.user.role != "ADMIN":
+            return Response(
+                {"error": "Accès refusé."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        instance = self.get_object()
+        nouveau_niveau = request.data.get("niveau")
+
+        # 2. On force les points AVANT le reste
+        if nouveau_niveau:
+            if nouveau_niveau == "EXPERT":
+                instance.points = 7.0
+            elif nouveau_niveau == "AVANCE":
+                instance.points = 5.0
+            elif nouveau_niveau == "INTERMEDIAIRE":
+                instance.points = 3.0
+            elif nouveau_niveau == "DEBUTANT":
+                instance.points = 0.0
+
+            # On force manuellement le niveau aussi
+            instance.niveau = nouveau_niveau
+            # On enregistre l'objet directement
+            instance.save()
+
+        # 3. On laisse le serializer gérer les autres champs (comme le rôle)
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+
+        return Response(serializer.data)
 
 
 class UserListView(generics.ListAPIView):
