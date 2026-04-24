@@ -66,6 +66,7 @@ const PageCarte = () => {
         description: '',
         details: '', // Sera utilisé pour immatriculation ou places_totales
     });
+    const [doitCentrer, setDoitCentrer] = useState(true);
 
     // --- VÉRIFICATION DU RÔLE (Pour afficher le bouton +) ---
     useEffect(() => {
@@ -88,25 +89,31 @@ const PageCarte = () => {
     }, []);
 
     // --- FONCTION DE CHARGEMENT API ---
-    const chargerDonnees = async (categorie = 'global', texte = '') => {
-        if (donneesMap.length === 0) setChargement(true);
+    const chargerDonnees = async (
+        categorie = 'global',
+        texte = '',
+        isRefresh = false,
+    ) => {
+        if (!isRefresh) {
+            setDoitCentrer(true); // Autorise le recentrage pour une vraie recherche
+            if (donneesMap.length === 0) setChargement(true);
+        } else {
+            setDoitCentrer(false); // Bloque le recentrage pour les mises à jour auto
+        }
+
         setAucunResultat(false);
         setTermeFixe(texte);
         setCategorieActuelle(categorie);
 
         try {
-            const endpoint = categorie === 'global' ? 'global' : categorie;
-            let url = `http://localhost:8000/api/map/${endpoint}/?search=${texte}`;
+            let url = `http://localhost:8000/api/map/${categorie === 'global' ? 'global' : categorie}/?search=${texte}`;
             const response = await fetch(url);
-            if (!response.ok)
-                throw new Error(`Erreur HTTP: ${response.status}`);
             const data = await response.json();
 
             setDonneesMap(data);
             if (data.length === 0 && texte !== '') setAucunResultat(true);
         } catch (error) {
             console.error('Erreur API Carte:', error);
-            if (donneesMap.length === 0) setAucunResultat(true);
         } finally {
             setChargement(false);
         }
@@ -115,7 +122,8 @@ const PageCarte = () => {
     // --- REFRESH RÉGULIER ---
     useEffect(() => {
         const intervalle = setInterval(() => {
-            chargerDonnees(categorieActuelle, recherche);
+            // On ajoute un flag "true" pour dire que c'est un refresh
+            chargerDonnees(categorieActuelle, recherche, true);
         }, 5000);
         return () => clearInterval(intervalle);
     }, [categorieActuelle, recherche]);
@@ -293,6 +301,7 @@ const PageCarte = () => {
                     donnees={donneesMap}
                     enModeAjout={modeAjout}
                     auClicCarte={handleClicCarte}
+                    doitCentrer={doitCentrer}
                 />
             </Box>
 

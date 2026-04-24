@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, memo } from 'react';
 import { Box, Typography, Chip, Divider, Button } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -13,7 +13,7 @@ import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { renderToStaticMarkup } from 'react-dom/server';
 
-// 🎨 Import des icônes
+// Import des icônes
 import {
     DirectionsCar,
     Traffic,
@@ -25,7 +25,6 @@ import {
     Error as ErrorIcon,
 } from '@mui/icons-material';
 
-// --- 🛠️ LA FABRIQUE D'ICÔNES DYNAMIQUES ---
 const creerIconeSmart = (item) => {
     let IconeMUI = DirectionsBus;
     let couleur = '#1a237e';
@@ -79,30 +78,32 @@ const creerIconeSmart = (item) => {
 };
 
 // --- RECENTREUR AUTOMATIQUE ---
-const RecentreurDeCarte = ({ donnees }) => {
+const RecentreurDeCarte = ({ donnees, doitCentrer }) => {
     const map = useMap();
+
     useEffect(() => {
         map.invalidateSize();
-        if (donnees && donnees.length > 0) {
+
+        // On ne recentre QUE si doitCentrer est vrai (nouvelle recherche)
+        if (doitCentrer && donnees && donnees.length > 0) {
             const premier = donnees[0];
-            const lat =
-                premier.point_actuel_details?.latitude ||
-                premier.position?.latitude;
-            const lng =
-                premier.point_actuel_details?.longitude ||
-                premier.position?.longitude;
-            if (lat && lng) map.panTo([lat, lng]);
+            const coords = premier.point_actuel_details || premier.position;
+
+            if (coords && coords.latitude && coords.longitude) {
+                map.panTo([coords.latitude, coords.longitude]);
+            }
         }
-    }, [donnees, map]);
+    }, [donnees, doitCentrer, map]); // On ajoute doitCentrer aux dépendances
+
     return null;
 };
 
-// --- 🎯 NOUVEAU : LE CAPTEUR DE CLICS POUR L'AJOUT ---
+// --- CAPTEUR DE CLICS ---
 const GestionnaireClic = ({ enModeAjout, auClic }) => {
     useMapEvents({
         click(e) {
             if (enModeAjout && auClic) {
-                auClic(e.latlng); // Récupère la latitude et longitude du clic
+                auClic(e.latlng);
             }
         },
     });
@@ -115,6 +116,7 @@ const Carte = ({
     donnees = [],
     enModeAjout = false,
     auClicCarte,
+    doitCentrer = true,
 }) => {
     const navigate = useNavigate();
     const positionCergy = [49.0351, 2.0799];
@@ -128,7 +130,6 @@ const Carte = ({
     };
 
     return (
-        // 👇 On change le curseur en mode ajout pour indiquer qu'on peut cliquer
         <Box
             sx={{
                 height: hauteur,
@@ -144,9 +145,13 @@ const Carte = ({
                 zoomControl={false}
             >
                 <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-                <RecentreurDeCarte donnees={donnees} />
 
-                {/* 🎯 On injecte notre capteur de clic ici */}
+                {/* On passe le flag de contrôle ici */}
+                <RecentreurDeCarte
+                    donnees={donnees}
+                    doitCentrer={doitCentrer}
+                />
+
                 <GestionnaireClic
                     enModeAjout={enModeAjout}
                     auClic={auClicCarte}
@@ -214,7 +219,6 @@ const Carte = ({
                                     </Box>
 
                                     <Divider sx={{ mb: 1 }} />
-
                                     <Typography
                                         variant="caption"
                                         display="block"
@@ -252,4 +256,6 @@ const Carte = ({
     );
 };
 
-export default Carte;
+// On utilise memo pour éviter que la carte ne re-render
+// quand on tape dans la barre de recherche ou ouvre un modal
+export default memo(Carte);
