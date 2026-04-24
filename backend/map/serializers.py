@@ -8,7 +8,6 @@ from .models import Feu, Parking, Point, Vehicule, Zone
 class ActionLogSerializer(serializers.ModelSerializer):
     class Meta:
         model = ActionLog
-        # 👇 Utilisation du champ 'date' (vu dans tes logs d'erreur)
         fields = ["action", "date", "points_gagnes"]
 
 
@@ -42,11 +41,11 @@ class VehiculeSerializer(serializers.ModelSerializer):
             "en_panne",
             "point_actuel",
             "point_actuel_details",
-            "historique",
+            "zone",
+            "historique",  # 👈 Ajout "zone"
         ]
 
     def get_historique(self, obj):
-        # On cherche les actions liées à cet ID. Tri par 'date'
         logs = ActionLog.objects.filter(action__contains=f"ID: {obj.id}").order_by(
             "-date"
         )[:5]
@@ -65,16 +64,16 @@ class FeuSerializer(serializers.ModelSerializer):
             "nom",
             "etat_actuel",
             "temps_avant_changement",
-            "position",  # 👈 LA CORRECTION EST ICI ! On autorise l'enregistrement de la position.
+            "position",
             "point_actuel_details",
             "est_actif",
             "en_panne",
             "description",
-            "historique",
+            "zone",
+            "historique",  # 👈 Ajout "zone"
         ]
 
     def get_historique(self, obj):
-        # Tri par 'date'
         logs = ActionLog.objects.filter(action__contains=f"ID: {obj.id}").order_by(
             "-date"
         )[:5]
@@ -95,11 +94,11 @@ class ParkingSerializer(serializers.ModelSerializer):
             "places_totales",
             "position",
             "point_actuel_details",
-            "historique",
+            "zone",
+            "historique",  # 👈 Ajout "zone"
         ]
 
     def get_historique(self, obj):
-        # Tri par 'date'
         logs = ActionLog.objects.filter(action__contains=f"ID: {obj.id}").order_by(
             "-date"
         )[:5]

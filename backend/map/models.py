@@ -16,12 +16,13 @@ class Zone(models.Model):
 class Point(models.Model):
     latitude = models.FloatField()
     longitude = models.FloatField()
+    # On garde ce lien pour la géolocalisation pure
     zone = models.ForeignKey(
         Zone, on_delete=models.SET_NULL, null=True, blank=True, related_name="points"
     )
 
     def __str__(self):
-        return f"Point ({self.latitude}, {self.longitude}) - {self.zone if self.zone else 'Sans zone'}"
+        return f"Point ({self.latitude}, {self.longitude})"
 
 
 # ==========================================
@@ -30,48 +31,28 @@ class Point(models.Model):
 
 
 class TrafficObject(models.Model):
-    """
-    Classe de base (Abstraite) mise à jour pour inclure les attributs
-    de recherche et de connectivité demandés dans le PDF (Pages 4-5).
-    """
-
     nom = models.CharField(max_length=100)
-    description = models.TextField(
-        blank=True, help_text="Description contenant potentiellement des mots-clés"
-    )
-    marque = models.CharField(
-        max_length=50,
+    description = models.TextField(blank=True)
+
+    # 👇 NOUVEAU : Lien direct avec la Zone pour faciliter la gestion CRUD
+    zone = models.ForeignKey(
+        Zone,
+        on_delete=models.SET_NULL,
+        null=True,
         blank=True,
-        default="Non spécifiée",
-        help_text="Ex: Phillips, Siemens...",
-    )
-    type_objet = models.CharField(
-        max_length=50,
-        default="Non défini",
-        help_text="Ex: Feu, Caméra, Thermostat, Capteur",
+        related_name="%(class)s_set",
     )
 
-    mots_cles = models.CharField(
-        max_length=255, blank=True, help_text="Pour le moteur de recherche"
-    )
+    marque = models.CharField(max_length=50, blank=True, default="Non spécifiée")
+    type_objet = models.CharField(max_length=50, default="Non défini")
+    mots_cles = models.CharField(max_length=255, blank=True)
 
-    # États de l'objet
-    est_actif = models.BooleanField(default=True, help_text="Activer/Désactiver")
-    est_connecte = models.BooleanField(
-        default=True, help_text="État de la connexion au réseau"
-    )
-    en_panne = models.BooleanField(
-        default=False, help_text="Identifier les objets nécessitant maintenance"
-    )
+    est_actif = models.BooleanField(default=True)
+    est_connecte = models.BooleanField(default=True)
+    en_panne = models.BooleanField(default=False)
 
-    # Attributs d'énergie et de connectivité
-    connectivite = models.CharField(
-        max_length=50, default="Wi-Fi", help_text="Type de réseau (Wi-Fi, 4G, LoRa...)"
-    )
-    niveau_batterie = models.IntegerField(
-        null=True, blank=True, help_text="Niveau de batterie en %"
-    )
-
+    connectivite = models.CharField(max_length=50, default="Wi-Fi")
+    niveau_batterie = models.IntegerField(null=True, blank=True)
     derniere_mise_a_jour = models.DateTimeField(auto_now=True)
 
     class Meta:
@@ -80,14 +61,10 @@ class TrafficObject(models.Model):
 
 class Feu(TrafficObject):
     COULEURS = (("VERT", "Vert"), ("ORANGE", "Orange"), ("ROUGE", "Rouge"))
-
     position = models.ForeignKey(Point, on_delete=models.CASCADE)
     etat_actuel = models.CharField(max_length=10, choices=COULEURS, default="ROUGE")
     temps_avant_changement = models.IntegerField(default=30)
-    cycle_config = models.JSONField(
-        default=dict,
-        help_text="Paramètres d'utilisation : {'vert': 30, 'orange': 5, 'rouge': 30}",
-    )
+    cycle_config = models.JSONField(default=dict)
 
     def save(self, *args, **kwargs):
         if not self.type_objet:
@@ -131,7 +108,7 @@ class Vehicule(TrafficObject):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"Véhicule {self.immatriculation} ({self.nom})"
+        return f"Véhicule {self.immatriculation}"
 
 
 # ==========================================
@@ -153,15 +130,14 @@ class Incident(models.Model):
     TYPES = (
         ("ACCIDENT", "Accident"),
         ("INONDATION", "Inondation"),
-        ("PANNE_ECLAIRAGE", "Panne de lampadaire"),
+        ("PANNE_ECLAIRAGE", "Panne"),
         ("TRAVAUX", "Travaux"),
     )
     type_incident = models.CharField(max_length=50, choices=TYPES)
     description = models.TextField(blank=True)
     debut = models.DateTimeField(auto_now_add=True)
-    fin = models.DateTimeField(null=True, blank=True)
     position = models.ForeignKey(Point, on_delete=models.CASCADE)
-    gravite = models.IntegerField(default=1, help_text="De 1 à 5")
+    gravite = models.IntegerField(default=1)
 
     def __str__(self):
         return f"{self.type_incident} à {self.position}"
