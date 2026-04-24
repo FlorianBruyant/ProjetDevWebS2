@@ -1,3 +1,4 @@
+import requests  # 👈 Nécessaire pour appeler l'API externe
 from django.db import models
 
 # ==========================================
@@ -16,7 +17,6 @@ class Zone(models.Model):
 class Point(models.Model):
     latitude = models.FloatField()
     longitude = models.FloatField()
-    # On garde ce lien pour la géolocalisation pure
     zone = models.ForeignKey(
         Zone, on_delete=models.SET_NULL, null=True, blank=True, related_name="points"
     )
@@ -33,8 +33,6 @@ class Point(models.Model):
 class TrafficObject(models.Model):
     nom = models.CharField(max_length=100)
     description = models.TextField(blank=True)
-
-    # 👇 NOUVEAU : Lien direct avec la Zone pour faciliter la gestion CRUD
     zone = models.ForeignKey(
         Zone,
         on_delete=models.SET_NULL,
@@ -46,17 +44,48 @@ class TrafficObject(models.Model):
     marque = models.CharField(max_length=50, blank=True, default="Non spécifiée")
     type_objet = models.CharField(max_length=50, default="Non défini")
     mots_cles = models.CharField(max_length=255, blank=True)
-
     est_actif = models.BooleanField(default=True)
     est_connecte = models.BooleanField(default=True)
     en_panne = models.BooleanField(default=False)
-
     connectivite = models.CharField(max_length=50, default="Wi-Fi")
     niveau_batterie = models.IntegerField(null=True, blank=True)
     derniere_mise_a_jour = models.DateTimeField(auto_now=True)
 
     class Meta:
         abstract = True
+
+    def determiner_zone_auto(self, lat, lon):
+        """Appelle l'API Géo pour récupérer le nom de la commune/quartier"""
+        try:
+            # On interroge l'API officielle française
+            url = f"https://geo.api.gouv.fr/communes?lat={lat}&lon={lon}&fields=nom"
+            reponse = requests.get(url, timeout=2)
+            data = reponse.json()
+
+            if data and len(data) > 0:
+                nom_commune = data[0]["nom"]
+                # On récupère la zone si elle existe, sinon on la crée
+                zone_obj, created = Zone.objects.get_or_create(nom=nom_commune)
+                return zone_obj
+        except Exception as e:
+            print(f"Erreur API Géo : {e}")
+        return None
+
+    def save(self, *args, **kwargs):
+        # 🎯 LOGIQUE D'AUTOMATISATION
+        # On essaie de trouver les coordonnées de l'objet
+        lat, lon = None, None
+
+        if hasattr(self, "position") and self.position:
+            lat, lon = self.position.latitude, self.position.longitude
+        elif hasattr(self, "point_actuel") and self.point_actuel:
+            lat, lon = self.point_actuel.latitude, self.point_actuel.longitude
+
+        # Si on a des coordonnées mais pas de zone, on automatise
+        if lat and lon and not self.zone:
+            self.zone = self.determiner_zone_auto(lat, lon)
+
+        super().save(*args, **kwargs)
 
 
 class Feu(TrafficObject):
