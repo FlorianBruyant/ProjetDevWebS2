@@ -16,7 +16,7 @@ import {
 } from '@mui/material';
 import { AccessTime, Train, LocationOn, Refresh } from '@mui/icons-material';
 
-// 🔒 ID UNIQUE : Châtelet Les Halles
+// ID UNIQUE : Châtelet Les Halles
 const ID_CHATELET = 'STIF:StopPoint:Q:474151:';
 
 const Horaires = () => {
@@ -27,9 +27,14 @@ const Horaires = () => {
     const fetchHoraires = async () => {
         setChargement(true);
         try {
+            // 👇 CORRECTION : URL mise à jour pour correspondre au nouveau Backend
             const response = await fetch(
-                `http://localhost:8000/api-map/horaires/?gare=${ID_CHATELET}`,
+                `http://localhost:8000/api/map/horaires/?gare=${ID_CHATELET}`,
             );
+
+            if (!response.ok)
+                throw new Error('Erreur de connexion aux serveurs IDFM');
+
             const data = await response.json();
             const list =
                 data.Siri?.ServiceDelivery?.StopMonitoringDelivery?.[0]
@@ -37,7 +42,7 @@ const Horaires = () => {
             setPassages(list);
             setDerniereMaj(new Date());
         } catch (error) {
-            console.error('Erreur API:', error);
+            console.error('Erreur API Horaires:', error);
         } finally {
             setChargement(false);
         }
@@ -53,7 +58,6 @@ const Horaires = () => {
         <Box
             sx={{ p: 4, bgcolor: '#f8f9fa', minHeight: '100vh', mt: 8, pb: 12 }}
         >
-            {/* Header Unique pour Châtelet */}
             <Paper
                 sx={{
                     p: 3,
@@ -62,6 +66,7 @@ const Horaires = () => {
                     background:
                         'linear-gradient(135deg, #1a237e 30%, #283593 90%)',
                     color: 'white',
+                    boxShadow: '0 8px 32px rgba(26, 35, 126, 0.2)',
                 }}
             >
                 <Stack
@@ -73,7 +78,7 @@ const Horaires = () => {
                         <Typography
                             variant="h4"
                             sx={{
-                                fontWeight: 'bold',
+                                fontWeight: '900',
                                 display: 'flex',
                                 alignItems: 'center',
                                 gap: 2,
@@ -91,7 +96,8 @@ const Horaires = () => {
                                 gap: 1,
                             }}
                         >
-                            <LocationOn fontSize="small" /> Hub RER A, B, D
+                            <LocationOn fontSize="small" /> Hub de transport en
+                            temps réel (RER A, B, D)
                         </Typography>
                     </Box>
                     <Box sx={{ textAlign: 'right' }}>
@@ -99,20 +105,21 @@ const Horaires = () => {
                             variant="caption"
                             sx={{ display: 'block', opacity: 0.8, mb: 1 }}
                         >
-                            Dernière mise à jour :{' '}
-                            {derniereMaj.toLocaleTimeString()}
+                            Actualisé à : {derniereMaj.toLocaleTimeString()}
                         </Typography>
                         <Button
                             variant="contained"
                             size="small"
                             startIcon={<Refresh />}
                             onClick={fetchHoraires}
+                            disabled={chargement}
                             sx={{
                                 bgcolor: 'rgba(255,255,255,0.2)',
+                                backdropFilter: 'blur(10px)',
                                 '&:hover': { bgcolor: 'rgba(255,255,255,0.3)' },
                             }}
                         >
-                            Actualiser
+                            {chargement ? 'Mise à jour...' : 'Actualiser'}
                         </Button>
                     </Box>
                 </Stack>
@@ -120,13 +127,10 @@ const Horaires = () => {
 
             <TableContainer
                 component={Paper}
-                sx={{
-                    borderRadius: 4,
-                    boxShadow: '0 10px 30px rgba(0,0,0,0.05)',
-                }}
+                sx={{ borderRadius: 4, overflow: 'hidden' }}
             >
                 <Table>
-                    <TableHead sx={{ bgcolor: '#eeeeee' }}>
+                    <TableHead sx={{ bgcolor: '#f1f3f5' }}>
                         <TableRow>
                             <TableCell sx={{ fontWeight: 'bold' }}>
                                 Ligne
@@ -150,7 +154,13 @@ const Horaires = () => {
                                     align="center"
                                     sx={{ py: 10 }}
                                 >
-                                    <CircularProgress />
+                                    <CircularProgress size={30} />
+                                    <Typography
+                                        sx={{ mt: 2 }}
+                                        color="text.secondary"
+                                    >
+                                        Connexion aux serveurs PRIM...
+                                    </Typography>
                                 </TableCell>
                             </TableRow>
                         ) : passages.length === 0 ? (
@@ -161,7 +171,7 @@ const Horaires = () => {
                                     sx={{ py: 10 }}
                                 >
                                     <Typography color="text.secondary">
-                                        Aucun train en approche.
+                                        Aucun train détecté pour le moment.
                                     </Typography>
                                 </TableCell>
                             </TableRow>
@@ -171,11 +181,9 @@ const Horaires = () => {
                                 const call = info?.MonitoredCall;
                                 if (!info || !call) return null;
 
-                                // Sécurité horaire : Temps réel ou Théorique
                                 const dateBrute =
                                     call.ExpectedArrivalTime ||
-                                    call.AimedArrivalTime ||
-                                    call.ExpectedDepartureTime;
+                                    call.AimedArrivalTime;
                                 const heureObj = dateBrute
                                     ? new Date(dateBrute)
                                     : null;
@@ -194,10 +202,16 @@ const Horaires = () => {
                                                     bgcolor: '#1a237e',
                                                     color: 'white',
                                                     width: 55,
+                                                    borderRadius: 1,
                                                 }}
                                             />
                                         </TableCell>
-                                        <TableCell sx={{ fontWeight: '600' }}>
+                                        <TableCell
+                                            sx={{
+                                                fontWeight: '700',
+                                                color: '#2c3e50',
+                                            }}
+                                        >
                                             {info.DestinationName?.[0]?.value ??
                                                 'Direction Inconnue'}
                                         </TableCell>
@@ -212,7 +226,7 @@ const Horaires = () => {
                                                     color={
                                                         estTempsReel
                                                             ? 'success'
-                                                            : 'warning'
+                                                            : 'action'
                                                     }
                                                 />
                                                 <Typography
@@ -220,7 +234,7 @@ const Horaires = () => {
                                                         fontWeight: 'bold',
                                                         color: estTempsReel
                                                             ? '#2e7d32'
-                                                            : '#ed6c02',
+                                                            : 'text.primary',
                                                     }}
                                                 >
                                                     {heureObj
@@ -252,6 +266,7 @@ const Horaires = () => {
                                                         : 'success'
                                                 }
                                                 variant="outlined"
+                                                sx={{ fontWeight: '600' }}
                                             />
                                         </TableCell>
                                     </TableRow>

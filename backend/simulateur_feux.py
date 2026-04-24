@@ -4,57 +4,49 @@ import time
 
 import django
 
+# --- CONFIGURATION DJANGO ---
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "backend.settings")
 django.setup()
 
 from map.models import Feu
 
 
-def lancer_simulation_robuste():
-    print("🚦 Simulateur lancé...")
-    print("💡 Astuce : Change la proba_panne à 1.0 en bas pour tout casser d'un coup.")
+def simuler_ville():
+    print("🚦 Simulateur de Smart City démarré...")
 
     while True:
-        feux = Feu.objects.all()
+        # On ne récupère que les feux qui ne sont pas en maintenance
+        feux = Feu.objects.filter(en_panne=False, est_actif=True)
+
+        if not feux.exists():
+            print("💤 Aucun feu actif à simuler (tous en maintenance ou désactivés).")
 
         for feu in feux:
-            # --- 1. LOGIQUE DE PANNE ---
-            # Proba de 5% par seconde pour tester (c'est énorme, juste pour ton test)
-            proba_panne = 0.01
+            # 1. On diminue le temps restant
+            feu.temps_avant_changement -= 2
 
-            if not feu.en_panne and random.random() < proba_panne:
-                feu.en_panne = True
-                feu.est_actif = False
-                feu.etat_actuel = (
-                    "ROUGE"  # On peut imaginer qu'il se bloque au rouge par sécu
-                )
-                print(f"🚨 PANNE SUR : {feu.nom}")
+            # 2. Si le temps est écoulé, on change de couleur
+            if feu.temps_avant_changement <= 0:
+                if feu.etat_actuel == "VERT":
+                    feu.etat_actuel = "ORANGE"
+                    feu.temps_avant_changement = 5  # L'orange dure moins longtemps
+                elif feu.etat_actuel == "ORANGE":
+                    feu.etat_actuel = "ROUGE"
+                    feu.temps_avant_changement = random.randint(15, 30)
+                else:  # Était ROUGE
+                    feu.etat_actuel = "VERT"
+                    feu.temps_avant_changement = random.randint(20, 40)
 
-            # --- 2. LOGIQUE DE CYCLE (Seulement si PAS en panne) ---
-            if not feu.en_panne and feu.est_actif:
-                if feu.temps_avant_changement > 0:
-                    feu.temps_avant_changement -= 1
-                else:
-                    # Changement de couleur classique
-                    if feu.etat_actuel == "VERT":
-                        feu.etat_actuel = "ORANGE"
-                        feu.temps_avant_changement = 5
-                    elif feu.etat_actuel == "ORANGE":
-                        feu.etat_actuel = "ROUGE"
-                        feu.temps_avant_changement = 30
-                    else:
-                        feu.etat_actuel = "VERT"
-                        feu.temps_avant_changement = 30
+                print(f"✨ {feu.nom} est passé au {feu.etat_actuel}")
 
-            # --- 3. ÉTAT ÉTEINT ---
-            # Si le feu est en panne, on force le chrono à 0 pour l'affichage
-            if feu.en_panne:
-                feu.temps_avant_changement = 0
-
+            # Sauvegarde en BDD
             feu.save()
 
-        time.sleep(1)
+        time.sleep(2)  # Mise à jour toutes les 2 secondes
 
 
 if __name__ == "__main__":
-    lancer_simulation_robuste()
+    try:
+        simuler_ville()
+    except KeyboardInterrupt:
+        print("\n🛑 Simulateur arrêté.")

@@ -18,31 +18,37 @@ import {
     Error as ErrorIcon,
 } from '@mui/icons-material';
 
-// --- 🛠️ LA FABRIQUE D'ICÔNES DYNAMIQUES ---
+// --- 🛠️ LA FABRIQUE D'ICÔNES DYNAMIQUES (STABILISÉE) ---
 const creerIconeSmart = (item) => {
     let IconeMUI = DirectionsBus;
     let couleur = '#1a237e';
 
-    if (item.nom?.toLowerCase().includes('station')) {
-        IconeMUI = PedalBike;
-        couleur = '#1565c0';
-    } else if (item.etat_actuel) {
-        IconeMUI = Traffic;
-        if (item.etat_actuel === 'VERT') couleur = '#4caf50';
-        else if (item.etat_actuel === 'ORANGE') couleur = '#ff9800';
-        else couleur = '#f44336';
-    } else if (item.places_totales) {
-        IconeMUI = LocalParking;
-        couleur = '#455a64';
-    } else if (item.immatriculation) {
-        IconeMUI = DirectionsCar;
-        couleur = '#2e7d32';
-    } else if (item.type_incident) {
-        IconeMUI = Warning;
-        couleur = '#d32f2f';
+    // On utilise le type_api que j'ai ajouté dans views.py pour fixer l'icône
+    switch (item.type_api) {
+        case 'feux':
+            IconeMUI = Traffic;
+            if (item.etat_actuel === 'VERT') couleur = '#4caf50';
+            else if (item.etat_actuel === 'ORANGE') couleur = '#ff9800';
+            else couleur = '#f44336';
+            break;
+        case 'parkings':
+            IconeMUI = LocalParking;
+            couleur = '#455a64';
+            break;
+        case 'vehicules':
+            // Si c'est un véhicule, on regarde s'il y a une plaque pour mettre une voiture, sinon bus
+            IconeMUI = item.immatriculation ? DirectionsCar : DirectionsBus;
+            couleur = '#2e7d32';
+            break;
+        default:
+            IconeMUI = Warning;
+            couleur = '#d32f2f';
     }
 
-    if (item.en_panne) couleur = '#9e9e9e';
+    // Si l'objet est marqué en panne ou inactif, il devient GRIS
+    if (item.en_panne || item.est_actif === false) {
+        couleur = '#9e9e9e';
+    }
 
     const htmlIcone = renderToStaticMarkup(
         <div
@@ -91,16 +97,10 @@ const Carte = ({ hauteur = '100%', donnees = [] }) => {
     const positionCergy = [49.0351, 2.0799];
 
     const extrairePosition = (item) => {
-        if (item.point_actuel_details)
-            return [
-                parseFloat(item.point_actuel_details.latitude),
-                parseFloat(item.point_actuel_details.longitude),
-            ];
-        if (item.position)
-            return [
-                parseFloat(item.position.latitude),
-                parseFloat(item.position.longitude),
-            ];
+        const coords = item.point_actuel_details || item.position;
+        if (coords && coords.latitude && coords.longitude) {
+            return [parseFloat(coords.latitude), parseFloat(coords.longitude)];
+        }
         return null;
     };
 
@@ -150,12 +150,15 @@ const Carte = ({ hauteur = '100%', donnees = [] }) => {
                                         <Chip
                                             label={
                                                 item.en_panne
-                                                    ? 'PANNE'
-                                                    : 'SANTÉ OK'
+                                                    ? 'MAINTENANCE'
+                                                    : item.est_actif === false
+                                                      ? 'INACTIF'
+                                                      : 'SANTÉ OK'
                                             }
                                             size="small"
                                             color={
-                                                item.en_panne
+                                                item.en_panne ||
+                                                item.est_actif === false
                                                     ? 'error'
                                                     : 'success'
                                             }
@@ -175,6 +178,14 @@ const Carte = ({ hauteur = '100%', donnees = [] }) => {
 
                                     <Divider sx={{ mb: 1 }} />
 
+                                    <Typography
+                                        variant="caption"
+                                        display="block"
+                                        color="text.secondary"
+                                    >
+                                        Type: {item.type_api}
+                                    </Typography>
+
                                     <Button
                                         variant="contained"
                                         color="primary"
@@ -186,7 +197,6 @@ const Carte = ({ hauteur = '100%', donnees = [] }) => {
                                             textTransform: 'none',
                                             fontWeight: 'bold',
                                         }}
-                                        // Utilisation de type_api et id pour la redirection
                                         onClick={() =>
                                             navigate(
                                                 `/objet/${item.type_api}/${item.id}`,

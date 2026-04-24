@@ -1,14 +1,25 @@
 from rest_framework import serializers
+from users.models import ActionLog
 
 from .models import Feu, Parking, Point, Vehicule, Zone
 
 
+# --- Sérialiseur pour l'historique (Stats) ---
+class ActionLogSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ActionLog
+        # 👇 Utilisation du champ 'date' (vu dans tes logs d'erreur)
+        fields = ["action", "date", "points_gagnes"]
+
+
+# --- Sérialiseur pour les Zones ---
 class ZoneSerializer(serializers.ModelSerializer):
     class Meta:
         model = Zone
         fields = "__all__"
 
 
+# --- Sérialiseur pour les Points (Coordonnées) ---
 class PointSerializer(serializers.ModelSerializer):
     class Meta:
         model = Point
@@ -18,7 +29,7 @@ class PointSerializer(serializers.ModelSerializer):
 # --- Sérialiseur pour les Véhicules ---
 class VehiculeSerializer(serializers.ModelSerializer):
     point_actuel_details = PointSerializer(source="point_actuel", read_only=True)
-    type_objet = serializers.ReadOnlyField(default="VEHICULE")
+    historique = serializers.SerializerMethodField()
 
     class Meta:
         model = Vehicule
@@ -28,16 +39,24 @@ class VehiculeSerializer(serializers.ModelSerializer):
             "immatriculation",
             "vitesse",
             "est_actif",
-            "en_panne",  # 👈 Ajouté pour la gestion
+            "en_panne",
             "point_actuel",
             "point_actuel_details",
-            "type_objet",
+            "historique",
         ]
+
+    def get_historique(self, obj):
+        # On cherche les actions liées à cet ID. Tri par 'date'
+        logs = ActionLog.objects.filter(action__contains=f"ID: {obj.id}").order_by(
+            "-date"
+        )[:5]
+        return ActionLogSerializer(logs, many=True).data
 
 
 # --- Sérialiseur pour les Feux ---
 class FeuSerializer(serializers.ModelSerializer):
     point_actuel_details = PointSerializer(source="position", read_only=True)
+    historique = serializers.SerializerMethodField()
 
     class Meta:
         model = Feu
@@ -48,15 +67,23 @@ class FeuSerializer(serializers.ModelSerializer):
             "temps_avant_changement",
             "point_actuel_details",
             "est_actif",
-            "en_panne",  # 👈 Ajouté pour la gestion
-            "description",  # 👈 Ajouté pour la gestion
+            "en_panne",
+            "description",
+            "historique",
         ]
+
+    def get_historique(self, obj):
+        # Tri par 'date'
+        logs = ActionLog.objects.filter(action__contains=f"ID: {obj.id}").order_by(
+            "-date"
+        )[:5]
+        return ActionLogSerializer(logs, many=True).data
 
 
 # --- Sérialiseur pour les Parkings ---
 class ParkingSerializer(serializers.ModelSerializer):
     point_actuel_details = PointSerializer(source="position", read_only=True)
-    type_objet = serializers.ReadOnlyField(default="PARKING")
+    historique = serializers.SerializerMethodField()
 
     class Meta:
         model = Parking
@@ -67,5 +94,12 @@ class ParkingSerializer(serializers.ModelSerializer):
             "places_totales",
             "position",
             "point_actuel_details",
-            "type_objet",
+            "historique",
         ]
+
+    def get_historique(self, obj):
+        # Tri par 'date'
+        logs = ActionLog.objects.filter(action__contains=f"ID: {obj.id}").order_by(
+            "-date"
+        )[:5]
+        return ActionLogSerializer(logs, many=True).data

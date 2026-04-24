@@ -46,33 +46,43 @@ class ParkingViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAdminOrReadOnly]
 
 
-# --- VUE GLOBALE POUR LA CARTE (LA PLUS IMPORTANTE) ---
+# --- VUE GLOBALE POUR LA CARTE ---
 
 
 @api_view(["GET"])
 def get_global_data(request):
     """
-    Cette vue rassemble tous les objets.
-    On ajoute manuellement 'type_api' pour que React sache quelle URL appeler.
+    Rassemble tous les objets et injecte le 'type_api'.
     """
-    vehicules = Vehicule.objects.all()
-    feux = Feu.objects.all()
-    parkings = Parking.objects.all()
+    try:
+        vehicules = Vehicule.objects.all()
+        feux = Feu.objects.all()
+        parkings = Parking.objects.all()
 
-    v_data = VehiculeSerializer(vehicules, many=True).data
-    f_data = FeuSerializer(feux, many=True).data
-    p_data = ParkingSerializer(parkings, many=True).data
+        v_data = VehiculeSerializer(vehicules, many=True).data
+        f_data = FeuSerializer(feux, many=True).data
+        p_data = ParkingSerializer(parkings, many=True).data
 
-    # On injecte le nom de l'endpoint pour le Frontend
-    for item in v_data:
-        item["type_api"] = "vehicules"
-    for item in f_data:
-        item["type_api"] = "feux"
-    for item in p_data:
-        item["type_api"] = "parkings"
+        # On transforme en listes simples pour être sûr de pouvoir modifier
+        v_list = list(v_data)
+        f_list = list(f_data)
+        p_list = list(p_data)
 
-    tout_le_monde = v_data + f_data + p_data
-    return Response(tout_le_monde)
+        for item in v_list:
+            item["type_api"] = "vehicules"
+        for item in f_list:
+            item["type_api"] = "feux"
+        for item in p_list:
+            item["type_api"] = "parkings"
+
+        print(
+            f"✅ Data Global : {len(v_list)} véhicules, {len(f_list)} feux, {len(p_list)} parkings"
+        )
+
+        return Response(v_list + f_list + p_list)
+    except Exception as e:
+        print(f"❌ ERREUR DANS GET_GLOBAL_DATA : {str(e)}")
+        return Response({"error": str(e)}, status=500)
 
 
 # --- VUES COMPLÉMENTAIRES ---
@@ -87,7 +97,7 @@ def get_horaires_gare(request):
         "Accept": "application/json",
     }
     try:
-        reponse = requests.get(url, headers=headers)
+        reponse = requests.get(url, headers=headers, timeout=10)
         return Response(reponse.json())
     except Exception as e:
         return Response({"error": str(e)}, status=500)
