@@ -68,6 +68,9 @@ const PageCarte = () => {
     });
     const [doitCentrer, setDoitCentrer] = useState(true);
 
+    const [zones, setZones] = useState([]);
+    const [zoneSelectionnee, setZoneSelectionnee] = useState('');
+
     // --- VÉRIFICATION DU RÔLE (Pour afficher le bouton +) ---
     useEffect(() => {
         const verifierRole = async () => {
@@ -88,12 +91,28 @@ const PageCarte = () => {
         verifierRole();
     }, []);
 
+    useEffect(() => {
+        const fetchZones = async () => {
+            try {
+                const res = await fetch('http://localhost:8000/api/map/zones/');
+                const data = await res.json();
+                setZones(Array.isArray(data) ? data : data.results || []);
+            } catch (err) {
+                console.error('Erreur zones:', err);
+            }
+        };
+        fetchZones();
+    }, []);
+
     // --- FONCTION DE CHARGEMENT API ---
     const chargerDonnees = async (
         categorie = 'global',
         texte = '',
         isRefresh = false,
+        zoneId = zoneSelectionnee,
     ) => {
+        const activeZone = zoneId;
+
         if (!isRefresh) {
             setDoitCentrer(true); // Autorise le recentrage pour une vraie recherche
             if (donneesMap.length === 0) setChargement(true);
@@ -107,7 +126,7 @@ const PageCarte = () => {
 
         try {
             const endpoint = categorie === 'global' ? 'global' : categorie;
-            let url = `http://localhost:8000/api/map/${endpoint}/?search=${texte}`;
+            let url = `http://localhost:8000/api/map/${endpoint}/?search=${texte}&zone=${activeZone}`;
             const response = await fetch(url);
             const data = await response.json();
             // On vérifie si data est un tableau. Sinon, on cherche data.results.
@@ -543,6 +562,36 @@ const PageCarte = () => {
                                 clickable
                             />
                         </Stack>
+                        <FormControl
+                            fullWidth
+                            size="small"
+                            sx={{ mt: 2, mb: 1 }}
+                        >
+                            <InputLabel>Filtrer par quartier</InputLabel>
+                            <Select
+                                value={zoneSelectionnee}
+                                label="Filtrer par quartier"
+                                onChange={(e) => {
+                                    const val = e.target.value;
+                                    setZoneSelectionnee(val);
+                                    chargerDonnees(
+                                        categorieActuelle,
+                                        recherche,
+                                        false,
+                                        val,
+                                    );
+                                }}
+                            >
+                                <MenuItem value="">
+                                    <em>Tous les quartiers</em>
+                                </MenuItem>
+                                {zones.map((z) => (
+                                    <MenuItem key={z.id} value={z.id}>
+                                        {z.nom}
+                                    </MenuItem>
+                                ))}
+                            </Select>
+                        </FormControl>
                         {chargement && donneesMap.length === 0 && (
                             <Typography
                                 sx={{
