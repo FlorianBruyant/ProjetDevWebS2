@@ -1,4 +1,9 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import {
+    BrowserRouter as Router,
+    Routes,
+    Route,
+    Navigate,
+} from 'react-router-dom';
 import Accueil from './pages/Accueil';
 import PageCarte from './pages/PageCarte';
 import Inscription from './pages/Inscription';
@@ -9,25 +14,33 @@ import Horaires from './pages/Horaires';
 import ConfirmEmail from './components/ConfirmEmail';
 import DemandeReset from './pages/DemandeReset';
 import NouveauMotDePasse from './components/NouveauMotDePasse';
-
-// Import de la page de gestion des objets
 import GestionObjet from './pages/GestionObjet';
+
+// --- LE VIDEUR (PROTECTEUR DE ROUTES) ---
+// Ce composant vérifie si l'utilisateur est connecté avant d'afficher la page
+const RouteProtegee = ({ children }) => {
+    const token = localStorage.getItem('access_token');
+
+    // Si le token n'existe pas ou est invalide, on le jette vers la page de connexion
+    if (!token || token === 'undefined') {
+        return <Navigate to="/connexion" replace />;
+    }
+
+    // S'il a le token, on le laisse passer et on affiche la page demandée (children)
+    return children;
+};
 
 function App() {
     return (
         <Router>
-            {/* La barre de navigation est persistante sur toutes les pages */}
+            {/* La barre de navigation reste visible partout */}
             <BarreNavigation />
 
             <Routes>
+                {/* 🟢 ROUTES PUBLIQUES (Accessibles à tous) */}
                 <Route path="/" element={<Accueil />} />
-                <Route path="/carte" element={<PageCarte />} />
-                <Route path="/profil" element={<Profil />} />
-                <Route path="/horaires" element={<Horaires />} />
                 <Route path="/inscription" element={<Inscription />} />
                 <Route path="/connexion" element={<Connexion />} />
-
-                {/* Routes de confirmation et réinitialisation */}
                 <Route
                     path="/confirmer-email/:uid/:token"
                     element={<ConfirmEmail />}
@@ -38,10 +51,40 @@ function App() {
                     element={<NouveauMotDePasse />}
                 />
 
-                {/* MISE À JOUR : La route accepte maintenant le type_api 
-                  pour différencier les requêtes (feux/vehicules/parkings)
-                */}
-                <Route path="/objet/:type_api/:id" element={<GestionObjet />} />
+                {/* 🔴 ROUTES PROTÉGÉES (Réservées aux connectés) */}
+                {/* On emballe les composants dans <RouteProtegee> */}
+                <Route
+                    path="/carte"
+                    element={
+                        <RouteProtegee>
+                            <PageCarte />
+                        </RouteProtegee>
+                    }
+                />
+                <Route
+                    path="/profil"
+                    element={
+                        <RouteProtegee>
+                            <Profil />
+                        </RouteProtegee>
+                    }
+                />
+                <Route
+                    path="/horaires"
+                    element={
+                        <RouteProtegee>
+                            <Horaires />
+                        </RouteProtegee>
+                    }
+                />
+                <Route
+                    path="/objet/:type_api/:id"
+                    element={
+                        <RouteProtegee>
+                            <GestionObjet />
+                        </RouteProtegee>
+                    }
+                />
             </Routes>
         </Router>
     );
