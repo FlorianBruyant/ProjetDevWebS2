@@ -16,6 +16,7 @@ import {
     Logout,
     Login,
     Home,
+    Assessment,
 } from '@mui/icons-material';
 import PeopleIcon from '@mui/icons-material/People';
 
@@ -108,6 +109,19 @@ const BarreNavigation = () => {
                             }}
                         >
                             Horaires
+                        </Button>
+                        <Button
+                            startIcon={<Assessment />}
+                            onClick={() => navigate('/stats')}
+                            sx={{
+                                color: isActive('/stats') ? '#3b82f6' : 'white',
+                                fontWeight: isActive('/stats')
+                                    ? 'bold'
+                                    : 'normal',
+                                textTransform: 'none',
+                            }}
+                        >
+                            Statistiques
                         </Button>
                     </Box>
                 )}
@@ -257,6 +271,30 @@ const BarreNavigation = () => {
                                 }}
                             >
                                 Horaires
+                            </Typography>
+                        </IconButton>
+                        <IconButton
+                            onClick={() => navigate('/stats')}
+                            sx={{
+                                color: isActive('/stats')
+                                    ? '#3b82f6'
+                                    : '#9ca3af',
+                                flexDirection: 'column',
+                                p: 1,
+                            }}
+                        >
+                            <Assessment fontSize="small" />
+                            <Typography
+                                variant="caption"
+                                sx={{
+                                    fontSize: '0.65rem',
+                                    mt: 0.5,
+                                    fontWeight: isActive('/stats')
+                                        ? 'bold'
+                                        : 'normal',
+                                }}
+                            >
+                                Stats
                             </Typography>
                         </IconButton>
                         <IconButton

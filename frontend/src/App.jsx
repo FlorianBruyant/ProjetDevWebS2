@@ -18,6 +18,7 @@ import ConfirmEmail from './components/ConfirmEmail';
 import DemandeReset from './pages/DemandeReset';
 import NouveauMotDePasse from './components/NouveauMotDePasse';
 import GestionObjet from './pages/GestionObjet';
+import Dashboard from './pages/Dashboard';
 
 const RouteProtegee = ({ children }) => {
     const token = localStorage.getItem('access_token');
@@ -93,6 +94,7 @@ function App() {
                     />
                     <Route path="/membres" element={<Membres />} />
                     <Route path="/profil/:id" element={<ProfilMembre />} />
+                    <Route path="/stats" element={<Dashboard />} />
                 </Routes>
             </Box>
         </Router>

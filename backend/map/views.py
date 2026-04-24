@@ -172,14 +172,35 @@ def consulter_objet(request, objet_id):
 
 
 @api_view(["GET"])
-def get_stats_consommation(request):
-    # On récupère les données des 24 dernières heures
+def get_analytics(request):
+    # On regarde les 24 dernières heures
     hier = timezone.now() - timedelta(hours=24)
-    historique = HistoriqueObjet.objects.filter(date_mesure__gte=hier)
+    stats_recentes = HistoriqueObjet.objects.filter(date_mesure__gte=hier)
 
-    stats = historique.values("type_objet").annotate(
-        consommation_totale=Sum("consommation_kwh"),
-        moyenne_consommation=Avg("consommation_kwh"),
+    # 1. Consommation par type
+    conso_par_type = stats_recentes.values("type_objet").annotate(
+        total=Sum("consommation_kwh"), moyenne=Avg("consommation_kwh")
     )
 
-    return Response(stats)
+    # 2. Objets nécessitant une maintenance (ex: est_en_panne est True récemment)
+    objets_en_panne = (
+        stats_recentes.filter(est_en_panne=True)
+        .values("type_objet", "objet_id")
+        .distinct()
+    )
+
+    # 3. Évolution temporelle (pour le graphique)
+    evolution = (
+        stats_recentes.extra(select={"heure": "strftime('%%H:00', date_mesure)"})
+        .values("heure")
+        .annotate(conso=Sum("consommation_kwh"))
+        .order_by("heure")
+    )
+
+    return Response(
+        {
+            "par_type": conso_par_type,
+            "alertes": list(objets_en_panne),
+            "graphique": list(evolution),
+        }
+    )

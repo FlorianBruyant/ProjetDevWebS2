@@ -17,4 +17,5 @@ urlpatterns = [
     path("horaires/", views.get_horaires_gare),
     path("global/", views.get_global_data),
     path("consulter/<int:objet_id>/", views.consulter_objet),
+    path("analytics/", views.get_analytics),
 ]
