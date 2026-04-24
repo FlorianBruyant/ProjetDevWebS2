@@ -9,7 +9,7 @@ from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 
 from .models import CustomUser
-from .serializers import UserSerializer
+from .serializers import UserListSerializer, UserSerializer
 
 
 class PasswordResetRequestView(generics.GenericAPIView):
@@ -193,3 +193,17 @@ class UserProfileView(generics.RetrieveUpdateAPIView):
             )
 
         return super().update(request, *args, **kwargs)
+
+
+# Vue pour consulter le profil d'un autre membre (Lecture seule)
+class MemberProfileView(generics.RetrieveAPIView):
+    queryset = CustomUser.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    lookup_field = "id"
+
+
+class UserListView(generics.ListAPIView):
+    queryset = CustomUser.objects.all().order_by("username")
+    serializer_class = UserListSerializer
+    permission_classes = [permissions.IsAuthenticated]

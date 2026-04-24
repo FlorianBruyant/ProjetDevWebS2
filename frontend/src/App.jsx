@@ -10,6 +10,8 @@ import PageCarte from './pages/PageCarte';
 import Inscription from './pages/Inscription';
 import Profil from './pages/Profil';
 import Connexion from './pages/Connexion';
+import Membres from './pages/Membres';
+import ProfilMembre from './pages/ProfilMembre';
 import BarreNavigation from './components/BarreNavigation';
 import Horaires from './pages/Horaires';
 import ConfirmEmail from './components/ConfirmEmail';
@@ -89,6 +91,8 @@ function App() {
                             </RouteProtegee>
                         }
                     />
+                    <Route path="/membres" element={<Membres />} />
+                    <Route path="/profil/:id" element={<ProfilMembre />} />
                 </Routes>
             </Box>
         </Router>

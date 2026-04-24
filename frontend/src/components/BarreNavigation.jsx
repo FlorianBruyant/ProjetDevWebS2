@@ -8,7 +8,7 @@ import {
     IconButton,
     Tooltip,
 } from '@mui/material';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import {
     Map,
     Person,
@@ -17,6 +17,7 @@ import {
     Login,
     Home,
 } from '@mui/icons-material';
+import PeopleIcon from '@mui/icons-material/People';
 
 const BarreNavigation = () => {
     const navigate = useNavigate();
@@ -114,6 +115,19 @@ const BarreNavigation = () => {
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     {estConnecte ? (
                         <>
+                            <Button
+                                onClick={() => navigate('/membres')}
+                                startIcon={<PeopleIcon />}
+                                sx={{
+                                    color: isActive('/profil')
+                                        ? '#3b82f6'
+                                        : 'white',
+                                    textTransform: 'none',
+                                    fontWeight: 'bold',
+                                }}
+                            >
+                                Membres
+                            </Button>
                             <Button
                                 startIcon={<Person />}
                                 onClick={() => navigate('/profil')}
@@ -243,6 +257,30 @@ const BarreNavigation = () => {
                                 }}
                             >
                                 Horaires
+                            </Typography>
+                        </IconButton>
+                        <IconButton
+                            onClick={() => navigate('/membres')}
+                            sx={{
+                                color: isActive('/profil')
+                                    ? '#3b82f6'
+                                    : '#9ca3af',
+                                flexDirection: 'column',
+                                p: 1,
+                            }}
+                        >
+                            <PeopleIcon fontSize="small" />
+                            <Typography
+                                variant="caption"
+                                sx={{
+                                    fontSize: '0.65rem',
+                                    mt: 0.5,
+                                    fontWeight: isActive('/profil')
+                                        ? 'bold'
+                                        : 'normal',
+                                }}
+                            >
+                                Membres
                             </Typography>
                         </IconButton>
                         <IconButton

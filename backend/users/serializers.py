@@ -3,6 +3,13 @@ from rest_framework import serializers
 from .models import CustomUser
 
 
+# Serializer pour la liste des users
+class UserListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomUser
+        fields = ["id", "username", "genre", "type_membre", "niveau", "points"]
+
+
 class UserSerializer(serializers.ModelSerializer):
     photo_url = serializers.SerializerMethodField()
 
