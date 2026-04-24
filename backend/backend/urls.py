@@ -12,9 +12,11 @@ from rest_framework_simplejwt.views import (
 # On importe TOUTES tes vues personnalisées depuis users.views
 from users.views import (
     ActivateAccountView,
+    MemberProfileView,
     PasswordResetConfirmView,  # La vue pour l'étape 3
     PasswordResetRequestView,  # La vue pour l'étape 1
     RegisterView,
+    UserListView,
     UserProfileView,
 )
 
@@ -23,6 +25,8 @@ urlpatterns = [
     # --- AUTHENTIFICATION & PROFIL ---
     path("api/register/", RegisterView.as_view(), name="auth_register"),
     path("api/login/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
+    path("api/members/<int:id>/", MemberProfileView.as_view(), name="member-profile"),
+    path("api/members/", UserListView.as_view(), name="user-list"),
     path("api/me/", UserProfileView.as_view(), name="user_profile"),
     path("api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
     # --- ACTIVATION DU COMPTE ---
