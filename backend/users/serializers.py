@@ -8,7 +8,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CustomUser
-        # On ajoute les champs "Admin" : prénom, nom, statuts et statistiques
+        # On ajoute les nouveaux champs liés au cahier des charges
         fields = (
             "id",
             "username",
@@ -17,6 +17,10 @@ class UserSerializer(serializers.ModelSerializer):
             "first_name",
             "last_name",
             "role",
+            "niveau",  # AJOUT : Niveau (Débutant, Intermédiaire...)
+            "points",  # AJOUT : XP
+            "genre",  # AJOUT : Sexe / Genre (Profil Public)
+            "type_membre",  # AJOUT : Type (Profil Public)
             "nb_acces",
             "date_derniere_action",
             "is_staff",
@@ -32,6 +36,8 @@ class UserSerializer(serializers.ModelSerializer):
             "nb_acces": {"read_only": True},  # Lu seulement (géré par le signal auto)
             "date_derniere_action": {"read_only": True},  # Lu seulement (auto_now)
             "date_joined": {"read_only": True},  # Lu seulement (géré par Django)
+            "niveau": {"read_only": True},  # Sécurité : calculé automatiquement
+            "points": {"read_only": True},  # Sécurité : géré via les vues d'actions
             "photo": {
                 "write_only": True
             },  # On envoie le fichier, on ne le reçoit pas en JSON
@@ -44,5 +50,9 @@ class UserSerializer(serializers.ModelSerializer):
 
     def get_photo_url(self, obj):
         if obj.photo:
-            return self.context["request"].build_absolute_uri(obj.photo.url)
+            request = self.context.get("request")
+            if request:
+                return request.build_absolute_uri(obj.photo.url)
+            # Sécurité au cas où le serializer est appelé sans request dans le contexte
+            return obj.photo.url
         return None

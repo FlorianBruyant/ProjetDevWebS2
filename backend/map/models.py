@@ -6,8 +6,6 @@ from django.db import models
 
 
 class Zone(models.Model):
-    """Module 3.2 : Permet d'associer des objets à des quartiers spécifiques"""
-
     nom = models.CharField(max_length=100, help_text="Ex: Centre-Ville, Zone Nord")
     description = models.TextField(blank=True)
 
@@ -16,8 +14,6 @@ class Zone(models.Model):
 
 
 class Point(models.Model):
-    """La brique de base : une position GPS"""
-
     latitude = models.FloatField()
     longitude = models.FloatField()
     zone = models.ForeignKey(
@@ -29,64 +25,94 @@ class Point(models.Model):
 
 
 # ==========================================
-# 2. LES OBJETS CONNECTÉS (MODULE 3.1)
+# 2. LES OBJETS CONNECTÉS
 # ==========================================
 
 
 class TrafficObject(models.Model):
     """
-    Classe de base (Abstraite) pour que tous nos objets aient
-    les fonctions demandées : Activer/Désactiver, Maintenance, Statut.
+    Classe de base (Abstraite) mise à jour pour inclure les attributs
+    de recherche et de connectivité demandés dans le PDF (Pages 4-5).
     """
 
     nom = models.CharField(max_length=100)
-    est_actif = models.BooleanField(
-        default=True, help_text="Module 3.1 : Contrôler l'état (Activer/Désactiver)"
+    description = models.TextField(
+        blank=True, help_text="Description contenant potentiellement des mots-clés"
     )
-    en_panne = models.BooleanField(
-        default=False,
-        help_text="Module 3.3 : Identifier les objets nécessitant maintenance",
+    marque = models.CharField(
+        max_length=50,
+        blank=True,
+        default="Non spécifiée",
+        help_text="Ex: Phillips, Siemens...",
     )
-    derniere_mise_a_jour = models.DateTimeField(
-        auto_now=True, help_text="Module 3.1 : Test de connectivité"
+    type_objet = models.CharField(
+        max_length=50,
+        default="Non défini",
+        help_text="Ex: Feu, Caméra, Thermostat, Capteur",
     )
 
+    mots_cles = models.CharField(
+        max_length=255, blank=True, help_text="Pour le moteur de recherche"
+    )
+
+    # États de l'objet
+    est_actif = models.BooleanField(default=True, help_text="Activer/Désactiver")
+    est_connecte = models.BooleanField(
+        default=True, help_text="État de la connexion au réseau"
+    )
+    en_panne = models.BooleanField(
+        default=False, help_text="Identifier les objets nécessitant maintenance"
+    )
+
+    # Attributs d'énergie et de connectivité
+    connectivite = models.CharField(
+        max_length=50, default="Wi-Fi", help_text="Type de réseau (Wi-Fi, 4G, LoRa...)"
+    )
+    niveau_batterie = models.IntegerField(
+        null=True, blank=True, help_text="Niveau de batterie en %"
+    )
+
+    derniere_mise_a_jour = models.DateTimeField(auto_now=True)
+
     class Meta:
-        abstract = (
-            True  # Cette classe ne crée pas de table, elle sert de modèle aux autres
-        )
+        abstract = True
 
 
 class Feu(TrafficObject):
-    """Module 1 & 3 : Les feux tricolores intelligents"""
-
     COULEURS = (("VERT", "Vert"), ("ORANGE", "Orange"), ("ROUGE", "Rouge"))
 
     position = models.ForeignKey(Point, on_delete=models.CASCADE)
     etat_actuel = models.CharField(max_length=10, choices=COULEURS, default="ROUGE")
     temps_avant_changement = models.IntegerField(default=30)
     cycle_config = models.JSONField(
-        default=dict, help_text="Ex: {'vert': 30, 'orange': 5, 'rouge': 30}"
+        default=dict,
+        help_text="Paramètres d'utilisation : {'vert': 30, 'orange': 5, 'rouge': 30}",
     )
+
+    def save(self, *args, **kwargs):
+        if not self.type_objet:
+            self.type_objet = "Feu tricolore"
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"Feu {self.nom} ({self.etat_actuel})"
 
 
 class Parking(TrafficObject):
-    """Module 1 & 3 : Gestion des parkings"""
-
     position = models.ForeignKey(Point, on_delete=models.CASCADE)
     places_occupees = models.IntegerField(default=0)
     places_totales = models.IntegerField()
+
+    def save(self, *args, **kwargs):
+        if not self.type_objet:
+            self.type_objet = "Parking connecté"
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"Parking {self.nom} ({self.places_occupees}/{self.places_totales})"
 
 
 class Vehicule(TrafficObject):
-    """Module 1 & 3 : Bus, voitures connectées"""
-
     immatriculation = models.CharField(max_length=20, unique=True)
     vitesse = models.FloatField(default=0.0)
     point_actuel = models.ForeignKey(
@@ -99,6 +125,11 @@ class Vehicule(TrafficObject):
         Point, related_name="historique_vehicules", blank=True
     )
 
+    def save(self, *args, **kwargs):
+        if not self.type_objet:
+            self.type_objet = "Véhicule"
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return f"Véhicule {self.immatriculation} ({self.nom})"
 
@@ -109,8 +140,6 @@ class Vehicule(TrafficObject):
 
 
 class Route(models.Model):
-    """Module 1 : Infrastructures routières"""
-
     nom = models.CharField(max_length=100)
     points = models.ManyToManyField(Point, related_name="routes")
     feux = models.ManyToManyField(Feu, blank=True, related_name="routes")
@@ -121,8 +150,6 @@ class Route(models.Model):
 
 
 class Incident(models.Model):
-    """Module 1 : Rapports d'incidents (Inondations, accidents, lampadaires)"""
-
     TYPES = (
         ("ACCIDENT", "Accident"),
         ("INONDATION", "Inondation"),
