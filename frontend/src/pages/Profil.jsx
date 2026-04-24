@@ -8,6 +8,12 @@ import {
     Container,
     CircularProgress,
     LinearProgress,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions,
+    TextField,
+    MenuItem,
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 
@@ -15,6 +21,11 @@ export default function Profil() {
     const navigate = useNavigate();
     const [user, setUser] = useState(null);
     const [chargement, setChargement] = useState(true);
+
+    // Etats pour la modification
+    const [open, setOpen] = useState(false);
+    const [editData, setEditData] = useState({});
+    const [isUpdating, setIsUpdating] = useState(false);
 
     useEffect(() => {
         const fetchProfil = async () => {
@@ -33,18 +44,47 @@ export default function Profil() {
                 if (response.ok) {
                     const data = await response.json();
                     setUser(data);
+                    setEditData(data);
                 } else {
                     localStorage.clear();
                     navigate('/connexion');
                 }
             } catch (error) {
-                console.error('Erreur backend éteint:', error);
+                console.error('Erreur backend :', error);
             } finally {
                 setChargement(false);
             }
         };
         fetchProfil();
     }, [navigate]);
+
+    const handleUpdate = async () => {
+        setIsUpdating(true);
+        const token = localStorage.getItem('access_token');
+        try {
+            const response = await fetch('http://localhost:8000/api/me/', {
+                method: 'PATCH',
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    genre: editData.genre,
+                    type_membre: editData.type_membre,
+                }),
+            });
+
+            if (response.ok) {
+                const updatedUser = await response.json();
+                setUser(updatedUser);
+                setOpen(false);
+            }
+        } catch (error) {
+            console.error('Erreur lors de la mise à jour:', error);
+        } finally {
+            setIsUpdating(false);
+        }
+    };
 
     const handleLogout = () => {
         localStorage.clear();
@@ -136,7 +176,10 @@ export default function Profil() {
                         Gagnez de l'XP en consultant des objets sur la carte !
                     </Typography>
                 </Paper>
-
+                {/* --- BOUTON MODIF PROFIL --- */}
+                <Button size="small" onClick={() => setOpen(true)}>
+                    Modifier
+                </Button>
                 {/* --- INFORMATIONS PUBLIQUES --- */}
                 <Paper elevation={2} sx={{ p: 3, mb: 3, borderRadius: 3 }}>
                     <Typography variant="h6" fontWeight="bold" sx={{ mb: 2 }}>
@@ -154,6 +197,74 @@ export default function Profil() {
                         {user?.type_membre || 'Citoyen'}
                     </Typography>
                 </Paper>
+
+                {/* --- DIALOG DE MODIFICATION --- */}
+                <Dialog
+                    open={open}
+                    onClose={() => setOpen(false)}
+                    fullWidth
+                    maxWidth="xs"
+                >
+                    <DialogTitle>Modifier mon profil</DialogTitle>
+                    <DialogContent
+                        sx={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: 2,
+                            pt: 1,
+                        }}
+                    >
+                        <TextField
+                            select
+                            fullWidth
+                            label="Genre"
+                            value={editData.genre || ''}
+                            onChange={(e) =>
+                                setEditData({
+                                    ...editData,
+                                    genre: e.target.value,
+                                })
+                            }
+                        >
+                            {/* Correction : On utilise les clés du modèle Django ('M', 'F', etc.) */}
+                            <MenuItem value="M">Masculin</MenuItem>
+                            <MenuItem value="F">Féminin</MenuItem>
+                            <MenuItem value="A">Autre</MenuItem>
+                            <MenuItem value="NR">Non renseigné</MenuItem>
+                        </TextField>
+
+                        <TextField
+                            select
+                            fullWidth
+                            label="Type de membre"
+                            value={editData.type_membre || ''}
+                            onChange={(e) =>
+                                setEditData({
+                                    ...editData,
+                                    type_membre: e.target.value,
+                                })
+                            }
+                        >
+                            <MenuItem value="Citoyen">Citoyen</MenuItem>
+                            <MenuItem value="Étudiant">Étudiant</MenuItem>
+                            <MenuItem value="Professionnel">
+                                Professionnel
+                            </MenuItem>
+                        </TextField>
+                    </DialogContent>
+                    <DialogActions>
+                        <Button onClick={() => setOpen(false)} color="inherit">
+                            Annuler
+                        </Button>
+                        <Button
+                            onClick={handleUpdate}
+                            variant="contained"
+                            disabled={isUpdating}
+                        >
+                            {isUpdating ? 'Enregistrement...' : 'Enregistrer'}
+                        </Button>
+                    </DialogActions>
+                </Dialog>
 
                 {/* --- STATISTIQUES --- */}
                 <Paper elevation={2} sx={{ p: 3, mb: 4, borderRadius: 3 }}>
