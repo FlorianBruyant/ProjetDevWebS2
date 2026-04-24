@@ -144,8 +144,11 @@ class ActivateAccountView(generics.GenericAPIView):
 
 # 3. Vue Profil (Rappel pour fichier complet)
 class UserProfileView(generics.RetrieveUpdateAPIView):
-    serializer_class = UserSerializer
     permission_classes = [permissions.IsAuthenticated]
+    serializer_class = UserSerializer
 
     def get_object(self):
         return self.request.user
+
+    def perform_update(self, serializer):
+        serializer.save()
