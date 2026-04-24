@@ -10,15 +10,13 @@ import ConfirmEmail from './components/ConfirmEmail';
 import DemandeReset from './pages/DemandeReset';
 import NouveauMotDePasse from './components/NouveauMotDePasse';
 
-// 👇 NOUVEL IMPORT POUR LA PAGE DE GESTION DES OBJETS
+// Import de la page de gestion des objets
 import GestionObjet from './pages/GestionObjet';
 
 function App() {
     return (
         <Router>
-            {/* La barre est placée ici. Comme elle est en "position: fixed",
-               elle restera en haut de l'écran peu importe la page affichée.
-            */}
+            {/* La barre de navigation est persistante sur toutes les pages */}
             <BarreNavigation />
 
             <Routes>
@@ -28,6 +26,8 @@ function App() {
                 <Route path="/horaires" element={<Horaires />} />
                 <Route path="/inscription" element={<Inscription />} />
                 <Route path="/connexion" element={<Connexion />} />
+
+                {/* Routes de confirmation et réinitialisation */}
                 <Route
                     path="/confirmer-email/:uid/:token"
                     element={<ConfirmEmail />}
@@ -38,8 +38,10 @@ function App() {
                     element={<NouveauMotDePasse />}
                 />
 
-                {/* 👇 NOUVELLE ROUTE POUR GÉRER UN OBJET SPÉCIFIQUE (Le ":id" est dynamique) */}
-                <Route path="/objet/:id" element={<GestionObjet />} />
+                {/* MISE À JOUR : La route accepte maintenant le type_api 
+                  pour différencier les requêtes (feux/vehicules/parkings)
+                */}
+                <Route path="/objet/:type_api/:id" element={<GestionObjet />} />
             </Routes>
         </Router>
     );

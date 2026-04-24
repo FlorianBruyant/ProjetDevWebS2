@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
-import { Box, Typography, Chip, Divider, Button } from '@mui/material'; // 👈 Ajout de Button ici
-import { useNavigate } from 'react-router-dom'; // 👈 Ajout de useNavigate
+import { Box, Typography, Chip, Divider, Button } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
@@ -87,8 +87,8 @@ const RecentreurDeCarte = ({ donnees }) => {
 };
 
 const Carte = ({ hauteur = '100%', donnees = [] }) => {
+    const navigate = useNavigate();
     const positionCergy = [49.0351, 2.0799];
-    const navigate = useNavigate(); // 👈 Initialisation de la navigation
 
     const extrairePosition = (item) => {
         if (item.point_actuel_details)
@@ -119,16 +119,9 @@ const Carte = ({ hauteur = '100%', donnees = [] }) => {
                     const pos = extrairePosition(item);
                     if (!pos) return null;
 
-                    const couleurFeu =
-                        item.etat_actuel === 'VERT'
-                            ? '#4caf50'
-                            : item.etat_actuel === 'ROUGE'
-                              ? '#f44336'
-                              : '#ff9800';
-
                     return (
                         <Marker
-                            key={`${item.id}-${item.nom}`}
+                            key={`${item.type_api}-${item.id}`}
                             position={pos}
                             icon={creerIconeSmart(item)}
                         >
@@ -147,146 +140,41 @@ const Carte = ({ hauteur = '100%', donnees = [] }) => {
                                         {item.nom}
                                     </Typography>
 
-                                    {/* --- INDICATEUR DE SANTÉ --- */}
                                     <Box
                                         sx={{
                                             display: 'flex',
                                             justifyContent: 'center',
-                                            alignItems: 'center',
-                                            gap: 0.5,
                                             mb: 1,
                                         }}
                                     >
-                                        {item.en_panne ? (
-                                            <Chip
-                                                label="PANNE"
-                                                size="small"
-                                                color="error"
-                                                icon={<ErrorIcon />}
-                                                sx={{
-                                                    height: '20px',
-                                                    fontSize: '0.7rem',
-                                                }}
-                                            />
-                                        ) : (
-                                            <Chip
-                                                label="SANTÉ OK"
-                                                size="small"
-                                                color="success"
-                                                icon={<CheckCircle />}
-                                                sx={{
-                                                    height: '20px',
-                                                    fontSize: '0.7rem',
-                                                }}
-                                            />
-                                        )}
+                                        <Chip
+                                            label={
+                                                item.en_panne
+                                                    ? 'PANNE'
+                                                    : 'SANTÉ OK'
+                                            }
+                                            size="small"
+                                            color={
+                                                item.en_panne
+                                                    ? 'error'
+                                                    : 'success'
+                                            }
+                                            icon={
+                                                item.en_panne ? (
+                                                    <ErrorIcon />
+                                                ) : (
+                                                    <CheckCircle />
+                                                )
+                                            }
+                                            sx={{
+                                                height: '20px',
+                                                fontSize: '0.7rem',
+                                            }}
+                                        />
                                     </Box>
 
                                     <Divider sx={{ mb: 1 }} />
 
-                                    {/* --- SI EN PANNE : AFFICHAGE ALERTE --- */}
-                                    {item.en_panne ? (
-                                        <Box
-                                            sx={{
-                                                p: 1,
-                                                bgcolor: '#fff5f5',
-                                                borderRadius: 1,
-                                                border: '1px dashed #f44336',
-                                            }}
-                                        >
-                                            <Warning
-                                                sx={{
-                                                    color: '#f44336',
-                                                    fontSize: '2rem',
-                                                }}
-                                            />
-                                            <Typography
-                                                variant="caption"
-                                                sx={{
-                                                    display: 'block',
-                                                    color: '#d32f2f',
-                                                    fontWeight: 'bold',
-                                                }}
-                                            >
-                                                MAINTENANCE REQUISE
-                                            </Typography>
-                                        </Box>
-                                    ) : (
-                                        /* --- SI FONCTIONNE : CHRONO --- */
-                                        <Box>
-                                            {item.etat_actuel ? (
-                                                <Box
-                                                    sx={{
-                                                        display: 'flex',
-                                                        flexDirection: 'column',
-                                                        alignItems: 'center',
-                                                        gap: 1,
-                                                    }}
-                                                >
-                                                    <Box
-                                                        sx={{
-                                                            width: '45px',
-                                                            height: '45px',
-                                                            borderRadius: '50%',
-                                                            border: `3px solid ${couleurFeu}`,
-                                                            display: 'flex',
-                                                            alignItems:
-                                                                'center',
-                                                            justifyContent:
-                                                                'center',
-                                                            bgcolor: '#fdfdfd',
-                                                        }}
-                                                    >
-                                                        <Typography
-                                                            sx={{
-                                                                fontWeight:
-                                                                    'bold',
-                                                                fontSize:
-                                                                    '1.1rem',
-                                                            }}
-                                                        >
-                                                            {
-                                                                item.temps_avant_changement
-                                                            }
-                                                        </Typography>
-                                                    </Box>
-                                                    <Chip
-                                                        label={item.etat_actuel}
-                                                        size="small"
-                                                        sx={{
-                                                            backgroundColor:
-                                                                couleurFeu,
-                                                            color: 'white',
-                                                            fontWeight: 'bold',
-                                                        }}
-                                                    />
-                                                </Box>
-                                            ) : (
-                                                <Typography
-                                                    variant="body2"
-                                                    sx={{ color: '#666' }}
-                                                >
-                                                    {item.places_totales
-                                                        ? `🅿️ Places: ${item.places_occupees}/${item.places_totales}`
-                                                        : `🚗 Vitesse: ${item.vitesse} km/h`}
-                                                </Typography>
-                                            )}
-                                        </Box>
-                                    )}
-
-                                    <Typography
-                                        variant="caption"
-                                        sx={{
-                                            display: 'block',
-                                            mt: 1,
-                                            color: '#999',
-                                            fontSize: '0.65rem',
-                                        }}
-                                    >
-                                        ID: {item.id_technique || item.id}
-                                    </Typography>
-
-                                    {/* 👈 NOUVEAU BOUTON D'ACCÈS AU DASHBOARD DE L'OBJET */}
                                     <Button
                                         variant="contained"
                                         color="primary"
@@ -298,8 +186,11 @@ const Carte = ({ hauteur = '100%', donnees = [] }) => {
                                             textTransform: 'none',
                                             fontWeight: 'bold',
                                         }}
+                                        // Utilisation de type_api et id pour la redirection
                                         onClick={() =>
-                                            navigate(`/objet/${item.id}`)
+                                            navigate(
+                                                `/objet/${item.type_api}/${item.id}`,
+                                            )
                                         }
                                     >
                                         Gérer cet objet

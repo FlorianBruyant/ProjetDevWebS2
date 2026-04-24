@@ -1,11 +1,10 @@
 import requests
-from django.db.models import Q
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, viewsets
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from users.models import ActionLog  # Important pour l'historique des points
+from users.models import ActionLog
 from users.permissions import IsAdminOrReadOnly
 
 # Import des modèles et serializers
@@ -17,7 +16,7 @@ from .serializers import (
     ZoneSerializer,
 )
 
-# --- VIEWSETS CLASSIQUES (Pour le routeur) ---
+# --- VIEWSETS (CRUD AUTOMATIQUE) ---
 
 
 class ZoneViewSet(viewsets.ModelViewSet):
@@ -47,11 +46,15 @@ class ParkingViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAdminOrReadOnly]
 
 
-# --- VUE GLOBALE POUR LA CARTE (Tout en un) ---
+# --- VUE GLOBALE POUR LA CARTE (LA PLUS IMPORTANTE) ---
 
 
 @api_view(["GET"])
 def get_global_data(request):
+    """
+    Cette vue rassemble tous les objets.
+    On ajoute manuellement 'type_api' pour que React sache quelle URL appeler.
+    """
     vehicules = Vehicule.objects.all()
     feux = Feu.objects.all()
     parkings = Parking.objects.all()
@@ -60,12 +63,19 @@ def get_global_data(request):
     f_data = FeuSerializer(feux, many=True).data
     p_data = ParkingSerializer(parkings, many=True).data
 
+    # On injecte le nom de l'endpoint pour le Frontend
+    for item in v_data:
+        item["type_api"] = "vehicules"
+    for item in f_data:
+        item["type_api"] = "feux"
+    for item in p_data:
+        item["type_api"] = "parkings"
+
     tout_le_monde = v_data + f_data + p_data
-    print(f"📦 Envoi de {len(tout_le_monde)} objets à la carte")
     return Response(tout_le_monde)
 
 
-# --- VUE POUR LES HORAIRES PRIM ---
+# --- VUES COMPLÉMENTAIRES ---
 
 
 @api_view(["GET"])
@@ -83,51 +93,14 @@ def get_horaires_gare(request):
         return Response({"error": str(e)}, status=500)
 
 
-# --- NOUVEAUTÉS : MOTEUR DE RECHERCHE ET CONSULTATION (MODULES 1 & 2) ---
-
-
-@api_view(["GET"])
-@permission_classes([AllowAny])
-def rechercher_objets(request):
-    """Recherche avec 2 filtres : Mot-clé (q) et État (actif) [cite: 51, 80, 81]"""
-    mot_cle = request.GET.get("q", "")
-    est_actif = request.GET.get("actif", "")
-
-    resultats = Feu.objects.all()
-
-    if mot_cle:
-        resultats = resultats.filter(
-            Q(nom__icontains=mot_cle) | Q(description__icontains=mot_cle)
-        )
-
-    if est_actif.lower() == "true":
-        resultats = resultats.filter(est_actif=True)
-    elif est_actif.lower() == "false":
-        resultats = resultats.filter(est_actif=False)
-
-    data = FeuSerializer(resultats, many=True).data
-    return Response(data)
-
-
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def consulter_objet(request, objet_id):
-    """Fait gagner 0.50 pts à l'utilisateur quand il consulte un objet [cite: 109, 110, 115]"""
     user = request.user
     user.points += 0.50
     user.verifier_et_mettre_a_jour_niveau()
     user.save()
-
     ActionLog.objects.create(
-        utilisateur=user,
-        action=f"Consultation de l'objet ID: {objet_id}",
-        points_gagnes=0.50,
+        utilisateur=user, action=f"Consulte objet {objet_id}", points_gagnes=0.50
     )
-
-    return Response(
-        {
-            "message": "Objet consulté. +0.50 points !",
-            "points_actuels": user.points,
-            "niveau_actuel": user.get_niveau_display(),
-        }
-    )
+    return Response({"message": "Points ajoutés !"})

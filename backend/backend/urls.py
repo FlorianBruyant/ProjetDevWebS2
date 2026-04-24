@@ -12,8 +12,8 @@ from rest_framework_simplejwt.views import (
 # On importe TOUTES tes vues personnalisées depuis users.views
 from users.views import (
     ActivateAccountView,
-    PasswordResetConfirmView,  # La vue pour l'étape 3
-    PasswordResetRequestView,  # La vue pour l'étape 1
+    PasswordResetConfirmView,
+    PasswordResetRequestView,
     RegisterView,
     UserProfileView,
 )
@@ -31,20 +31,19 @@ urlpatterns = [
         ActivateAccountView.as_view(),
         name="activate",
     ),
-    # --- RÉINITIALISATION DU MOT DE PASSE (Version API pour React) ---
-    # 1. Demande de lien (React appelle ça depuis DemandeReset.jsx)
+    # --- RÉINITIALISATION DU MOT DE PASSE ---
     path(
         "api/password_reset/",
         PasswordResetRequestView.as_view(),
         name="password_reset",
     ),
-    # 3. Validation du nouveau mot de passe (React appelle ça depuis NouveauMotDePasse.jsx)
     path(
         "api/password_reset_confirm/<str:uidb64>/<str:token>/",
         PasswordResetConfirmView.as_view(),
         name="password_reset_confirm",
     ),
     # --- AUTRES APIS ---
-    path("api-map/", include("map.urls")),
+    # 👇 CORRECTION ICI : "api-map/" devient "api/map/" pour correspondre au Frontend
+    path("api/map/", include("map.urls")),
     path("api/", include("api.urls")),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

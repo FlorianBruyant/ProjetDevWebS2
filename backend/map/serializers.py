@@ -28,7 +28,7 @@ class VehiculeSerializer(serializers.ModelSerializer):
             "immatriculation",
             "vitesse",
             "est_actif",
-            "en_panne",
+            "en_panne",  # 👈 Ajouté pour la gestion
             "point_actuel",
             "point_actuel_details",
             "type_objet",
@@ -36,7 +36,6 @@ class VehiculeSerializer(serializers.ModelSerializer):
 
 
 # --- Sérialiseur pour les Feux ---
-# map/serializers.py
 class FeuSerializer(serializers.ModelSerializer):
     point_actuel_details = PointSerializer(source="position", read_only=True)
 
@@ -49,6 +48,8 @@ class FeuSerializer(serializers.ModelSerializer):
             "temps_avant_changement",
             "point_actuel_details",
             "est_actif",
+            "en_panne",  # 👈 Ajouté pour la gestion
+            "description",  # 👈 Ajouté pour la gestion
         ]
 
 

@@ -21,7 +21,6 @@ import {
     DirectionsBus,
     LocalParking,
     Traffic,
-    ReportProblem,
     Map as MapIcon,
 } from '@mui/icons-material';
 import Carte from '../components/Carte';
@@ -30,7 +29,7 @@ const PageCarte = () => {
     const location = useLocation();
 
     // --- ÉTATS ---
-    const [donneesMap, setDonneesMap] = useState([]); // Contiendra tous les objets (Vélos, Feux, etc.)
+    const [donneesMap, setDonneesMap] = useState([]);
     const [termeFixe, setTermeFixe] = useState('');
     const [chargement, setChargement] = useState(false);
     const [aucunResultat, setAucunResultat] = useState(false);
@@ -41,14 +40,11 @@ const PageCarte = () => {
         () => location.state?.texteInitial ?? '',
     );
 
-    // On commence par "global" pour charger toute la ville d'un coup
     const [categorieActuelle, setCategorieActuelle] = useState('global');
-
     const inputRef = useRef(null);
 
     // --- FONCTION DE CHARGEMENT API ---
     const chargerDonnees = async (categorie = 'global', texte = '') => {
-        // On affiche le chargement seulement si on n'a pas encore de données
         if (donneesMap.length === 0) setChargement(true);
 
         setAucunResultat(false);
@@ -56,9 +52,10 @@ const PageCarte = () => {
         setCategorieActuelle(categorie);
 
         try {
-            // Détermination de l'URL (si global on tape /global/, sinon /categorie/)
             const endpoint = categorie === 'global' ? 'global' : categorie;
-            let url = `http://localhost:8000/api-map/${endpoint}/?search=${texte}`;
+
+            // 👇 CORRECTION : On utilise maintenant "api/map/" au lieu de "api-map/"
+            let url = `http://localhost:8000/api/map/${endpoint}/?search=${texte}`;
 
             const response = await fetch(url);
 
@@ -73,23 +70,22 @@ const PageCarte = () => {
                 setAucunResultat(true);
             }
         } catch (error) {
-            console.error('Erreur API:', error);
+            console.error('Erreur API Carte:', error);
             if (donneesMap.length === 0) setAucunResultat(true);
         } finally {
             setChargement(false);
         }
     };
 
-    // --- TEMPS RÉEL (Refresh toutes les 5 secondes) ---
+    // --- REFRESH RÉGULIER ---
     useEffect(() => {
         const intervalle = setInterval(() => {
             chargerDonnees(categorieActuelle, recherche);
         }, 5000);
-
         return () => clearInterval(intervalle);
     }, [categorieActuelle, recherche]);
 
-    // --- EFFETS AU DÉMARRAGE ---
+    // --- INITIALISATION ---
     useLayoutEffect(() => {
         if (location.state?.focusRecherche) {
             const texteInitial = location.state?.texteInitial;
@@ -97,12 +93,9 @@ const PageCarte = () => {
 
             setTimeout(() => {
                 inputRef.current?.focus();
-                if (texteInitial) {
-                    chargerDonnees('global', texteInitial);
-                }
+                if (texteInitial) chargerDonnees('global', texteInitial);
             }, 0);
         } else {
-            // Charge toute la ville par défaut
             chargerDonnees('global', '');
         }
     }, [location]);
@@ -124,7 +117,7 @@ const PageCarte = () => {
                 bgcolor: 'white',
             }}
         >
-            {/* --- LA CARTE --- */}
+            {/* CARTE */}
             <Box
                 sx={{
                     flex: 1,
@@ -136,7 +129,7 @@ const PageCarte = () => {
                 <Carte donnees={donneesMap} />
             </Box>
 
-            {/* --- ZONE DE RECHERCHE --- */}
+            {/* BARRE DE RECHERCHE */}
             <Paper
                 elevation={rechercheActive ? 0 : 3}
                 sx={{
@@ -146,7 +139,7 @@ const PageCarte = () => {
                     transform: 'translateX(-50%)',
                     width: rechercheActive ? '100%' : '90%',
                     maxWidth: rechercheActive ? 'none' : 600,
-                    borderRadius: rechercheActive ? 0 : 30,
+                    borderRadius: rechercheActive ? 0 : 8,
                     bgcolor: 'white',
                     pt: rechercheActive ? 2 : 0,
                     zIndex: 1000,
@@ -185,23 +178,20 @@ const PageCarte = () => {
                                 inputRef.current?.blur();
                             }
                         }}
-                        slotProps={{
-                            input: {
-                                disableUnderline: true,
-                                startAdornment: !rechercheActive && (
-                                    <InputAdornment position="start">
-                                        <Search color="action" />
-                                    </InputAdornment>
-                                ),
-                            },
+                        InputProps={{
+                            disableUnderline: true,
+                            startAdornment: !rechercheActive && (
+                                <InputAdornment position="start">
+                                    <Search color="action" />
+                                </InputAdornment>
+                            ),
                         }}
                         sx={{ py: 1.5 }}
                     />
                 </Box>
 
                 {rechercheActive && (
-                    <Box sx={{ px: 2, animation: 'fadeIn 0.3s' }}>
-                        {/* FILTRES PAR CATÉGORIE */}
+                    <Box sx={{ px: 2 }}>
                         <Stack
                             direction="row"
                             spacing={1}
