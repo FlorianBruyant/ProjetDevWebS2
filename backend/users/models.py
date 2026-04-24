@@ -51,12 +51,12 @@ class CustomUser(AbstractUser):
         """Méthode pour ajuster le niveau en fonction des points (Valeurs d'exemple)"""
         if self.points >= 7.0:
             self.niveau = "EXPERT"
-            self.role = "ADMIN"
         elif self.points >= 5.0:
             self.niveau = "AVANCE"
-            self.role = "COMPLEXE"
         elif self.points >= 3.0:
             self.niveau = "INTERMEDIAIRE"
+        else:
+            self.niveau = "DEBUTANT"
         self.save()
 
     def __str__(self):
