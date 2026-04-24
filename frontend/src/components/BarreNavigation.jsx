@@ -1,101 +1,313 @@
 import React from 'react';
-import { Paper, BottomNavigation, BottomNavigationAction } from '@mui/material';
 import {
-    Home as HomeIcon,
-    Map as MapIcon,
-    AccessTime, // 🚨 NOUVELLE ICÔNE (Horloge)
-    Settings,
+    AppBar,
+    Toolbar,
+    Typography,
+    Button,
+    Box,
+    IconButton,
+    Tooltip,
+} from '@mui/material';
+import { useNavigate, useLocation } from 'react-router-dom';
+import {
+    Map,
+    Person,
+    AccessTime,
+    Logout,
+    Login,
+    Home,
 } from '@mui/icons-material';
-import { Link, useLocation } from 'react-router-dom';
 
 const BarreNavigation = () => {
+    const navigate = useNavigate();
     const location = useLocation();
 
-    const getValeurActive = () => {
-        if (location.pathname === '/') return 0;
-        if (location.pathname === '/carte') return 1;
-        if (location.pathname === '/horaires') return 2; // 🚨 CORRECTION ICI
-        if (location.pathname === '/profil') return 3;
-        return 0;
+    const token = localStorage.getItem('access_token');
+    const estConnecte = Boolean(token && token !== 'undefined');
+
+    const handleDeconnexion = () => {
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
+        navigate('/');
     };
 
+    const isActive = (path) => location.pathname === path;
+
     return (
-        <Paper
+        <AppBar
+            position="fixed"
+            elevation={10}
             sx={{
-                position: 'fixed',
-                bottom: 0,
-                left: 0,
-                right: 0,
-                zIndex: 1000,
-                // Design moderne et épuré (Glassmorphism clair)
-                background: 'rgba(255, 255, 255, 0.9)',
-                backdropFilter: 'blur(12px)',
-                WebkitBackdropFilter: 'blur(12px)', // Support Safari
-                borderTop: '1px solid rgba(0, 0, 0, 0.06)',
-                // Ombre très douce pour décoller la barre du contenu
-                boxShadow: '0px -2px 20px rgba(0, 0, 0, 0.04)',
+                bgcolor: '#111827',
+                zIndex: 1100,
+                // COMPORTEMENT RESPONSIVE :
+                // PC (md) = En haut, Mobile (xs) = En bas
+                top: { xs: 'auto', md: 0 },
+                bottom: { xs: 0, md: 'auto' },
+                borderBottom: { xs: 'none', md: '1px solid #1f2937' },
+                borderTop: { xs: '1px solid #1f2937', md: 'none' },
+                // Sécurité pour les iPhone récents (encoche du bas)
+                pb: { xs: 'env(safe-area-inset-bottom)', md: 0 },
             }}
-            elevation={0}
         >
-            <BottomNavigation
-                showLabels
-                value={getValeurActive()}
+            {/* ------------------------------------------- */}
+            {/* 💻 AFFICHAGE ORDINATEUR (Barre classique)   */}
+            {/* ------------------------------------------- */}
+            <Toolbar
                 sx={{
-                    background: 'transparent',
-                    height: '70px',
-                    '& .MuiBottomNavigationAction-root': {
-                        color: '#9ca3af', // Gris doux pour les icônes inactives
-                        transition: 'color 0.2s ease-in-out',
-                        minWidth: 'auto',
-                        padding: '8px 0',
-                        '&:hover': {
-                            color: '#6b7280',
-                        },
-                    },
-                    // Style de l'élément actif
-                    '& .Mui-selected': {
-                        color: '#2563eb !important', // Bleu moderne et dynamique
-                        '& .MuiSvgIcon-root': {
-                            // Légère élévation sans effet néon
-                            transform: 'translateY(-2px)',
-                            transition: 'transform 0.2s ease-in-out',
-                        },
-                    },
-                    '& .MuiBottomNavigationAction-label': {
-                        fontSize: '0.75rem',
-                        fontWeight: 600,
-                        marginTop: '4px',
-                        transition: 'all 0.2s ease-in-out',
-                    },
+                    display: { xs: 'none', md: 'flex' },
+                    justifyContent: 'space-between',
                 }}
             >
-                <BottomNavigationAction
-                    component={Link}
-                    to="/"
-                    label="Accueil"
-                    icon={<HomeIcon />}
-                />
-                <BottomNavigationAction
-                    component={Link}
-                    to="/carte"
-                    label="Carte"
-                    icon={<MapIcon />}
-                />
-                {/* 🚨 LE BOUTON HORAIRES EST ICI */}
-                <BottomNavigationAction
-                    component={Link}
-                    to="/horaires"
-                    label="Horaires"
-                    icon={<AccessTime />}
-                />
-                <BottomNavigationAction
-                    component={Link}
-                    to="/profil"
-                    label="Profil"
-                    icon={<Settings />}
-                />
-            </BottomNavigation>
-        </Paper>
+                <Box
+                    sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        cursor: 'pointer',
+                    }}
+                    onClick={() => navigate('/')}
+                >
+                    <Home sx={{ color: '#3b82f6', mr: 1, fontSize: 28 }} />
+                    <Typography
+                        variant="h6"
+                        sx={{
+                            fontWeight: '800',
+                            letterSpacing: 1,
+                            color: 'white',
+                        }}
+                    >
+                        CERGY<span style={{ color: '#3b82f6' }}>LIVE</span>
+                    </Typography>
+                </Box>
+
+                {estConnecte && (
+                    <Box sx={{ display: 'flex', gap: 2 }}>
+                        <Button
+                            startIcon={<Map />}
+                            onClick={() => navigate('/carte')}
+                            sx={{
+                                color: isActive('/carte') ? '#3b82f6' : 'white',
+                                fontWeight: isActive('/carte')
+                                    ? 'bold'
+                                    : 'normal',
+                            }}
+                        >
+                            Carte Interactive
+                        </Button>
+                        <Button
+                            startIcon={<AccessTime />}
+                            onClick={() => navigate('/horaires')}
+                            sx={{
+                                color: isActive('/horaires')
+                                    ? '#3b82f6'
+                                    : 'white',
+                                fontWeight: isActive('/horaires')
+                                    ? 'bold'
+                                    : 'normal',
+                            }}
+                        >
+                            Horaires
+                        </Button>
+                    </Box>
+                )}
+
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    {estConnecte ? (
+                        <>
+                            <Button
+                                startIcon={<Person />}
+                                onClick={() => navigate('/profil')}
+                                sx={{
+                                    color: isActive('/profil')
+                                        ? '#3b82f6'
+                                        : 'white',
+                                    textTransform: 'none',
+                                    fontWeight: 'bold',
+                                }}
+                            >
+                                Profil
+                            </Button>
+                            <Tooltip title="Déconnexion">
+                                <IconButton
+                                    onClick={handleDeconnexion}
+                                    sx={{
+                                        color: '#ef4444',
+                                        ml: 1,
+                                        bgcolor: 'rgba(239, 68, 68, 0.1)',
+                                        '&:hover': {
+                                            bgcolor: 'rgba(239, 68, 68, 0.2)',
+                                        },
+                                    }}
+                                >
+                                    <Logout fontSize="small" />
+                                </IconButton>
+                            </Tooltip>
+                        </>
+                    ) : (
+                        <Button
+                            variant="contained"
+                            startIcon={<Login />}
+                            onClick={() => navigate('/connexion')}
+                            sx={{
+                                bgcolor: '#3b82f6',
+                                '&:hover': { bgcolor: '#2563eb' },
+                                fontWeight: 'bold',
+                                textTransform: 'none',
+                                borderRadius: 2,
+                            }}
+                        >
+                            Connexion
+                        </Button>
+                    )}
+                </Box>
+            </Toolbar>
+
+            {/* ------------------------------------------- */}
+            {/* 📱 AFFICHAGE MOBILE (Tab Bar icônes)        */}
+            {/* ------------------------------------------- */}
+            <Toolbar
+                sx={{
+                    display: { xs: 'flex', md: 'none' },
+                    justifyContent: 'space-around',
+                    alignItems: 'center',
+                    minHeight: '65px',
+                    px: 1,
+                }}
+            >
+                <IconButton
+                    onClick={() => navigate('/')}
+                    sx={{
+                        color: isActive('/') ? '#3b82f6' : '#9ca3af',
+                        flexDirection: 'column',
+                        p: 1,
+                    }}
+                >
+                    <Home fontSize="small" />
+                    <Typography
+                        variant="caption"
+                        sx={{
+                            fontSize: '0.65rem',
+                            mt: 0.5,
+                            fontWeight: isActive('/') ? 'bold' : 'normal',
+                        }}
+                    >
+                        Accueil
+                    </Typography>
+                </IconButton>
+
+                {estConnecte && (
+                    <>
+                        <IconButton
+                            onClick={() => navigate('/carte')}
+                            sx={{
+                                color: isActive('/carte')
+                                    ? '#3b82f6'
+                                    : '#9ca3af',
+                                flexDirection: 'column',
+                                p: 1,
+                            }}
+                        >
+                            <Map fontSize="small" />
+                            <Typography
+                                variant="caption"
+                                sx={{
+                                    fontSize: '0.65rem',
+                                    mt: 0.5,
+                                    fontWeight: isActive('/carte')
+                                        ? 'bold'
+                                        : 'normal',
+                                }}
+                            >
+                                Carte
+                            </Typography>
+                        </IconButton>
+                        <IconButton
+                            onClick={() => navigate('/horaires')}
+                            sx={{
+                                color: isActive('/horaires')
+                                    ? '#3b82f6'
+                                    : '#9ca3af',
+                                flexDirection: 'column',
+                                p: 1,
+                            }}
+                        >
+                            <AccessTime fontSize="small" />
+                            <Typography
+                                variant="caption"
+                                sx={{
+                                    fontSize: '0.65rem',
+                                    mt: 0.5,
+                                    fontWeight: isActive('/horaires')
+                                        ? 'bold'
+                                        : 'normal',
+                                }}
+                            >
+                                Horaires
+                            </Typography>
+                        </IconButton>
+                        <IconButton
+                            onClick={() => navigate('/profil')}
+                            sx={{
+                                color: isActive('/profil')
+                                    ? '#3b82f6'
+                                    : '#9ca3af',
+                                flexDirection: 'column',
+                                p: 1,
+                            }}
+                        >
+                            <Person fontSize="small" />
+                            <Typography
+                                variant="caption"
+                                sx={{
+                                    fontSize: '0.65rem',
+                                    mt: 0.5,
+                                    fontWeight: isActive('/profil')
+                                        ? 'bold'
+                                        : 'normal',
+                                }}
+                            >
+                                Profil
+                            </Typography>
+                        </IconButton>
+                        <IconButton
+                            onClick={handleDeconnexion}
+                            sx={{
+                                color: '#ef4444',
+                                flexDirection: 'column',
+                                p: 1,
+                            }}
+                        >
+                            <Logout fontSize="small" />
+                            <Typography
+                                variant="caption"
+                                sx={{ fontSize: '0.65rem', mt: 0.5 }}
+                            >
+                                Quitter
+                            </Typography>
+                        </IconButton>
+                    </>
+                )}
+
+                {!estConnecte && (
+                    <IconButton
+                        onClick={() => navigate('/connexion')}
+                        sx={{ color: '#3b82f6', flexDirection: 'column', p: 1 }}
+                    >
+                        <Login fontSize="small" />
+                        <Typography
+                            variant="caption"
+                            sx={{
+                                fontSize: '0.65rem',
+                                mt: 0.5,
+                                fontWeight: 'bold',
+                            }}
+                        >
+                            Connexion
+                        </Typography>
+                    </IconButton>
+                )}
+            </Toolbar>
+        </AppBar>
     );
 };
 
