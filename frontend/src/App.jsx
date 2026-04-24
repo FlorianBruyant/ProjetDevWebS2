@@ -10,6 +10,9 @@ import ConfirmEmail from './components/ConfirmEmail';
 import DemandeReset from './pages/DemandeReset';
 import NouveauMotDePasse from './components/NouveauMotDePasse';
 
+// 👇 NOUVEL IMPORT POUR LA PAGE DE GESTION DES OBJETS
+import GestionObjet from './pages/GestionObjet';
+
 function App() {
     return (
         <Router>
@@ -34,6 +37,9 @@ function App() {
                     path="/reset-password/:uid/:token"
                     element={<NouveauMotDePasse />}
                 />
+
+                {/* 👇 NOUVELLE ROUTE POUR GÉRER UN OBJET SPÉCIFIQUE (Le ":id" est dynamique) */}
+                <Route path="/objet/:id" element={<GestionObjet />} />
             </Routes>
         </Router>
     );

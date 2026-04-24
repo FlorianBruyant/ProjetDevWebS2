@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
-import { Box, Typography, Chip, Divider } from '@mui/material';
+import { Box, Typography, Chip, Divider, Button } from '@mui/material'; // 👈 Ajout de Button ici
+import { useNavigate } from 'react-router-dom'; // 👈 Ajout de useNavigate
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
@@ -41,7 +42,6 @@ const creerIconeSmart = (item) => {
         couleur = '#d32f2f';
     }
 
-    // Si l'objet est en panne, l'icône sur la carte devient grise
     if (item.en_panne) couleur = '#9e9e9e';
 
     const htmlIcone = renderToStaticMarkup(
@@ -88,6 +88,7 @@ const RecentreurDeCarte = ({ donnees }) => {
 
 const Carte = ({ hauteur = '100%', donnees = [] }) => {
     const positionCergy = [49.0351, 2.0799];
+    const navigate = useNavigate(); // 👈 Initialisation de la navigation
 
     const extrairePosition = (item) => {
         if (item.point_actuel_details)
@@ -284,6 +285,25 @@ const Carte = ({ hauteur = '100%', donnees = [] }) => {
                                     >
                                         ID: {item.id_technique || item.id}
                                     </Typography>
+
+                                    {/* 👈 NOUVEAU BOUTON D'ACCÈS AU DASHBOARD DE L'OBJET */}
+                                    <Button
+                                        variant="contained"
+                                        color="primary"
+                                        size="small"
+                                        fullWidth
+                                        sx={{
+                                            mt: 1.5,
+                                            borderRadius: 2,
+                                            textTransform: 'none',
+                                            fontWeight: 'bold',
+                                        }}
+                                        onClick={() =>
+                                            navigate(`/objet/${item.id}`)
+                                        }
+                                    >
+                                        Gérer cet objet
+                                    </Button>
                                 </Box>
                             </Popup>
                         </Marker>

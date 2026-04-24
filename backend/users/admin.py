@@ -5,17 +5,56 @@ from .models import ActionLog, CustomUser
 
 
 class CustomUserAdmin(UserAdmin):
-    # On ajoute nos champs personnalisés dans la liste du tableau
-    list_display = ("username", "email", "role", "nb_acces", "is_staff")
-
-    # On ajoute nos champs dans le formulaire de modification (quand on clique sur l'user)
-    fieldsets = UserAdmin.fieldsets + (
-        ("Infos Smart City", {"fields": ("role", "nb_acces")}),
+    # Les colonnes visibles dans le tableau de la liste des utilisateurs
+    list_display = (
+        "username",
+        "email",
+        "role",
+        "niveau",
+        "points",
+        "nb_acces",
+        "is_staff",
     )
 
-    # On permet aussi de modifier ces champs lors de la création d'un utilisateur
+    # Comme "date_derniere_action" se met à jour tout seul (auto_now=True),
+    # il doit être mis en "lecture seule" dans l'admin
+    readonly_fields = ("date_derniere_action",)
+
+    # Les champs visibles quand tu cliques sur un utilisateur pour le modifier
+    fieldsets = UserAdmin.fieldsets + (
+        (
+            "Infos Smart City",
+            {
+                "fields": (
+                    "role",
+                    "niveau",
+                    "points",
+                    "genre",
+                    "date_naissance",
+                    "type_membre",
+                    "photo",
+                    "nb_acces",
+                    "date_derniere_action",
+                )
+            },
+        ),
+    )
+
+    # Les champs visibles quand tu crées un NOUVEL utilisateur depuis l'admin
     add_fieldsets = UserAdmin.add_fieldsets + (
-        ("Infos Smart City", {"fields": ("role", "nb_acces")}),
+        (
+            "Infos Smart City",
+            {
+                "fields": (
+                    "role",
+                    "niveau",
+                    "points",
+                    "genre",
+                    "type_membre",
+                    "nb_acces",
+                )
+            },
+        ),
     )
 
 
