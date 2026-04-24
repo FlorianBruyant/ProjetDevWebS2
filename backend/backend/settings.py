@@ -42,7 +42,7 @@ INSTALLED_APPS = [
     "corsheaders",
     "api",
     "users",
-    "map",  # ajout de nos applications ici
+    "map.apps.MapConfig",
 ]
 
 MIDDLEWARE = [
