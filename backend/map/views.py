@@ -43,6 +43,14 @@ class VehiculeViewSet(viewsets.ModelViewSet):
     search_fields = ["nom", "immatriculation"]
     permission_classes = [IsAdminOrReadOnly]
 
+    def get_queryset(self):
+        queryset = Vehicule.objects.all()
+        # On récupère la zone depuis l'URL
+        zone_id = self.request.query_params.get("zone")
+        if zone_id:
+            queryset = queryset.filter(zone_id=zone_id)
+        return queryset
+
 
 class FeuViewSet(viewsets.ModelViewSet):
     queryset = Feu.objects.all()
@@ -51,6 +59,13 @@ class FeuViewSet(viewsets.ModelViewSet):
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
     search_fields = ["nom", "zone__nom"]
 
+    def get_queryset(self):
+        queryset = Feu.objects.all()
+        zone_id = self.request.query_params.get("zone")
+        if zone_id:
+            queryset = queryset.filter(zone_id=zone_id)
+        return queryset
+
 
 class ParkingViewSet(viewsets.ModelViewSet):
     queryset = Parking.objects.all()
@@ -58,6 +73,13 @@ class ParkingViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAdminOrReadOnly]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
     search_fields = ["nom", "zone__nom"]
+
+    def get_queryset(self):
+        queryset = Parking.objects.all()
+        zone_id = self.request.query_params.get("zone")
+        if zone_id:
+            queryset = queryset.filter(zone_id=zone_id)
+        return queryset
 
 
 # 👇 NOUVEAU VIEWSET POUR LES SCÉNARIOS

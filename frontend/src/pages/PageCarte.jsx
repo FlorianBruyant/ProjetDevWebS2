@@ -106,13 +106,11 @@ const PageCarte = () => {
 
     // --- FONCTION DE CHARGEMENT API ---
     const chargerDonnees = async (
-        categorie = 'global',
-        texte = '',
+        categorie = categorieActuelle,
+        texte = recherche,
         isRefresh = false,
         zoneId = zoneSelectionnee,
     ) => {
-        const activeZone = zoneId;
-
         if (!isRefresh) {
             setDoitCentrer(true); // Autorise le recentrage pour une vraie recherche
             if (donneesMap.length === 0) setChargement(true);
@@ -126,7 +124,7 @@ const PageCarte = () => {
 
         try {
             const endpoint = categorie === 'global' ? 'global' : categorie;
-            let url = `http://localhost:8000/api/map/${endpoint}/?search=${texte}&zone=${activeZone}`;
+            let url = `http://localhost:8000/api/map/${endpoint}/?search=${texte}&zone=${zoneId}`;
             const response = await fetch(url);
             const data = await response.json();
             // On vérifie si data est un tableau. Sinon, on cherche data.results.
@@ -149,10 +147,15 @@ const PageCarte = () => {
     useEffect(() => {
         const intervalle = setInterval(() => {
             // On ajoute un flag "true" pour dire que c'est un refresh
-            chargerDonnees(categorieActuelle, recherche, true);
+            chargerDonnees(
+                categorieActuelle,
+                recherche,
+                true,
+                zoneSelectionnee,
+            );
         }, 5000);
         return () => clearInterval(intervalle);
-    }, [categorieActuelle, recherche]);
+    }, [categorieActuelle, recherche, zoneSelectionnee]);
 
     useLayoutEffect(() => {
         if (location.state?.focusRecherche) {
@@ -482,7 +485,12 @@ const PageCarte = () => {
                         onChange={(e) => setRecherche(e.target.value)}
                         onKeyDown={(e) => {
                             if (e.key === 'Enter') {
-                                chargerDonnees(categorieActuelle, recherche);
+                                chargerDonnees(
+                                    categorieActuelle,
+                                    recherche,
+                                    false,
+                                    zoneSelectionnee,
+                                );
                                 setRechercheActive(false);
                                 inputRef.current?.blur();
                             }
@@ -509,7 +517,12 @@ const PageCarte = () => {
                                 icon={<MapIcon />}
                                 label="Toute la ville"
                                 onClick={() => {
-                                    chargerDonnees('global', recherche);
+                                    chargerDonnees(
+                                        'global',
+                                        recherche,
+                                        false,
+                                        zoneSelectionnee,
+                                    );
                                     setRechercheActive(false);
                                 }}
                                 color={
@@ -523,7 +536,13 @@ const PageCarte = () => {
                                 icon={<DirectionsBus />}
                                 label="Bus & Vélibs"
                                 onClick={() => {
-                                    chargerDonnees('vehicules', recherche);
+                                    setCategorieActuelle('vehicules');
+                                    chargerDonnees(
+                                        'vehicules',
+                                        recherche,
+                                        false,
+                                        zoneSelectionnee,
+                                    );
                                     setRechercheActive(false);
                                 }}
                                 color={
@@ -537,7 +556,13 @@ const PageCarte = () => {
                                 icon={<LocalParking />}
                                 label="Parkings"
                                 onClick={() => {
-                                    chargerDonnees('parkings', recherche);
+                                    setCategorieActuelle('parkings');
+                                    chargerDonnees(
+                                        'parkings',
+                                        recherche,
+                                        false,
+                                        zoneSelectionnee,
+                                    );
                                     setRechercheActive(false);
                                 }}
                                 color={
@@ -551,7 +576,13 @@ const PageCarte = () => {
                                 icon={<Traffic />}
                                 label="Feux"
                                 onClick={() => {
-                                    chargerDonnees('feux', recherche);
+                                    setCategorieActuelle('feux');
+                                    chargerDonnees(
+                                        'feux',
+                                        recherche,
+                                        false,
+                                        zoneSelectionnee,
+                                    );
                                     setRechercheActive(false);
                                 }}
                                 color={
