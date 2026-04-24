@@ -1,7 +1,14 @@
 import React, { useEffect } from 'react';
 import { Box, Typography, Chip, Divider, Button } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import {
+    MapContainer,
+    TileLayer,
+    Marker,
+    Popup,
+    useMap,
+    useMapEvents,
+} from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { renderToStaticMarkup } from 'react-dom/server';
@@ -18,12 +25,11 @@ import {
     Error as ErrorIcon,
 } from '@mui/icons-material';
 
-// --- 🛠️ LA FABRIQUE D'ICÔNES DYNAMIQUES (STABILISÉE) ---
+// --- 🛠️ LA FABRIQUE D'ICÔNES DYNAMIQUES ---
 const creerIconeSmart = (item) => {
     let IconeMUI = DirectionsBus;
     let couleur = '#1a237e';
 
-    // On utilise le type_api que j'ai ajouté dans views.py pour fixer l'icône
     switch (item.type_api) {
         case 'feux':
             IconeMUI = Traffic;
@@ -36,7 +42,6 @@ const creerIconeSmart = (item) => {
             couleur = '#455a64';
             break;
         case 'vehicules':
-            // Si c'est un véhicule, on regarde s'il y a une plaque pour mettre une voiture, sinon bus
             IconeMUI = item.immatriculation ? DirectionsCar : DirectionsBus;
             couleur = '#2e7d32';
             break;
@@ -45,7 +50,6 @@ const creerIconeSmart = (item) => {
             couleur = '#d32f2f';
     }
 
-    // Si l'objet est marqué en panne ou inactif, il devient GRIS
     if (item.en_panne || item.est_actif === false) {
         couleur = '#9e9e9e';
     }
@@ -74,6 +78,7 @@ const creerIconeSmart = (item) => {
     });
 };
 
+// --- RECENTREUR AUTOMATIQUE ---
 const RecentreurDeCarte = ({ donnees }) => {
     const map = useMap();
     useEffect(() => {
@@ -92,7 +97,25 @@ const RecentreurDeCarte = ({ donnees }) => {
     return null;
 };
 
-const Carte = ({ hauteur = '100%', donnees = [] }) => {
+// --- 🎯 NOUVEAU : LE CAPTEUR DE CLICS POUR L'AJOUT ---
+const GestionnaireClic = ({ enModeAjout, auClic }) => {
+    useMapEvents({
+        click(e) {
+            if (enModeAjout && auClic) {
+                auClic(e.latlng); // Récupère la latitude et longitude du clic
+            }
+        },
+    });
+    return null;
+};
+
+// --- COMPOSANT PRINCIPAL CARTE ---
+const Carte = ({
+    hauteur = '100%',
+    donnees = [],
+    enModeAjout = false,
+    auClicCarte,
+}) => {
     const navigate = useNavigate();
     const positionCergy = [49.0351, 2.0799];
 
@@ -105,7 +128,15 @@ const Carte = ({ hauteur = '100%', donnees = [] }) => {
     };
 
     return (
-        <Box sx={{ height: hauteur, width: '100%', overflow: 'hidden' }}>
+        // 👇 On change le curseur en mode ajout pour indiquer qu'on peut cliquer
+        <Box
+            sx={{
+                height: hauteur,
+                width: '100%',
+                overflow: 'hidden',
+                cursor: enModeAjout ? 'crosshair' : 'grab',
+            }}
+        >
             <MapContainer
                 center={positionCergy}
                 zoom={14}
@@ -114,6 +145,12 @@ const Carte = ({ hauteur = '100%', donnees = [] }) => {
             >
                 <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
                 <RecentreurDeCarte donnees={donnees} />
+
+                {/* 🎯 On injecte notre capteur de clic ici */}
+                <GestionnaireClic
+                    enModeAjout={enModeAjout}
+                    auClic={auClicCarte}
+                />
 
                 {donnees.map((item) => {
                     const pos = extrairePosition(item);
@@ -137,7 +174,7 @@ const Carte = ({ hauteur = '100%', donnees = [] }) => {
                                         variant="subtitle2"
                                         sx={{ fontWeight: 'bold', mb: 0.5 }}
                                     >
-                                        {item.nom}
+                                        {item.nom || item.type_incident}
                                     </Typography>
 
                                     <Box

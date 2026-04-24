@@ -13,6 +13,17 @@ import {
     Typography,
     IconButton,
     Stack,
+    Fab,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions,
+    Button,
+    MenuItem,
+    Select,
+    FormControl,
+    InputLabel,
+    Alert,
 } from '@mui/material';
 import {
     Search,
@@ -22,13 +33,15 @@ import {
     LocalParking,
     Traffic,
     Map as MapIcon,
+    Add,
+    LocationOn,
 } from '@mui/icons-material';
 import Carte from '../components/Carte';
 
 const PageCarte = () => {
     const location = useLocation();
 
-    // --- ÉTATS ---
+    // --- ÉTATS EXISTANTS ---
     const [donneesMap, setDonneesMap] = useState([]);
     const [termeFixe, setTermeFixe] = useState('');
     const [chargement, setChargement] = useState(false);
@@ -39,36 +52,58 @@ const PageCarte = () => {
     const [recherche, setRecherche] = useState(
         () => location.state?.texteInitial ?? '',
     );
-
     const [categorieActuelle, setCategorieActuelle] = useState('global');
     const inputRef = useRef(null);
+
+    // --- NOUVEAUX ÉTATS (OPTION A - AJOUT D'OBJET) ---
+    const [isAdmin, setIsAdmin] = useState(false);
+    const [modeAjout, setModeAjout] = useState(false);
+    const [openModal, setOpenModal] = useState(false);
+    const [coordsSelectionnees, setCoordsSelectionnees] = useState(null);
+    const [nouveauObjet, setNouveauObjet] = useState({
+        type_api: 'feux',
+        nom: '',
+        description: '',
+        details: '', // Sera utilisé pour immatriculation ou places_totales
+    });
+
+    // --- VÉRIFICATION DU RÔLE (Pour afficher le bouton +) ---
+    useEffect(() => {
+        const verifierRole = async () => {
+            const token = localStorage.getItem('access_token');
+            if (!token) return;
+            try {
+                const res = await fetch('http://localhost:8000/api/me/', {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    setIsAdmin(data.role === 'ADMIN');
+                }
+            } catch (err) {
+                console.error('Erreur vérification rôle:', err);
+            }
+        };
+        verifierRole();
+    }, []);
 
     // --- FONCTION DE CHARGEMENT API ---
     const chargerDonnees = async (categorie = 'global', texte = '') => {
         if (donneesMap.length === 0) setChargement(true);
-
         setAucunResultat(false);
         setTermeFixe(texte);
         setCategorieActuelle(categorie);
 
         try {
             const endpoint = categorie === 'global' ? 'global' : categorie;
-
-            // 👇 CORRECTION : On utilise maintenant "api/map/" au lieu de "api-map/"
             let url = `http://localhost:8000/api/map/${endpoint}/?search=${texte}`;
-
             const response = await fetch(url);
-
-            if (!response.ok) {
+            if (!response.ok)
                 throw new Error(`Erreur HTTP: ${response.status}`);
-            }
             const data = await response.json();
 
             setDonneesMap(data);
-
-            if (data.length === 0 && texte !== '') {
-                setAucunResultat(true);
-            }
+            if (data.length === 0 && texte !== '') setAucunResultat(true);
         } catch (error) {
             console.error('Erreur API Carte:', error);
             if (donneesMap.length === 0) setAucunResultat(true);
@@ -85,12 +120,10 @@ const PageCarte = () => {
         return () => clearInterval(intervalle);
     }, [categorieActuelle, recherche]);
 
-    // --- INITIALISATION ---
     useLayoutEffect(() => {
         if (location.state?.focusRecherche) {
             const texteInitial = location.state?.texteInitial;
             window.history.replaceState({}, document.title);
-
             setTimeout(() => {
                 inputRef.current?.focus();
                 if (texteInitial) chargerDonnees('global', texteInitial);
@@ -106,6 +139,103 @@ const PageCarte = () => {
         'Centre Commercial Trois Fontaines',
     ];
 
+    // --- GESTION DU CLIC SUR LA CARTE ---
+    const handleClicCarte = (latlng) => {
+        setCoordsSelectionnees(latlng);
+        setOpenModal(true);
+        setModeAjout(false); // On quitte le mode ajout une fois cliqué
+    };
+
+    // --- ENVOI DE L'OBJET AU BACKEND ---
+    const handleCreerObjet = async () => {
+        const token = localStorage.getItem('access_token');
+        if (!token) return;
+
+        try {
+            // 1. On crée d'abord le Point GPS (Coordonnées)
+            // Note: Si tu n'as pas de ViewSet pour les Points, on ajustera cette partie côté Backend après.
+            const resPoint = await fetch(
+                'http://localhost:8000/api/map/points/',
+                {
+                    method: 'POST',
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        latitude: coordsSelectionnees.lat,
+                        longitude: coordsSelectionnees.lng,
+                    }),
+                },
+            );
+
+            let pointId = null;
+            if (resPoint.ok) {
+                const pointData = await resPoint.json();
+                pointId = pointData.id;
+            } else {
+                console.warn(
+                    "Échec création point, tentative d'envoi imbriqué...",
+                );
+                // Gérer le cas où on envoie tout d'un coup (si le backend est configuré pour)
+            }
+
+            // 2. On prépare les données de l'objet
+            const payload = {
+                nom: nouveauObjet.nom,
+                description: nouveauObjet.description,
+                est_actif: true,
+                en_panne: false,
+            };
+
+            // On ajoute la position ou le point actuel selon le type
+            if (nouveauObjet.type_api === 'vehicules') {
+                payload.immatriculation =
+                    nouveauObjet.details ||
+                    `BUS-${Math.floor(Math.random() * 1000)}`;
+                if (pointId) payload.point_actuel = pointId;
+            } else if (nouveauObjet.type_api === 'parkings') {
+                payload.places_totales = parseInt(nouveauObjet.details) || 100;
+                payload.places_occupees = 0;
+                if (pointId) payload.position = pointId;
+            } else {
+                // Feux
+                if (pointId) payload.position = pointId;
+            }
+
+            // 3. On crée l'objet
+            const res = await fetch(
+                `http://localhost:8000/api/map/${nouveauObjet.type_api}/`,
+                {
+                    method: 'POST',
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(payload),
+                },
+            );
+
+            if (res.ok) {
+                setOpenModal(false);
+                setNouveauObjet({
+                    type_api: 'feux',
+                    nom: '',
+                    description: '',
+                    details: '',
+                }); // Reset
+                chargerDonnees(); // Rafraîchir la carte
+            } else {
+                console.error('Erreur lors de la création', await res.json());
+                alert(
+                    "Erreur lors de la création de l'objet. Vérifiez la console.",
+                );
+            }
+        } catch (err) {
+            console.error('Erreur réseau:', err);
+        }
+    };
+
     return (
         <Box
             sx={{
@@ -117,7 +247,40 @@ const PageCarte = () => {
                 bgcolor: 'white',
             }}
         >
-            {/* CARTE */}
+            {/* BOUTON FLOTTANT D'AJOUT (Uniquement pour Admin) */}
+            {isAdmin && (
+                <Fab
+                    color={modeAjout ? 'secondary' : 'primary'}
+                    sx={{
+                        position: 'absolute',
+                        bottom: { xs: 90, md: 30 },
+                        right: { xs: 20, md: 30 },
+                        zIndex: 1000,
+                    }}
+                    onClick={() => setModeAjout(!modeAjout)}
+                >
+                    {modeAjout ? <Close /> : <Add />}
+                </Fab>
+            )}
+
+            {/* MESSAGE D'INSTRUCTION */}
+            {modeAjout && (
+                <Alert
+                    icon={<LocationOn fontSize="inherit" />}
+                    severity="info"
+                    sx={{
+                        position: 'absolute',
+                        bottom: { xs: 160, md: 100 },
+                        right: { xs: 20, md: 30 },
+                        zIndex: 1000,
+                        boxShadow: 3,
+                    }}
+                >
+                    Cliquez n'importe où sur la carte pour placer l'objet.
+                </Alert>
+            )}
+
+            {/* LA CARTE (On lui passe les props pour le clic) */}
             <Box
                 sx={{
                     flex: 1,
@@ -126,10 +289,121 @@ const PageCarte = () => {
                     transition: 'filter 0.3s',
                 }}
             >
-                <Carte donnees={donneesMap} />
+                <Carte
+                    donnees={donneesMap}
+                    enModeAjout={modeAjout}
+                    auClicCarte={handleClicCarte}
+                />
             </Box>
 
-            {/* BARRE DE RECHERCHE */}
+            {/* --- LE MODAL DE CRÉATION DE L'OBJET --- */}
+            <Dialog
+                open={openModal}
+                onClose={() => setOpenModal(false)}
+                fullWidth
+                maxWidth="sm"
+            >
+                <DialogTitle sx={{ fontWeight: 'bold' }}>
+                    Créer un équipement connecté
+                </DialogTitle>
+                <DialogContent
+                    sx={{
+                        pt: '20px !important',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: 3,
+                    }}
+                >
+                    <FormControl fullWidth>
+                        <InputLabel>Type d'équipement</InputLabel>
+                        <Select
+                            value={nouveauObjet.type_api}
+                            label="Type d'équipement"
+                            onChange={(e) =>
+                                setNouveauObjet({
+                                    ...nouveauObjet,
+                                    type_api: e.target.value,
+                                })
+                            }
+                        >
+                            <MenuItem value="feux">Feu Tricolore</MenuItem>
+                            <MenuItem value="vehicules">
+                                Bus / Véhicule
+                            </MenuItem>
+                            <MenuItem value="parkings">Parking</MenuItem>
+                        </Select>
+                    </FormControl>
+
+                    <TextField
+                        label="Nom de l'objet (ex: Feu croisement Nord)"
+                        fullWidth
+                        value={nouveauObjet.nom}
+                        onChange={(e) =>
+                            setNouveauObjet({
+                                ...nouveauObjet,
+                                nom: e.target.value,
+                            })
+                        }
+                    />
+
+                    {nouveauObjet.type_api === 'vehicules' && (
+                        <TextField
+                            label="Plaque d'immatriculation"
+                            fullWidth
+                            value={nouveauObjet.details}
+                            onChange={(e) =>
+                                setNouveauObjet({
+                                    ...nouveauObjet,
+                                    details: e.target.value,
+                                })
+                            }
+                        />
+                    )}
+
+                    {nouveauObjet.type_api === 'parkings' && (
+                        <TextField
+                            label="Nombre de places totales"
+                            type="number"
+                            fullWidth
+                            value={nouveauObjet.details}
+                            onChange={(e) =>
+                                setNouveauObjet({
+                                    ...nouveauObjet,
+                                    details: e.target.value,
+                                })
+                            }
+                        />
+                    )}
+
+                    <TextField
+                        label="Description (Optionnel)"
+                        multiline
+                        rows={3}
+                        fullWidth
+                        value={nouveauObjet.description}
+                        onChange={(e) =>
+                            setNouveauObjet({
+                                ...nouveauObjet,
+                                description: e.target.value,
+                            })
+                        }
+                    />
+                </DialogContent>
+                <DialogActions sx={{ p: 2, pt: 0 }}>
+                    <Button onClick={() => setOpenModal(false)} color="inherit">
+                        Annuler
+                    </Button>
+                    <Button
+                        variant="contained"
+                        onClick={handleCreerObjet}
+                        disableElevation
+                    >
+                        Placer sur la carte
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
+            {/* --- LA BARRE DE RECHERCHE (Ton code original intouché) --- */}
             <Paper
                 elevation={rechercheActive ? 0 : 3}
                 sx={{
@@ -189,7 +463,6 @@ const PageCarte = () => {
                         sx={{ py: 1.5 }}
                     />
                 </Box>
-
                 {rechercheActive && (
                     <Box sx={{ px: 2 }}>
                         <Stack
@@ -254,7 +527,6 @@ const PageCarte = () => {
                                 clickable
                             />
                         </Stack>
-
                         {chargement && donneesMap.length === 0 && (
                             <Typography
                                 sx={{
@@ -266,7 +538,6 @@ const PageCarte = () => {
                                 Analyse de la ville en cours...
                             </Typography>
                         )}
-
                         {aucunResultat && (
                             <Paper
                                 sx={{
@@ -282,7 +553,6 @@ const PageCarte = () => {
                                 </Typography>
                             </Paper>
                         )}
-
                         <Typography
                             variant="overline"
                             sx={{ color: 'text.secondary', fontWeight: 'bold' }}

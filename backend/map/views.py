@@ -8,15 +8,24 @@ from users.models import ActionLog
 from users.permissions import IsAdminOrReadOnly
 
 # Import des modèles et serializers
-from .models import Feu, Parking, Vehicule, Zone
+# 👇 AJOUT DE 'Point'
+from .models import Feu, Parking, Point, Vehicule, Zone
 from .serializers import (
     FeuSerializer,
     ParkingSerializer,
+    PointSerializer,  # 👇 AJOUT DE 'PointSerializer'
     VehiculeSerializer,
     ZoneSerializer,
 )
 
 # --- VIEWSETS (CRUD AUTOMATIQUE) ---
+
+
+# 👇 LE NOUVEAU VIEWSET QUI MANQUAIT
+class PointViewSet(viewsets.ModelViewSet):
+    queryset = Point.objects.all()
+    serializer_class = PointSerializer
+    permission_classes = [IsAdminOrReadOnly]
 
 
 class ZoneViewSet(viewsets.ModelViewSet):

@@ -65,6 +65,7 @@ class FeuSerializer(serializers.ModelSerializer):
             "nom",
             "etat_actuel",
             "temps_avant_changement",
+            "position",  # 👈 LA CORRECTION EST ICI ! On autorise l'enregistrement de la position.
             "point_actuel_details",
             "est_actif",
             "en_panne",
