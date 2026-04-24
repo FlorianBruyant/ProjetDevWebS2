@@ -157,7 +157,7 @@ const Carte = ({
                     auClic={auClicCarte}
                 />
 
-                {donnees.map((item) => {
+                {(donnees || []).map((item) => {
                     const pos = extrairePosition(item);
                     if (!pos) return null;
 

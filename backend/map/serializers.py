@@ -29,6 +29,7 @@ class PointSerializer(serializers.ModelSerializer):
 class VehiculeSerializer(serializers.ModelSerializer):
     point_actuel_details = PointSerializer(source="point_actuel", read_only=True)
     historique = serializers.SerializerMethodField()
+    type_api = serializers.ReadOnlyField(default="vehicules")
 
     class Meta:
         model = Vehicule
@@ -42,7 +43,8 @@ class VehiculeSerializer(serializers.ModelSerializer):
             "point_actuel",
             "point_actuel_details",
             "zone",
-            "historique",  # 👈 Ajout "zone"
+            "historique",
+            "type_api",
         ]
 
     def get_historique(self, obj):
@@ -56,6 +58,7 @@ class VehiculeSerializer(serializers.ModelSerializer):
 class FeuSerializer(serializers.ModelSerializer):
     point_actuel_details = PointSerializer(source="position", read_only=True)
     historique = serializers.SerializerMethodField()
+    type_api = serializers.ReadOnlyField(default="feux")
 
     class Meta:
         model = Feu
@@ -70,7 +73,8 @@ class FeuSerializer(serializers.ModelSerializer):
             "en_panne",
             "description",
             "zone",
-            "historique",  # 👈 Ajout "zone"
+            "historique",
+            "type_api",
         ]
 
     def get_historique(self, obj):
@@ -84,6 +88,7 @@ class FeuSerializer(serializers.ModelSerializer):
 class ParkingSerializer(serializers.ModelSerializer):
     point_actuel_details = PointSerializer(source="position", read_only=True)
     historique = serializers.SerializerMethodField()
+    type_api = serializers.ReadOnlyField(default="parkings")
 
     class Meta:
         model = Parking
@@ -95,7 +100,8 @@ class ParkingSerializer(serializers.ModelSerializer):
             "position",
             "point_actuel_details",
             "zone",
-            "historique",  # 👈 Ajout "zone"
+            "historique",
+            "type_api",
         ]
 
     def get_historique(self, obj):

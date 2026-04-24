@@ -1,4 +1,5 @@
 import requests
+from django.db.models import Q
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, viewsets
 from rest_framework.decorators import api_view, permission_classes
@@ -47,12 +48,16 @@ class FeuViewSet(viewsets.ModelViewSet):
     queryset = Feu.objects.all()
     serializer_class = FeuSerializer
     permission_classes = [IsAdminOrReadOnly]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
+    search_fields = ["nom", "zone__nom"]
 
 
 class ParkingViewSet(viewsets.ModelViewSet):
     queryset = Parking.objects.all()
     serializer_class = ParkingSerializer
     permission_classes = [IsAdminOrReadOnly]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
+    search_fields = ["nom", "zone__nom"]
 
 
 # 👇 NOUVEAU VIEWSET POUR LES SCÉNARIOS
@@ -67,36 +72,38 @@ class ScenarioViewSet(viewsets.ModelViewSet):
 
 @api_view(["GET"])
 def get_global_data(request):
-    """
-    Rassemble tous les objets et injecte le 'type_api'.
-    """
     try:
-        vehicules = Vehicule.objects.all()
-        feux = Feu.objects.all()
-        parkings = Parking.objects.all()
+        query = request.query_params.get("search", "").strip()
 
+        # On pré-charge la zone pour éviter des centaines de requêtes SQL (optimisation)
+        vehicules = Vehicule.objects.select_related("zone").all()
+        feux = Feu.objects.select_related("zone").all()
+        parkings = Parking.objects.select_related("zone").all()
+
+        if query:
+            # On définit le filtre de base
+            # icontains sur une relation (zone__nom) fonctionne même si zone est null
+            filtre_base = Q(nom__icontains=query) | Q(zone__nom__icontains=query)
+
+            vehicules = vehicules.filter(
+                filtre_base | Q(immatriculation__icontains=query)
+            ).distinct()
+            feux = feux.filter(filtre_base).distinct()
+            parkings = parkings.filter(filtre_base).distinct()
+
+        # On sérialise
         v_data = VehiculeSerializer(vehicules, many=True).data
         f_data = FeuSerializer(feux, many=True).data
         p_data = ParkingSerializer(parkings, many=True).data
 
-        v_list = list(v_data)
-        f_list = list(f_data)
-        p_list = list(p_data)
+        # Fusion des listes
+        return Response(list(v_data) + list(f_data) + list(p_data))
 
-        for item in v_list:
-            item["type_api"] = "vehicules"
-        for item in f_list:
-            item["type_api"] = "feux"
-        for item in p_list:
-            item["type_api"] = "parkings"
-
-        print(
-            f"✅ Data Global : {len(v_list)} véhicules, {len(f_list)} feux, {len(p_list)} parkings"
-        )
-        return Response(v_list + f_list + p_list)
     except Exception as e:
-        print(f"❌ ERREUR DANS GET_GLOBAL_DATA : {str(e)}")
-        return Response({"error": str(e)}, status=500)
+        print(f"❌ ERREUR SERVEUR : {str(e)}")
+        return Response(
+            {"error": "Erreur interne du serveur", "details": str(e)}, status=500
+        )
 
 
 # --- VUES COMPLÉMENTAIRES ---

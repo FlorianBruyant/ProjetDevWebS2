@@ -106,14 +106,21 @@ const PageCarte = () => {
         setCategorieActuelle(categorie);
 
         try {
-            let url = `http://localhost:8000/api/map/${categorie === 'global' ? 'global' : categorie}/?search=${texte}`;
+            const endpoint = categorie === 'global' ? 'global' : categorie;
+            let url = `http://localhost:8000/api/map/${endpoint}/?search=${texte}`;
             const response = await fetch(url);
             const data = await response.json();
+            // On vérifie si data est un tableau. Sinon, on cherche data.results.
+            // Si aucun des deux, on met un tableau vide [].
+            const listeFinale = Array.isArray(data) ? data : data.results || [];
 
-            setDonneesMap(data);
-            if (data.length === 0 && texte !== '') setAucunResultat(true);
+            setDonneesMap(listeFinale);
+
+            if (listeFinale.length === 0 && texte !== '')
+                setAucunResultat(true);
         } catch (error) {
             console.error('Erreur API Carte:', error);
+            setDonneesMap([]); // Sécurité
         } finally {
             setChargement(false);
         }
@@ -483,7 +490,7 @@ const PageCarte = () => {
                                 icon={<MapIcon />}
                                 label="Toute la ville"
                                 onClick={() => {
-                                    chargerDonnees('global');
+                                    chargerDonnees('global', recherche);
                                     setRechercheActive(false);
                                 }}
                                 color={
@@ -497,7 +504,7 @@ const PageCarte = () => {
                                 icon={<DirectionsBus />}
                                 label="Bus & Vélibs"
                                 onClick={() => {
-                                    chargerDonnees('vehicules');
+                                    chargerDonnees('vehicules', recherche);
                                     setRechercheActive(false);
                                 }}
                                 color={
@@ -511,7 +518,7 @@ const PageCarte = () => {
                                 icon={<LocalParking />}
                                 label="Parkings"
                                 onClick={() => {
-                                    chargerDonnees('parkings');
+                                    chargerDonnees('parkings', recherche);
                                     setRechercheActive(false);
                                 }}
                                 color={
@@ -525,7 +532,7 @@ const PageCarte = () => {
                                 icon={<Traffic />}
                                 label="Feux"
                                 onClick={() => {
-                                    chargerDonnees('feux');
+                                    chargerDonnees('feux', recherche);
                                     setRechercheActive(false);
                                 }}
                                 color={
