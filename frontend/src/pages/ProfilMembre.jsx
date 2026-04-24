@@ -7,6 +7,9 @@ import {
     Paper,
     Container,
     CircularProgress,
+    TextField,
+    MenuItem,
+    Alert,
     LinearProgress,
     Button,
 } from '@mui/material';
@@ -14,24 +17,32 @@ import {
 export default function ProfilMembre() {
     const { id } = useParams(); // Récupère l'ID depuis l'URL
     const navigate = useNavigate();
+
     const [member, setMember] = useState(null);
+    const [currentUser, setCurrentUser] = useState(null); // Pour vérifier si JE suis admin
     const [loading, setLoading] = useState(true);
+    const [isUpdating, setIsUpdating] = useState(false);
+    const [errorMsg, setErrorMsg] = useState('');
 
     useEffect(() => {
-        const fetchMember = async () => {
+        const fetchData = async () => {
             const token = localStorage.getItem('access_token');
             try {
-                const response = await fetch(
+                // 1. Récupérer le profil consulté
+                const resMember = await fetch(
                     `http://localhost:8000/api/members/${id}/`,
                     {
                         headers: { Authorization: `Bearer ${token}` },
                     },
                 );
-                if (response.ok) {
-                    const data = await response.json();
-                    setMember(data);
-                } else {
-                    console.error('Membre introuvable');
+                // 2. Récupérer mon propre profil pour vérifier mon rôle
+                const resMe = await fetch(`http://localhost:8000/api/me/`, {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+
+                if (resMember.ok && resMe.ok) {
+                    setMember(await resMember.json());
+                    setCurrentUser(await resMe.json());
                 }
             } catch (error) {
                 console.error(error);
@@ -39,8 +50,37 @@ export default function ProfilMembre() {
                 setLoading(false);
             }
         };
-        fetchMember();
+        fetchData();
     }, [id]);
+
+    const handleAdminUpdate = async (field, value) => {
+        setIsUpdating(true);
+        const token = localStorage.getItem('access_token');
+        try {
+            const response = await fetch(
+                `http://localhost:8000/api/members/${id}/`,
+                {
+                    method: 'PATCH',
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ [field]: value }),
+                },
+            );
+
+            if (response.ok) {
+                const updatedMember = await response.json();
+                setMember(updatedMember);
+            } else {
+                setErrorMsg("Erreur lors de la mise à jour par l'admin.");
+            }
+        } catch (err) {
+            setErrorMsg('Erreur de connexion.');
+        } finally {
+            setIsUpdating(false);
+        }
+    };
 
     if (loading)
         return (
@@ -51,9 +91,11 @@ export default function ProfilMembre() {
     if (!member)
         return (
             <Typography sx={{ mt: 10, textAlign: 'center' }}>
-                Utilisateur introuvable.
+                Membre introuvable.
             </Typography>
         );
+
+    const isAdmin = currentUser?.role === 'ADMIN';
 
     return (
         <Box sx={{ bgcolor: '#FAFAFA', minHeight: '100vh', pb: 10 }}>
@@ -64,6 +106,7 @@ export default function ProfilMembre() {
                         'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                 }}
             />
+
             <Container maxWidth="sm" sx={{ mt: -6 }}>
                 <Button
                     onClick={() => navigate(-1)}
@@ -96,19 +139,80 @@ export default function ProfilMembre() {
                         {member.username}
                     </Typography>
                     <Typography variant="body1" color="text.secondary">
-                        Membre de la communauté
+                        {member.role}
                     </Typography>
                 </Box>
 
+                {errorMsg && (
+                    <Alert severity="error" sx={{ mb: 2 }}>
+                        {errorMsg}
+                    </Alert>
+                )}
+
+                {/* --- ZONE ADMIN --- */}
+                {isAdmin && (
+                    <Paper
+                        elevation={4}
+                        sx={{
+                            p: 3,
+                            mb: 3,
+                            borderRadius: 3,
+                            border: '2px solid #ed6c02',
+                        }}
+                    >
+                        <Typography
+                            variant="subtitle1"
+                            fontWeight="bold"
+                            color="warning.main"
+                            gutterBottom
+                        >
+                            Panel Administrateur
+                        </Typography>
+                        <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
+                            <TextField
+                                select
+                                label="Changer le Rôle"
+                                fullWidth
+                                value={member.role}
+                                onChange={(e) =>
+                                    handleAdminUpdate('role', e.target.value)
+                                }
+                                disabled={isUpdating}
+                            >
+                                <MenuItem value="VISITEUR">Visiteur</MenuItem>
+                                <MenuItem value="SIMPLE">Simple</MenuItem>
+                                <MenuItem value="COMPLEXE">Complexe</MenuItem>
+                                <MenuItem value="ADMIN">
+                                    Administrateur
+                                </MenuItem>
+                            </TextField>
+
+                            <TextField
+                                select
+                                label="Changer le Niveau"
+                                fullWidth
+                                value={member.niveau}
+                                onChange={(e) =>
+                                    handleAdminUpdate('niveau', e.target.value)
+                                }
+                                disabled={isUpdating}
+                            >
+                                <MenuItem value="DEBUTANT">Débutant</MenuItem>
+                                <MenuItem value="INTERMEDIAIRE">
+                                    Intermédiaire
+                                </MenuItem>
+                                <MenuItem value="AVANCE">Avancé</MenuItem>
+                                <MenuItem value="EXPERT">Expert</MenuItem>
+                            </TextField>
+                        </Box>
+                    </Paper>
+                )}
+
+                {/* --- INFORMATIONS CLASSIQUES --- */}
                 <Paper elevation={2} sx={{ p: 3, mb: 3, borderRadius: 3 }}>
                     <Typography variant="h6" fontWeight="bold" color="primary">
-                        Niveau {member.niveau || 'Débutant'}
+                        Niveau {member.niveau}
                     </Typography>
-                    <LinearProgress
-                        variant="determinate"
-                        value={40}
-                        sx={{ height: 10, borderRadius: 5, my: 1 }}
-                    />
                     <Typography variant="body2">
                         Points d'expérience : {member.points || 0} XP
                     </Typography>
@@ -119,12 +223,10 @@ export default function ProfilMembre() {
                         Informations
                     </Typography>
                     <Typography sx={{ mb: 1 }}>
-                        <strong>Genre :</strong>{' '}
-                        {member.genre || 'Non renseigné'}
+                        <strong>Genre :</strong> {member.genre}
                     </Typography>
                     <Typography>
-                        <strong>Type de membre :</strong>{' '}
-                        {member.type_membre || 'Citoyen'}
+                        <strong>Type :</strong> {member.type_membre}
                     </Typography>
                 </Paper>
             </Container>

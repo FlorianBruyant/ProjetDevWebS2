@@ -196,11 +196,22 @@ class UserProfileView(generics.RetrieveUpdateAPIView):
 
 
 # Vue pour consulter le profil d'un autre membre (Lecture seule)
-class MemberProfileView(generics.RetrieveAPIView):
+class MemberProfileView(generics.RetrieveUpdateAPIView):
     queryset = CustomUser.objects.all()
     serializer_class = UserSerializer
     permission_classes = [permissions.IsAuthenticated]
     lookup_field = "id"
+
+    def update(self, request, *args, **kwargs):
+        # Vérifier si l'utilisateur qui fait la requête est ADMIN
+        if request.user.role != "ADMIN":
+            return Response(
+                {"error": "Seul un administrateur peut modifier ces informations."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        # Si c'est un admin, on autorise la modification
+        return super().update(request, *args, **kwargs)
 
 
 class UserListView(generics.ListAPIView):
