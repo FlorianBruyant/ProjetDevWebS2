@@ -221,3 +221,37 @@ class Scenario(models.Model):
 
     def __str__(self):
         return f"[{self.categorie}] {self.nom}"
+
+
+# ==========================================
+# 4. STATISTIQUES
+# ==========================================
+
+
+class HistoriqueObjet(models.Model):
+    TYPES_CHOICES = [
+        ("vehicule", "Véhicule"),
+        ("feu", "Feu"),
+        ("parking", "Parking"),
+    ]
+
+    objet_id = models.IntegerField()  # L'ID de l'objet d'origine
+    type_objet = models.CharField(max_length=20, choices=TYPES_CHOICES)
+    date_mesure = models.DateTimeField(auto_now_add=True)
+
+    # Métriques à surveiller
+    consommation_kwh = models.FloatField(default=0.0)
+    est_en_panne = models.BooleanField(default=False)
+
+    # Donnée contextuelle (ex: % de remplissage pour parking, vitesse pour bus)
+    valeur_specifique = models.FloatField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["-date_mesure"]
+        indexes = [
+            models.Index(fields=["type_objet", "objet_id"]),
+            models.Index(fields=["date_mesure"]),
+        ]
+
+    def __str__(self):
+        return f"Mesure {self.type_objet} #{self.objet_id} - {self.date_mesure}"

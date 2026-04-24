@@ -1,5 +1,8 @@
+from datetime import timedelta
+
 import requests
-from django.db.models import Q
+from django.db.models import Avg, Q, Sum
+from django.utils import timezone
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, viewsets
 from rest_framework.decorators import api_view, permission_classes
@@ -10,7 +13,7 @@ from users.permissions import IsAdminOrReadOnly
 
 # Import des modèles et serializers
 # 👇 AJOUT DE 'Scenario'
-from .models import Feu, Parking, Point, Scenario, Vehicule, Zone
+from .models import Feu, HistoriqueObjet, Parking, Point, Scenario, Vehicule, Zone
 from .serializers import (
     FeuSerializer,
     ParkingSerializer,
@@ -166,3 +169,17 @@ def consulter_objet(request, objet_id):
         points_gagnes=0.50,
     )
     return Response({"message": "Points ajoutés !"})
+
+
+@api_view(["GET"])
+def get_stats_consommation(request):
+    # On récupère les données des 24 dernières heures
+    hier = timezone.now() - timedelta(hours=24)
+    historique = HistoriqueObjet.objects.filter(date_mesure__gte=hier)
+
+    stats = historique.values("type_objet").annotate(
+        consommation_totale=Sum("consommation_kwh"),
+        moyenne_consommation=Avg("consommation_kwh"),
+    )
+
+    return Response(stats)
