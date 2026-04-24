@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.contrib.auth.forms import PasswordResetForm
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from django.utils.encoding import force_bytes, force_str
@@ -8,6 +9,69 @@ from rest_framework.response import Response
 
 from .models import CustomUser
 from .serializers import UserSerializer
+
+
+class PasswordResetRequestView(generics.GenericAPIView):
+    permission_classes = [permissions.AllowAny]
+    # On n'a pas besoin de serializer ici, donc on supprime l'appel à get_serializer
+    serializer_class = None
+
+    def post(self, request):
+        email = request.data.get("email")
+
+        if not email:
+            return Response(
+                {"error": "Veuillez fournir une adresse email."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # On utilise le formulaire natif de Django pour gérer la logique
+        form = PasswordResetForm({"email": email})
+
+        if form.is_valid():
+            # On récupère les utilisateurs correspondant à l'email
+            for user in form.get_users(email):
+                uid = urlsafe_base64_encode(force_bytes(user.pk))
+                token = default_token_generator.make_token(user)
+
+                lien = f"http://localhost:5173/reset-password/{uid}/{token}/"
+
+                sujet = "Réinitialisation de votre mot de passe"
+                message = f"Bonjour {user.username},\n\nCliquez sur ce lien pour changer votre mot de passe : {lien}"
+
+                send_mail(
+                    sujet,
+                    message,
+                    settings.DEFAULT_FROM_EMAIL,
+                    [user.email],
+                    fail_silently=False,
+                )
+            return Response({"message": "Lien envoyé !"}, status=status.HTTP_200_OK)
+
+        return Response(
+            {"error": "Email invalide."}, status=status.HTTP_400_BAD_REQUEST
+        )
+
+
+# Vue pour valider le nouveau mot de passe
+class PasswordResetConfirmView(generics.GenericAPIView):
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request, uidb64, token):
+        new_password = request.data.get("password")
+        try:
+            uid = force_str(urlsafe_base64_decode(uidb64))
+            user = CustomUser.objects.get(pk=uid)
+        except:
+            user = None
+
+        if user is not None and default_token_generator.check_token(user, token):
+            user.set_password(new_password)
+            user.save()
+            return Response(
+                {"message": "Mot de passe modifié !"}, status=status.HTTP_200_OK
+            )
+        return Response({"error": "Lien invalide."}, status=status.HTTP_400_BAD_REQUEST)
 
 
 def envoyer_confirmation_email(user):
