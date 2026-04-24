@@ -10,9 +10,11 @@ import {
     LinearProgress,
     Dialog,
     DialogTitle,
+    Divider,
     DialogContent,
     DialogActions,
     TextField,
+    Alert,
     MenuItem,
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
@@ -26,6 +28,19 @@ export default function Profil() {
     const [open, setOpen] = useState(false);
     const [editData, setEditData] = useState({});
     const [isUpdating, setIsUpdating] = useState(false);
+    const [currentPassword, setCurrentPassword] = useState('');
+
+    const [showPasswordFields, setShowPasswordFields] = useState(false);
+    const [errorMsg, setErrorMsg] = useState('');
+
+    // Fonction pour vérifier si une donnée sensible a été touchée
+    const aModifieDonneesSensibles = () => {
+        return (
+            editData.username !== user?.username ||
+            editData.email !== user?.email ||
+            showPasswordFields // Si le bloc mot de passe est ouvert
+        );
+    };
 
     useEffect(() => {
         const fetchProfil = async () => {
@@ -60,7 +75,52 @@ export default function Profil() {
 
     const handleUpdate = async () => {
         setIsUpdating(true);
+        setErrorMsg('');
         const token = localStorage.getItem('access_token');
+
+        // 1. On prépare les données de base (non sensibles)
+        const payload = {
+            genre: editData.genre,
+            type_membre: editData.type_membre,
+            username: editData.username,
+        };
+
+        let isEmailChanged = false;
+        let isPasswordChanged = false;
+
+        // 2. Gestion des données sensibles (Username, Email, Password)
+        if (aModifieDonneesSensibles()) {
+            if (!currentPassword) {
+                setErrorMsg(
+                    'Veuillez saisir votre mot de passe actuel pour modifier vos identifiants.',
+                );
+                setIsUpdating(false);
+                return;
+            }
+
+            // On ajoute le mot de passe de confirmation requis par le backend
+            payload.current_password = currentPassword;
+
+            // Si l'email a changé
+            if (editData.email !== user.email) {
+                payload.email = editData.email;
+                isEmailChanged = true;
+            }
+
+            // Si on veut changer le mot de passe et que le champ est rempli
+            if (showPasswordFields && editData.password) {
+                if (editData.password !== editData.confirmPassword) {
+                    setErrorMsg(
+                        'Les nouveaux mots de passe ne correspondent pas.',
+                    );
+                    setIsUpdating(false);
+                    return;
+                }
+                payload.password = editData.password;
+                isPasswordChanged = true;
+            }
+        }
+
         try {
             const response = await fetch('http://localhost:8000/api/me/', {
                 method: 'PATCH',
@@ -68,19 +128,52 @@ export default function Profil() {
                     Authorization: `Bearer ${token}`,
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({
-                    genre: editData.genre,
-                    type_membre: editData.type_membre,
-                }),
+                body: JSON.stringify(payload),
             });
 
+            const data = await response.json();
+
             if (response.ok) {
-                const updatedUser = await response.json();
-                setUser(updatedUser);
-                setOpen(false);
+                // Si l'email OU le mot de passe a changé, on déconnecte l'utilisateur
+                if (isEmailChanged || isPasswordChanged) {
+                    if (isEmailChanged) {
+                        alert(
+                            'Email modifié. Veuillez valider le lien envoyé à votre nouvelle adresse avant de vous reconnecter.',
+                        );
+                    } else {
+                        alert(
+                            'Mot de passe modifié avec succès. Veuillez vous reconnecter avec vos nouveaux identifiants.',
+                        );
+                    }
+                    handleLogout();
+                } else {
+                    // Sinon, on met à jour l'interface normalement sans déconnecter
+                    setUser(data);
+                    setOpen(false);
+                    setShowPasswordFields(false);
+                    setCurrentPassword('');
+                    // On nettoie les champs de mot de passe pour la prochaine ouverture
+                    setEditData((prev) => ({
+                        ...prev,
+                        password: '',
+                        confirmPassword: '',
+                    }));
+                }
+            } else {
+                // Traduction des erreurs backend
+                if (data.current_password)
+                    setErrorMsg('Mot de passe actuel incorrect.');
+                else if (data.username)
+                    setErrorMsg("Ce nom d'utilisateur est déjà pris.");
+                else if (data.email)
+                    setErrorMsg('Cette adresse email est déjà utilisée.');
+                else
+                    setErrorMsg(
+                        data.detail || 'Erreur lors de la mise à jour.',
+                    );
             }
         } catch (error) {
-            console.error('Erreur lors de la mise à jour:', error);
+            setErrorMsg('Erreur de connexion au serveur.');
         } finally {
             setIsUpdating(false);
         }
@@ -176,10 +269,12 @@ export default function Profil() {
                         Gagnez de l'XP en consultant des objets sur la carte !
                     </Typography>
                 </Paper>
+
                 {/* --- BOUTON MODIF PROFIL --- */}
                 <Button size="small" onClick={() => setOpen(true)}>
                     Modifier
                 </Button>
+
                 {/* --- INFORMATIONS PUBLIQUES --- */}
                 <Paper elevation={2} sx={{ p: 3, mb: 3, borderRadius: 3 }}>
                     <Typography variant="h6" fontWeight="bold" sx={{ mb: 2 }}>
@@ -214,6 +309,12 @@ export default function Profil() {
                             pt: 1,
                         }}
                     >
+                        {errorMsg && <Alert severity="error">{errorMsg}</Alert>}
+
+                        {/* --- ZONE LIBRE (Pas besoin de mot de passe) --- */}
+                        <Typography variant="overline" color="text.secondary">
+                            Préférences
+                        </Typography>
                         <TextField
                             select
                             fullWidth
@@ -226,7 +327,6 @@ export default function Profil() {
                                 })
                             }
                         >
-                            {/* Correction : On utilise les clés du modèle Django ('M', 'F', etc.) */}
                             <MenuItem value="M">Masculin</MenuItem>
                             <MenuItem value="F">Féminin</MenuItem>
                             <MenuItem value="A">Autre</MenuItem>
@@ -251,17 +351,141 @@ export default function Profil() {
                                 Professionnel
                             </MenuItem>
                         </TextField>
+
+                        <Divider sx={{ my: 1 }} />
+
+                        {/* --- ZONE SÉCURISÉE (Détectée par aModifieDonneesSensibles) --- */}
+                        <Typography variant="overline" color="primary">
+                            Identifiants
+                        </Typography>
+
+                        <TextField
+                            fullWidth
+                            label="Nom d'utilisateur"
+                            value={editData.username || ''}
+                            onChange={(e) =>
+                                setEditData({
+                                    ...editData,
+                                    username: e.target.value,
+                                })
+                            }
+                        />
+
+                        <TextField
+                            fullWidth
+                            label="Email"
+                            value={editData.email || ''}
+                            onChange={(e) =>
+                                setEditData({
+                                    ...editData,
+                                    email: e.target.value,
+                                })
+                            }
+                        />
+
+                        {!showPasswordFields ? (
+                            <Button
+                                size="small"
+                                onClick={() => setShowPasswordFields(true)}
+                            >
+                                Changer le mot de passe
+                            </Button>
+                        ) : (
+                            <>
+                                <TextField
+                                    fullWidth
+                                    label="Nouveau mot de passe"
+                                    type="password"
+                                    onChange={(e) =>
+                                        setEditData({
+                                            ...editData,
+                                            password: e.target.value,
+                                        })
+                                    }
+                                />
+                                <TextField
+                                    fullWidth
+                                    label="Confirmer nouveau mot de passe"
+                                    type="password"
+                                    onChange={(e) =>
+                                        setEditData({
+                                            ...editData,
+                                            confirmPassword: e.target.value,
+                                        })
+                                    }
+                                />
+                                <Button
+                                    size="small"
+                                    color="error"
+                                    onClick={() => setShowPasswordFields(false)}
+                                >
+                                    Annuler le changement
+                                </Button>
+                            </>
+                        )}
+
+                        {/* --- CHAMP MOT DE PASSE ACTUEL (Apparaît ou s'active si besoin) --- */}
+                        {aModifieDonneesSensibles() && (
+                            <Box
+                                sx={{
+                                    mt: 2,
+                                    p: 2,
+                                    bgcolor: '#fff4e5',
+                                    borderRadius: 2,
+                                }}
+                            >
+                                <Typography
+                                    variant="caption"
+                                    color="warning.main"
+                                    sx={{ display: 'block', mb: 1 }}
+                                >
+                                    Confirmation requise pour modifier vos
+                                    identifiants :
+                                </Typography>
+
+                                <TextField
+                                    fullWidth
+                                    required
+                                    label="Mot de passe actuel"
+                                    type="password"
+                                    value={currentPassword}
+                                    onChange={(e) =>
+                                        setCurrentPassword(e.target.value)
+                                    }
+                                    color="warning"
+                                />
+
+                                {/* --- BOUTON MOT DE PASSE OUBLIÉ --- */}
+                                <Box sx={{ textAlign: 'right', mt: 1 }}>
+                                    <Typography
+                                        variant="caption"
+                                        onClick={() =>
+                                            navigate('/mot-de-passe-oublie')
+                                        }
+                                        sx={{
+                                            cursor: 'pointer',
+                                            color: 'primary.main',
+                                            textDecoration: 'underline',
+                                            '&:hover': {
+                                                color: 'primary.dark',
+                                            },
+                                        }}
+                                    >
+                                        J'ai oublié mon mot de passe
+                                    </Typography>
+                                </Box>
+                            </Box>
+                        )}
                     </DialogContent>
+
                     <DialogActions>
-                        <Button onClick={() => setOpen(false)} color="inherit">
-                            Annuler
-                        </Button>
+                        <Button onClick={() => setOpen(false)}>Annuler</Button>
                         <Button
                             onClick={handleUpdate}
                             variant="contained"
                             disabled={isUpdating}
                         >
-                            {isUpdating ? 'Enregistrement...' : 'Enregistrer'}
+                            Sauvegarder
                         </Button>
                     </DialogActions>
                 </Dialog>

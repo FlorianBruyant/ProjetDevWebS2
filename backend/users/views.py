@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.contrib.auth.forms import PasswordResetForm
+from django.contrib.auth.hashers import check_password
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from django.utils.encoding import force_bytes, force_str
@@ -150,5 +151,45 @@ class UserProfileView(generics.RetrieveUpdateAPIView):
     def get_object(self):
         return self.request.user
 
-    def perform_update(self, serializer):
-        serializer.save()
+    def update(self, request, *args, **kwargs):
+        user = self.get_object()
+        data = request.data
+
+        # 1. Vérification de sécurité (Ancien mot de passe)
+        changement_sensible = any(k in data for k in ["username", "email", "password"])
+
+        if changement_sensible:
+            current_password = data.get("current_password")
+            if not current_password or not check_password(
+                current_password, user.password
+            ):
+                return Response(
+                    {"current_password": "Mot de passe actuel incorrect."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+        # 2. CHANGEMENT DE MOT DE PASSE (Le fix est ici)
+        new_password = data.get("password")
+        if new_password:
+            # IMPORTANT : set_password() hache le mot de passe
+            user.set_password(new_password)
+            user.save()
+            # On retire le password des données du serializer pour ne pas
+            # qu'il essaie de le ré-enregistrer par dessus en texte clair
+            data_copy = data.copy()
+            data_copy.pop("password", None)
+            request._full_data = data_copy
+
+        # 3. Gestion Email (Désactivation si changé)
+        new_email = data.get("email")
+        if new_email and new_email != user.email:
+            user.email = new_email
+            user.is_active = False
+            user.save()
+            envoyer_confirmation_email(user)
+            return Response(
+                {"message": "Email modifié, validation requise."},
+                status=status.HTTP_200_OK,
+            )
+
+        return super().update(request, *args, **kwargs)
