@@ -111,6 +111,8 @@ def consulter_objet(request, objet_id):
     user.verifier_et_mettre_a_jour_niveau()
     user.save()
     ActionLog.objects.create(
-        utilisateur=user, action=f"Consulte objet {objet_id}", points_gagnes=0.50
+        utilisateur=user,
+        action=f"Consultation de l'équipement (ID: {objet_id})",
+        points_gagnes=0.50,
     )
     return Response({"message": "Points ajoutés !"})
