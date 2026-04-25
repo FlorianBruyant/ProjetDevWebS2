@@ -235,9 +235,6 @@ export default function Profil() {
                     <Typography variant="h5" fontWeight="bold">
                         {user?.username}
                     </Typography>
-                    <Typography variant="body1" color="text.secondary">
-                        {user?.email}
-                    </Typography>
                 </Box>
 
                 {/* --- MODULE NIVEAU / XP --- */}
@@ -290,6 +287,24 @@ export default function Profil() {
                     <Typography>
                         <strong>Type de membre :</strong>{' '}
                         {user?.type_membre || 'Citoyen'}
+                    </Typography>
+                </Paper>
+
+                {/* --- INFORMATIONS PRIVEES --- */}
+                <Paper elevation={2} sx={{ p: 3, mb: 3, borderRadius: 3 }}>
+                    <Typography variant="h6" fontWeight="bold" sx={{ mb: 2 }}>
+                        Informations privées
+                    </Typography>
+                    <Typography sx={{ mb: 1 }}>
+                        <strong>Email :</strong> {user?.email}
+                    </Typography>
+                    <Typography sx={{ mb: 1 }}>
+                        <strong>Prénom :</strong>{' '}
+                        {user?.first_name || 'Non renseigné'}
+                    </Typography>
+                    <Typography sx={{ mb: 1 }}>
+                        <strong>Nom :</strong>{' '}
+                        {user?.last_name || 'Non renseigné'}
                     </Typography>
                 </Paper>
 
