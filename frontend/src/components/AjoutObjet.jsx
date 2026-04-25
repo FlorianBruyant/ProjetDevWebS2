@@ -87,6 +87,7 @@ const AjoutObjet = ({
                                 setNouveauObjet({
                                     ...nouveauObjet,
                                     type_api: e.target.value,
+                                    sous_type: '', // Reset du sous-type lors du changement de catégorie
                                 })
                             }
                         >
@@ -95,11 +96,15 @@ const AjoutObjet = ({
                                 Bus / Véhicule
                             </MenuItem>
                             <MenuItem value="parkings">Parking</MenuItem>
+                            <MenuItem value="lieux">Lieu d'intérêt</MenuItem>
+                            <MenuItem value="evenements">
+                                Événement local
+                            </MenuItem>
                         </Select>
                     </FormControl>
 
                     <TextField
-                        label="Nom de l'objet (ex: Feu croisement Nord)"
+                        label="Nom de l'objet"
                         fullWidth
                         value={nouveauObjet.nom}
                         onChange={(e) =>
@@ -110,6 +115,7 @@ const AjoutObjet = ({
                         }
                     />
 
+                    {/* CHAMPS SPÉCIFIQUES : VÉHICULES */}
                     {nouveauObjet.type_api === 'vehicules' && (
                         <TextField
                             label="Plaque d'immatriculation"
@@ -124,6 +130,7 @@ const AjoutObjet = ({
                         />
                     )}
 
+                    {/* CHAMPS SPÉCIFIQUES : PARKINGS */}
                     {nouveauObjet.type_api === 'parkings' && (
                         <TextField
                             label="Nombre de places totales"
@@ -137,6 +144,85 @@ const AjoutObjet = ({
                                 })
                             }
                         />
+                    )}
+
+                    {/* CHAMPS SPÉCIFIQUES : LIEUX D'INTÉRÊT */}
+                    {nouveauObjet.type_api === 'lieux' && (
+                        <>
+                            <FormControl fullWidth>
+                                <InputLabel>Catégorie du lieu</InputLabel>
+                                <Select
+                                    value={nouveauObjet.sous_type || ''}
+                                    label="Catégorie du lieu"
+                                    onChange={(e) =>
+                                        setNouveauObjet({
+                                            ...nouveauObjet,
+                                            sous_type: e.target.value,
+                                        })
+                                    }
+                                >
+                                    <MenuItem value="musee">Musée</MenuItem>
+                                    <MenuItem value="parc">
+                                        Parc / Jardin
+                                    </MenuItem>
+                                    <MenuItem value="restaurant">
+                                        Restaurant
+                                    </MenuItem>
+                                    <MenuItem value="bibliotheque">
+                                        Bibliothèque
+                                    </MenuItem>
+                                </Select>
+                            </FormControl>
+                            <TextField
+                                label="Site Web (URL)"
+                                fullWidth
+                                value={nouveauObjet.site_web || ''}
+                                onChange={(e) =>
+                                    setNouveauObjet({
+                                        ...nouveauObjet,
+                                        site_web: e.target.value,
+                                    })
+                                }
+                            />
+                        </>
+                    )}
+
+                    {/* CHAMPS SPÉCIFIQUES : ÉVÉNEMENTS */}
+                    {nouveauObjet.type_api === 'evenements' && (
+                        <>
+                            <FormControl fullWidth>
+                                <InputLabel>Type d'événement</InputLabel>
+                                <Select
+                                    value={nouveauObjet.sous_type || ''}
+                                    label="Type d'événement"
+                                    onChange={(e) =>
+                                        setNouveauObjet({
+                                            ...nouveauObjet,
+                                            sous_type: e.target.value,
+                                        })
+                                    }
+                                >
+                                    <MenuItem value="festival">
+                                        Festival
+                                    </MenuItem>
+                                    <MenuItem value="marche">Marché</MenuItem>
+                                    <MenuItem value="concert">Concert</MenuItem>
+                                </Select>
+                            </FormControl>
+                            <TextField
+                                label="Date et Heure de début"
+                                type="datetime-local"
+                                fullWidth
+                                InputLabelProps={{ shrink: true }}
+                                value={nouveauObjet.date_debut || ''}
+                                onChange={(e) =>
+                                    setNouveauObjet({
+                                        ...nouveauObjet,
+                                        date_debut: e.target.value,
+                                    })
+                                }
+                            />
+                        </>
                     )}
 
                     <TextField

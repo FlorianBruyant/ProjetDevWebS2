@@ -28,7 +28,6 @@ def demarrer_simulation_feux():
                 else:
                     feu.etat_actuel = "VERT"
                     feu.temps_avant_changement = random.randint(20, 40)
-                print(f"✨ {feu.nom} -> {feu.etat_actuel}")
             feu.save()
 
         time.sleep(2)

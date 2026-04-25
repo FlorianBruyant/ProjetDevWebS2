@@ -150,6 +150,7 @@ const PageCarte = () => {
         if (!token) return;
 
         try {
+            // --- 1. CRÉATION DU POINT GPS ---
             const resPoint = await fetch(
                 'http://localhost:8000/api/map/points/',
                 {
@@ -175,6 +176,7 @@ const PageCarte = () => {
                 );
             }
 
+            // --- 2. PRÉPARATION DU PAYLOAD COMMUN ---
             const payload = {
                 nom: nouveauObjet.nom,
                 description: nouveauObjet.description,
@@ -182,6 +184,7 @@ const PageCarte = () => {
                 en_panne: false,
             };
 
+            // --- 3. LOGIQUE SPÉCIFIQUE PAR TYPE (Intégration nouveaux types) ---
             if (nouveauObjet.type_api === 'vehicules') {
                 payload.immatriculation =
                     nouveauObjet.details ||
@@ -191,10 +194,22 @@ const PageCarte = () => {
                 payload.places_totales = parseInt(nouveauObjet.details) || 100;
                 payload.places_occupees = 0;
                 if (pointId) payload.position = pointId;
+            } else if (nouveauObjet.type_api === 'lieux') {
+                // On utilise 'sous_type' pour la catégorie du lieu (musée, parc...)
+                payload.categorie = nouveauObjet.sous_type;
+                payload.site_web = nouveauObjet.site_web || '';
+                if (pointId) payload.position = pointId;
+            } else if (nouveauObjet.type_api === 'evenements') {
+                // On utilise 'sous_type' pour le type d'événement (festival, marché...)
+                payload.type_evenement = nouveauObjet.sous_type;
+                payload.date_debut = nouveauObjet.date_debut; // Format ISO string attendu par Django
+                if (pointId) payload.position = pointId;
             } else {
+                // Cas par défaut (ex: feux)
                 if (pointId) payload.position = pointId;
             }
 
+            // --- 4. ENVOI À L'API FINALE ---
             const res = await fetch(
                 `http://localhost:8000/api/map/${nouveauObjet.type_api}/`,
                 {
@@ -209,18 +224,21 @@ const PageCarte = () => {
 
             if (res.ok) {
                 setOpenModal(false);
+                // On remet à zéro tous les champs, y compris les nouveaux
                 setNouveauObjet({
                     type_api: 'feux',
                     nom: '',
                     description: '',
                     details: '',
+                    sous_type: '',
+                    site_web: '',
+                    date_debut: '',
                 });
                 chargerDonnees();
             } else {
-                console.error('Erreur lors de la création', await res.json());
-                alert(
-                    "Erreur lors de la création de l'objet. Vérifiez la console.",
-                );
+                const errorMsg = await res.json();
+                console.error('Erreur lors de la création', errorMsg);
+                alert(`Erreur: ${JSON.stringify(errorMsg)}`);
             }
         } catch (err) {
             console.error('Erreur réseau:', err);

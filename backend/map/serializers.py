@@ -1,7 +1,16 @@
 from rest_framework import serializers
 from users.models import ActionLog
 
-from .models import Feu, Parking, Point, Scenario, Vehicule, Zone
+from .models import (
+    Evenement,
+    Feu,
+    LieuInteret,
+    Parking,
+    Point,
+    Scenario,
+    Vehicule,
+    Zone,
+)
 
 
 # --- Sérialiseur pour l'historique (Stats) ---
@@ -108,6 +117,63 @@ class ParkingSerializer(serializers.ModelSerializer):
         logs = ActionLog.objects.filter(action__contains=f"ID: {obj.id}").order_by(
             "-date"
         )[:5]
+        return ActionLogSerializer(logs, many=True).data
+
+
+class LieuInteretSerializer(serializers.ModelSerializer):
+    # On utilise la même clé 'point_actuel_details' pour la compatibilité Front-end
+    point_actuel_details = PointSerializer(source="position", read_only=True)
+    historique = serializers.SerializerMethodField()
+    type_api = serializers.ReadOnlyField(default="lieux")
+
+    class Meta:
+        model = LieuInteret
+        fields = [
+            "id",
+            "nom",
+            "categorie",
+            "position",
+            "point_actuel_details",
+            "zone",
+            "description",
+            "site_web",
+            "historique",
+            "type_api",
+        ]
+
+    def get_historique(self, obj):
+        # On adapte la recherche de log pour le type Lieu
+        logs = ActionLog.objects.filter(action__contains=f"Lieu ID: {obj.id}").order_by(
+            "-date"
+        )[:5]
+        return ActionLogSerializer(logs, many=True).data
+
+
+class EvenementSerializer(serializers.ModelSerializer):
+    point_actuel_details = PointSerializer(source="position", read_only=True)
+    historique = serializers.SerializerMethodField()
+    type_api = serializers.ReadOnlyField(default="evenements")
+
+    class Meta:
+        model = Evenement
+        fields = [
+            "id",
+            "nom",
+            "type_evenement",
+            "date_debut",
+            "position",
+            "point_actuel_details",
+            "zone",
+            "description",
+            "historique",
+            "type_api",
+        ]
+
+    def get_historique(self, obj):
+        # On adapte la recherche de log pour le type Evenement
+        logs = ActionLog.objects.filter(
+            action__contains=f"Evénement ID: {obj.id}"
+        ).order_by("-date")[:5]
         return ActionLogSerializer(logs, many=True).data
 
 

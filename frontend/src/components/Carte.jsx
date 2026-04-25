@@ -23,6 +23,13 @@ import {
     DirectionsBus,
     CheckCircle,
     Error as ErrorIcon,
+    Museum,
+    Park,
+    Restaurant,
+    LibraryBooks,
+    Event,
+    Celebration,
+    MusicNote,
 } from '@mui/icons-material';
 
 const ICON_CACHE = {};
@@ -71,6 +78,17 @@ const creerIconeSmart = (item) => {
     } else if (item.type_api === 'parkings') {
         IconeMUI = LocalParking;
         couleur = '#455a64';
+    } else if (item.type_api === 'lieux') {
+        couleur = '#673ab7'; // Violet pour la culture/lieux
+        if (item.categorie === 'musee') IconeMUI = Museum;
+        else if (item.categorie === 'parc') IconeMUI = Park;
+        else if (item.categorie === 'restaurant') IconeMUI = Restaurant;
+        else if (item.categorie === 'bibliotheque') IconeMUI = LibraryBooks;
+    } else if (item.type_api === 'evenements') {
+        couleur = '#e91e63'; // Rose pour les événements
+        if (item.type_evenement === 'concert') IconeMUI = MusicNote;
+        else if (item.type_evenement === 'festival') IconeMUI = Celebration;
+        else IconeMUI = Event;
     } else {
         IconeMUI = item.immatriculation ? DirectionsCar : DirectionsBus;
         couleur = '#2e7d32';

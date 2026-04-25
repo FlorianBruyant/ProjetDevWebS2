@@ -13,9 +13,21 @@ from users.permissions import IsAdminOrReadOnly
 
 # Import des modèles et serializers
 # 👇 AJOUT DE 'Scenario'
-from .models import Feu, HistoriqueObjet, Parking, Point, Scenario, Vehicule, Zone
+from .models import (
+    Evenement,
+    Feu,
+    HistoriqueObjet,
+    LieuInteret,
+    Parking,
+    Point,
+    Scenario,
+    Vehicule,
+    Zone,
+)
 from .serializers import (
+    EvenementSerializer,
     FeuSerializer,
+    LieuInteretSerializer,
     ParkingSerializer,
     PointSerializer,
     ScenarioSerializer,  # 👇 AJOUT DE 'ScenarioSerializer'
@@ -85,6 +97,41 @@ class ParkingViewSet(viewsets.ModelViewSet):
         return queryset
 
 
+class LieuInteretViewSet(viewsets.ModelViewSet):
+    queryset = LieuInteret.objects.all()
+    serializer_class = LieuInteretSerializer
+    permission_classes = [IsAdminOrReadOnly]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
+    # On permet de filtrer par catégorie (musée, parc...)
+    filterset_fields = ["categorie"]
+    search_fields = ["nom", "categorie", "description"]
+
+    def get_queryset(self):
+        queryset = LieuInteret.objects.all()
+        # Filtrage par zone identique à tes autres modèles
+        zone_id = self.request.query_params.get("zone")
+        if zone_id:
+            queryset = queryset.filter(zone_id=zone_id)
+        return queryset
+
+
+class EvenementViewSet(viewsets.ModelViewSet):
+    queryset = Evenement.objects.all()
+    serializer_class = EvenementSerializer
+    permission_classes = [IsAdminOrReadOnly]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
+    # On permet de filtrer par type d'événement
+    filterset_fields = ["type_evenement"]
+    search_fields = ["nom", "type_evenement", "description"]
+
+    def get_queryset(self):
+        queryset = Evenement.objects.all()
+        zone_id = self.request.query_params.get("zone")
+        if zone_id:
+            queryset = queryset.filter(zone_id=zone_id)
+        return queryset
+
+
 # 👇 NOUVEAU VIEWSET POUR LES SCÉNARIOS
 class ScenarioViewSet(viewsets.ModelViewSet):
     queryset = Scenario.objects.all()
@@ -105,12 +152,16 @@ def get_global_data(request):
         vehicules = Vehicule.objects.select_related("zone").all()
         feux = Feu.objects.select_related("zone").all()
         parkings = Parking.objects.select_related("zone").all()
+        lieux = LieuInteret.objects.select_related("zone").all()
+        evenements = Evenement.objects.select_related("zone").all()
 
         # filtrage par zones
         if zone_id and zone_id != "undefined":
             vehicules = vehicules.filter(zone_id=zone_id)
             feux = feux.filter(zone_id=zone_id)
             parkings = parkings.filter(zone_id=zone_id)
+            lieux = lieux.filter(zone_id=zone_id)
+            evenements = evenements.filter(zone_id=zone_id)
         # recherche textuelle
         if query:
             # On définit le filtre de base
@@ -122,14 +173,20 @@ def get_global_data(request):
             ).distinct()
             feux = feux.filter(filtre_base).distinct()
             parkings = parkings.filter(filtre_base).distinct()
+            lieux = lieux.filter(filtre_base).distinct()
+            evenements = evenements.filter(filtre_base).distinct()
 
         # On sérialise
         v_data = VehiculeSerializer(vehicules, many=True).data
         f_data = FeuSerializer(feux, many=True).data
         p_data = ParkingSerializer(parkings, many=True).data
+        l_data = LieuInteretSerializer(lieux, many=True).data
+        e_data = EvenementSerializer(evenements, many=True).data
 
         # Fusion des listes
-        return Response(list(v_data) + list(f_data) + list(p_data))
+        return Response(
+            list(v_data) + list(f_data) + list(p_data) + list(l_data) + list(e_data)
+        )
 
     except Exception as e:
         print(f"❌ ERREUR SERVEUR : {str(e)}")
