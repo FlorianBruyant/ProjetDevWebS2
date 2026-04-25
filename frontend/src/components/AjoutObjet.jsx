@@ -32,10 +32,10 @@ const AjoutObjet = ({
                 <Fab
                     color={modeAjout ? 'secondary' : 'primary'}
                     sx={{
-                        position: 'absolute',
-                        bottom: { xs: 90, md: 30 },
-                        right: { xs: 20, md: 30 },
-                        zIndex: 1000,
+                        position: 'fixed',
+                        bottom: 30,
+                        right: 30,
+                        zIndex: 2000,
                     }}
                     onClick={() => setModeAjout(!modeAjout)}>
                     {modeAjout ? <Close /> : <Add />}

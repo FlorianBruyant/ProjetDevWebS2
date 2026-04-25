@@ -234,6 +234,7 @@ const PageCarte = () => {
                 flexDirection: 'column',
                 position: 'relative',
                 bgcolor: 'white',
+                overflow: 'hidden',
             }}>
             <AjoutObjet
                 isAdmin={isAdmin}
@@ -245,11 +246,11 @@ const PageCarte = () => {
                 setNouveauObjet={setNouveauObjet}
                 handleCreerObjet={handleCreerObjet}
             />
-
             {/* LA CARTE */}
             <Box
                 sx={{
                     flex: 1,
+                    position: 'relative',
                     zIndex: 0,
                     filter: rechercheActive ? 'blur(2px)' : 'none',
                     transition: 'filter 0.3s',
