@@ -25,11 +25,13 @@ const BarreNavigation = () => {
     const location = useLocation();
 
     const token = localStorage.getItem('access_token');
+    const role_token = localStorage.getItem('role_token');
     const estConnecte = Boolean(token && token !== 'undefined');
 
     const handleDeconnexion = () => {
         localStorage.removeItem('access_token');
         localStorage.removeItem('refresh_token');
+        localStorage.removeItem('user_role');
         navigate('/');
     };
 
@@ -110,19 +112,24 @@ const BarreNavigation = () => {
                         >
                             Horaires
                         </Button>
-                        <Button
-                            startIcon={<Assessment />}
-                            onClick={() => navigate('/stats')}
-                            sx={{
-                                color: isActive('/stats') ? '#3b82f6' : 'white',
-                                fontWeight: isActive('/stats')
-                                    ? 'bold'
-                                    : 'normal',
-                                textTransform: 'none',
-                            }}
-                        >
-                            Statistiques
-                        </Button>
+                        {(role_token === 'ADMIN' ||
+                            role_token === 'COMPLEXE') && (
+                            <Button
+                                startIcon={<Assessment />}
+                                onClick={() => navigate('/stats')}
+                                sx={{
+                                    color: isActive('/stats')
+                                        ? '#3b82f6'
+                                        : 'white',
+                                    fontWeight: isActive('/stats')
+                                        ? 'bold'
+                                        : 'normal',
+                                    textTransform: 'none',
+                                }}
+                            >
+                                Statistiques
+                            </Button>
+                        )}
                     </Box>
                 )}
 
@@ -273,30 +280,33 @@ const BarreNavigation = () => {
                                 Horaires
                             </Typography>
                         </IconButton>
-                        <IconButton
-                            onClick={() => navigate('/stats')}
-                            sx={{
-                                color: isActive('/stats')
-                                    ? '#3b82f6'
-                                    : '#9ca3af',
-                                flexDirection: 'column',
-                                p: 1,
-                            }}
-                        >
-                            <Assessment fontSize="small" />
-                            <Typography
-                                variant="caption"
+                        {(role_token === 'ADMIN' ||
+                            role_token === 'COMPLEXE') && (
+                            <IconButton
+                                onClick={() => navigate('/stats')}
                                 sx={{
-                                    fontSize: '0.65rem',
-                                    mt: 0.5,
-                                    fontWeight: isActive('/stats')
-                                        ? 'bold'
-                                        : 'normal',
+                                    color: isActive('/stats')
+                                        ? '#3b82f6'
+                                        : '#9ca3af',
+                                    flexDirection: 'column',
+                                    p: 1,
                                 }}
                             >
-                                Stats
-                            </Typography>
-                        </IconButton>
+                                <Assessment fontSize="small" />
+                                <Typography
+                                    variant="caption"
+                                    sx={{
+                                        fontSize: '0.65rem',
+                                        mt: 0.5,
+                                        fontWeight: isActive('/stats')
+                                            ? 'bold'
+                                            : 'normal',
+                                    }}
+                                >
+                                    Stats
+                                </Typography>
+                            </IconButton>
+                        )}
                         <IconButton
                             onClick={() => navigate('/membres')}
                             sx={{

@@ -9,10 +9,9 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from users.models import ActionLog
-from users.permissions import IsAdminOrReadOnly
+from users.permissions import IsAdminOrComplexe, IsAdminOrReadOnly
 
 # Import des modèles et serializers
-# 👇 AJOUT DE 'Scenario'
 from .models import (
     Evenement,
     Feu,
@@ -30,7 +29,7 @@ from .serializers import (
     LieuInteretSerializer,
     ParkingSerializer,
     PointSerializer,
-    ScenarioSerializer,  # 👇 AJOUT DE 'ScenarioSerializer'
+    ScenarioSerializer,
     VehiculeSerializer,
     ZoneSerializer,
 )
@@ -132,7 +131,7 @@ class EvenementViewSet(viewsets.ModelViewSet):
         return queryset
 
 
-# 👇 NOUVEAU VIEWSET POUR LES SCÉNARIOS
+# VIEWSET POUR LES SCÉNARIOS
 class ScenarioViewSet(viewsets.ModelViewSet):
     queryset = Scenario.objects.all()
     serializer_class = ScenarioSerializer
@@ -229,6 +228,7 @@ def consulter_objet(request, objet_id):
 
 
 @api_view(["GET"])
+@permission_classes([IsAdminOrComplexe])
 def get_analytics(request):
     # On regarde les 24 dernières heures
     hier = timezone.now() - timedelta(hours=24)

@@ -59,12 +59,24 @@ const Connexion = () => {
                 localStorage.setItem('access_token', data.access);
                 // On stocke le refresh token pour renouveler la session plus tard
                 localStorage.setItem('refresh_token', data.refresh);
-
                 // Optionnel : stocker le nom d'utilisateur pour l'afficher dans la barre de menu
                 localStorage.setItem('username', credentials.username);
 
-                // Redirection vers la carte
-                navigate('/carte');
+                // On stocke le rôle pour RouteProtegee
+                const resProfile = await fetch(
+                    'http://localhost:8000/api/me/',
+                    {
+                        headers: { Authorization: `Bearer ${data.access}` },
+                    },
+                );
+                if (resProfile.ok) {
+                    const userProfile = await resProfile.json();
+                    // On enregistre le rôle dans le localStorage
+                    localStorage.setItem('role_token', userProfile.role);
+                }
+                // On redirige l'utilisateur vers la page qu'il essayait d'accéder, sinon vers la carte
+                const destination = location.state?.from?.pathname || '/carte';
+                navigate(destination);
             } else {
                 setErreur("Nom d'utilisateur ou mot de passe incorrect.");
             }

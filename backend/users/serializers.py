@@ -15,7 +15,6 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CustomUser
-        # On ajoute les nouveaux champs liés au cahier des charges
         fields = (
             "id",
             "username",

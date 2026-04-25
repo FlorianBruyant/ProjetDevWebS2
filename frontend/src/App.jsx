@@ -4,7 +4,7 @@ import {
     Route,
     Navigate,
 } from 'react-router-dom';
-import { Box } from '@mui/material'; // N'oublie pas d'importer Box
+import { Box } from '@mui/material';
 import Accueil from './pages/Accueil';
 import PageCarte from './pages/PageCarte';
 import Inscription from './pages/Inscription';
@@ -20,11 +20,22 @@ import NouveauMotDePasse from './components/NouveauMotDePasse';
 import GestionObjet from './pages/GestionObjet';
 import Dashboard from './pages/Dashboard';
 
-const RouteProtegee = ({ children }) => {
+// --- MISE À JOUR DE LA ROUTE PROTÉGÉE ---
+const RouteProtegee = ({ children, rolesAutorises = [] }) => {
     const token = localStorage.getItem('access_token');
+    const userRole = localStorage.getItem('role_token'); // On récupère le rôle
+
+    // 1. Si pas de token, direction connexion
     if (!token || token === 'undefined') {
         return <Navigate to="/connexion" replace />;
     }
+
+    // 2. Si des rôles spécifiques sont demandés, on vérifie
+    if (rolesAutorises.length > 0 && !rolesAutorises.includes(userRole)) {
+        // L'utilisateur est connecté mais n'a pas le bon rôle -> retour à la carte
+        return <Navigate to="/carte" replace />;
+    }
+
     return children;
 };
 
@@ -33,9 +44,6 @@ function App() {
         <Router>
             <BarreNavigation />
 
-            {/* 👇 LE SECRET EST ICI : Un coussin d'air dynamique */}
-            {/* Sur Mobile (xs): padding en bas de 80px (car la barre est en bas) */}
-            {/* Sur Ordi (md): padding en haut de 64px (car la barre est en haut) */}
             <Box
                 sx={{
                     pb: { xs: '80px', md: 0 },
@@ -60,6 +68,7 @@ function App() {
                         element={<NouveauMotDePasse />}
                     />
 
+                    {/* Routes pour tous les connectés */}
                     <Route
                         path="/carte"
                         element={
@@ -92,9 +101,21 @@ function App() {
                             </RouteProtegee>
                         }
                     />
+
+                    {/* DASHBOARD : Uniquement ADMIN et COMPLEXE */}
+                    <Route
+                        path="/stats"
+                        element={
+                            <RouteProtegee
+                                rolesAutorises={['ADMIN', 'COMPLEXE']}
+                            >
+                                <Dashboard />
+                            </RouteProtegee>
+                        }
+                    />
+
                     <Route path="/membres" element={<Membres />} />
                     <Route path="/profil/:id" element={<ProfilMembre />} />
-                    <Route path="/stats" element={<Dashboard />} />
                 </Routes>
             </Box>
         </Router>
