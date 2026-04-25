@@ -2,46 +2,44 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
     Box,
-    Typography,
     Container,
     Paper,
-    Tabs,
-    Tab,
+    Typography,
     Button,
     Chip,
-    Divider,
-    TextField,
+    Tabs,
+    Tab,
     Grid,
+    TextField,
     Switch,
     FormControlLabel,
-    CircularProgress,
     Alert,
+    CircularProgress,
+    List,
+    ListItem,
+    ListItemText,
     Dialog,
     DialogTitle,
     DialogContent,
     DialogContentText,
     DialogActions,
-    Tooltip,
-    List,
-    ListItem,
-    ListItemText,
-    ListItemIcon,
-    MenuItem,
     Autocomplete,
     createFilterOptions,
 } from '@mui/material';
 import {
     ArrowBack,
-    Save,
-    Delete,
     Lock,
     Build,
     History,
-    Speed,
+    Save,
+    Delete,
+    Map as MapIcon,
     Traffic,
+    Speed,
     LocalParking,
     EventNote,
-    Map as MapIcon,
+    Warning,
+    PowerOff,
 } from '@mui/icons-material';
 
 // Filtre pour l'Autocomplete
@@ -58,7 +56,6 @@ export default function GestionObjet() {
     const [erreur, setErreur] = useState('');
     const [messageSucces, setMessageSucces] = useState('');
 
-    // État pour stocker la liste des zones de la ville
     const [zonesPossibles, setZonesPossibles] = useState([]);
 
     const [formData, setFormData] = useState({
@@ -66,7 +63,7 @@ export default function GestionObjet() {
         description: '',
         est_actif: true,
         en_panne: false,
-        zone: '', // Pour l'affectation de la zone
+        zone: '',
     });
 
     const [openDeleteModal, setOpenDeleteModal] = useState(false);
@@ -86,7 +83,10 @@ export default function GestionObjet() {
                 });
                 if (resUser.ok) {
                     const userData = await resUser.json();
-                    setIsAdmin(userData.role === 'ADMIN');
+                    setIsAdmin(
+                        userData.role === 'ADMIN' ||
+                            userData.role === 'COMPLEXE',
+                    );
                 }
 
                 // 2. Récupération des Zones
@@ -118,7 +118,6 @@ export default function GestionObjet() {
                 const dataObj = await resObj.json();
                 setObjet(dataObj);
 
-                // On remplit le formulaire avec les données existantes
                 setFormData({
                     nom: dataObj.nom || '',
                     description: dataObj.description || '',
@@ -135,7 +134,6 @@ export default function GestionObjet() {
         initialiserPage();
     }, [type_api, id, navigate]);
 
-    // Crédit des points
     useEffect(() => {
         const crediterPoints = async () => {
             const token = localStorage.getItem('access_token');
@@ -196,6 +194,24 @@ export default function GestionObjet() {
                 <CircularProgress />
             </Box>
         );
+
+    // --- CALCULS POUR L'EN-TÊTE DES STATS ---
+    const logs = objet?.historique || [];
+    const nbPannes = logs.filter((log) => log.est_en_panne).length;
+    // On considère "éteint" si la consommation est à 0 et que ce n'est pas une panne.
+    const nbEteint = logs.filter(
+        (log) =>
+            log.consommation_kwh === 0 &&
+            !log.est_en_panne &&
+            objet?.type_api !== 'lieux' &&
+            objet?.type_api !== 'evenements',
+    ).length;
+
+    // Calcul du remplissage pour les parkings
+    const tauxRemplissage =
+        objet?.type_api === 'parkings' && objet?.places_totales > 0
+            ? Math.round((objet.places_occupees / objet.places_totales) * 100)
+            : 0;
 
     return (
         <Box sx={{ bgcolor: '#F4F6F8', minHeight: '100vh', py: 4, mt: 8 }}>
@@ -316,7 +332,6 @@ export default function GestionObjet() {
                                     fullWidth
                                     disabled={!isAdmin}
                                     value={
-                                        // On cherche l'objet si c'est un ID, sinon on renvoie le texte libre
                                         zonesPossibles.find(
                                             (z) => z.id === formData.zone,
                                         ) ||
@@ -350,7 +365,6 @@ export default function GestionObjet() {
                                             params,
                                         );
                                         const { inputValue } = params;
-
                                         const isExisting = options.some(
                                             (option) =>
                                                 inputValue === option.nom,
@@ -373,7 +387,6 @@ export default function GestionObjet() {
                                     }}
                                     freeSolo
                                     renderInput={(params) => {
-                                        // Déstructuration propre pour éviter l'erreur undefined startAdornment
                                         const { InputProps, ...restParams } =
                                             params;
                                         return (
@@ -404,7 +417,6 @@ export default function GestionObjet() {
                                 />
                             </Grid>
 
-                            {/* Données spécifiques selon le type */}
                             <Grid item xs={12}>
                                 <Paper
                                     variant="outlined"
@@ -568,6 +580,108 @@ export default function GestionObjet() {
                     {/* ONGLET 1 : HISTORIQUE ET LOGS */}
                     {tabActif === 1 && (
                         <Box>
+                            {/* --- NOUVEL EN-TÊTE : DASHBOARD DE L'OBJET --- */}
+                            <Grid container spacing={2} sx={{ mb: 4 }}>
+                                <Grid item xs={12} sm={4}>
+                                    <Paper
+                                        sx={{
+                                            p: 2,
+                                            textAlign: 'center',
+                                            bgcolor: '#ffebee',
+                                            borderRadius: 3,
+                                            border: '1px solid #ffcdd2',
+                                        }}
+                                    >
+                                        <Warning
+                                            color="error"
+                                            sx={{ fontSize: 32, mb: 1 }}
+                                        />
+                                        <Typography
+                                            variant="h5"
+                                            color="error"
+                                            fontWeight="bold"
+                                        >
+                                            {nbPannes}
+                                        </Typography>
+                                        <Typography
+                                            variant="body2"
+                                            color="text.secondary"
+                                        >
+                                            Pannes Historiques
+                                        </Typography>
+                                    </Paper>
+                                </Grid>
+
+                                {objet?.type_api !== 'lieux' &&
+                                    objet?.type_api !== 'evenements' && (
+                                        <Grid item xs={12} sm={4}>
+                                            <Paper
+                                                sx={{
+                                                    p: 2,
+                                                    textAlign: 'center',
+                                                    bgcolor: '#eceff1',
+                                                    borderRadius: 3,
+                                                    border: '1px solid #cfd8dc',
+                                                }}
+                                            >
+                                                <PowerOff
+                                                    sx={{
+                                                        fontSize: 32,
+                                                        mb: 1,
+                                                        color: '#78909c',
+                                                    }}
+                                                />
+                                                <Typography
+                                                    variant="h5"
+                                                    color="text.secondary"
+                                                    fontWeight="bold"
+                                                >
+                                                    {nbEteint}
+                                                </Typography>
+                                                <Typography
+                                                    variant="body2"
+                                                    color="text.secondary"
+                                                >
+                                                    Mises hors tension
+                                                </Typography>
+                                            </Paper>
+                                        </Grid>
+                                    )}
+
+                                {objet?.type_api === 'parkings' && (
+                                    <Grid item xs={12} sm={4}>
+                                        <Paper
+                                            sx={{
+                                                p: 2,
+                                                textAlign: 'center',
+                                                bgcolor: '#e3f2fd',
+                                                borderRadius: 3,
+                                                border: '1px solid #bbdefb',
+                                            }}
+                                        >
+                                            <LocalParking
+                                                color="primary"
+                                                sx={{ fontSize: 32, mb: 1 }}
+                                            />
+                                            <Typography
+                                                variant="h5"
+                                                color="primary"
+                                                fontWeight="bold"
+                                            >
+                                                {tauxRemplissage}%
+                                            </Typography>
+                                            <Typography
+                                                variant="body2"
+                                                color="text.secondary"
+                                            >
+                                                Taux de remplissage
+                                            </Typography>
+                                        </Paper>
+                                    </Grid>
+                                )}
+                            </Grid>
+                            {/* --- FIN EN-TÊTE --- */}
+
                             <Typography
                                 variant="h6"
                                 gutterBottom
@@ -575,16 +689,13 @@ export default function GestionObjet() {
                             >
                                 <EventNote sx={{ mr: 1 }} /> Dernières activités
                             </Typography>
+
                             <List>
-                                {objet?.historique &&
-                                objet.historique.length > 0 ? (
-                                    objet.historique.map((log, index) => (
+                                {logs.length > 0 ? (
+                                    logs.map((log, index) => (
                                         <ListItem
                                             key={index}
-                                            divider={
-                                                index !==
-                                                objet.historique.length - 1
-                                            }
+                                            divider={index !== logs.length - 1}
                                         >
                                             <ListItemText
                                                 primary={(() => {
@@ -594,34 +705,34 @@ export default function GestionObjet() {
                                                         objet.type_api ===
                                                             'evenements'
                                                     ) {
-                                                        return `Affluence : ${log.frequentation} personnes`;
+                                                        return `Affluence : ${log.frequentation || 0} personnes`;
+                                                    }
+                                                    if (
+                                                        objet.type_api ===
+                                                        'parkings'
+                                                    ) {
+                                                        return `Fréquentation : ${log.frequentation || 0} véhicules | Conso: ${log.consommation_kwh} kWh`;
                                                     }
                                                     return log.est_en_panne
                                                         ? 'Panne signalée'
                                                         : `Consommation : ${log.consommation_kwh} kWh`;
                                                 })()}
-                                                secondary={
-                                                    // On vérifie tous les noms de champs possibles pour éviter le "Invalid Date"
-                                                    (() => {
-                                                        const dateBrute =
-                                                            log.date_mesure ||
-                                                            log.date ||
-                                                            log.date_action;
-                                                        if (!dateBrute)
-                                                            return 'Date inconnue';
-
-                                                        const d = new Date(
-                                                            dateBrute,
-                                                        );
-                                                        return isNaN(
-                                                            d.getTime(),
-                                                        )
-                                                            ? 'Format date invalide'
-                                                            : d.toLocaleString(
-                                                                  'fr-FR',
-                                                              );
-                                                    })()
-                                                }
+                                                secondary={(() => {
+                                                    const dateBrute =
+                                                        log.date_mesure ||
+                                                        log.date ||
+                                                        log.date_action;
+                                                    if (!dateBrute)
+                                                        return 'Date inconnue';
+                                                    const d = new Date(
+                                                        dateBrute,
+                                                    );
+                                                    return isNaN(d.getTime())
+                                                        ? 'Format date invalide'
+                                                        : d.toLocaleString(
+                                                              'fr-FR',
+                                                          );
+                                                })()}
                                             />
                                             {log.points_gagnes > 0 && (
                                                 <Chip
@@ -648,7 +759,6 @@ export default function GestionObjet() {
                 </Paper>
             </Container>
 
-            {/* Modal de suppression */}
             <Dialog
                 open={openDeleteModal}
                 onClose={() => setOpenDeleteModal(false)}
