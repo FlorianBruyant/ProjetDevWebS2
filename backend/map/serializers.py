@@ -13,6 +13,36 @@ from .models import (
 )
 
 
+class ZoneToleranteMixin:
+    """
+    Ce mixin intercepte les requêtes. Si on reçoit du texte au lieu d'un ID
+    pour la zone, il crée la zone à la volée et remplace le texte par le nouvel ID.
+    """
+
+    def to_internal_value(self, data):
+        # On crée une copie modifiable des données reçues
+        mutable_data = data.copy() if hasattr(data, "copy") else dict(data)
+
+        zone_data = mutable_data.get("zone")
+
+        # Si la zone est du texte (ex: "Quartier Nord") et pas un ID
+        if (
+            isinstance(zone_data, str)
+            and not zone_data.isdigit()
+            and zone_data.strip() != ""
+        ):
+            # On cherche la zone, ou on la crée si elle n'existe pas
+            nouvelle_zone, created = Zone.objects.get_or_create(nom=zone_data.strip())
+            # On remplace le texte par l'ID (DRF sera content !)
+            mutable_data["zone"] = nouvelle_zone.id
+
+        # Si on a vidé le champ zone
+        elif zone_data == "":
+            mutable_data["zone"] = None
+
+        return super().to_internal_value(mutable_data)
+
+
 # --- Sérialiseur pour l'historique (Stats) ---
 class ActionLogSerializer(serializers.ModelSerializer):
     class Meta:
@@ -35,7 +65,7 @@ class PointSerializer(serializers.ModelSerializer):
 
 
 # --- Sérialiseur pour les Véhicules ---
-class VehiculeSerializer(serializers.ModelSerializer):
+class VehiculeSerializer(ZoneToleranteMixin, serializers.ModelSerializer):
     point_actuel_details = PointSerializer(source="point_actuel", read_only=True)
     historique = serializers.SerializerMethodField()
     type_api = serializers.ReadOnlyField(default="vehicules")
@@ -64,7 +94,7 @@ class VehiculeSerializer(serializers.ModelSerializer):
 
 
 # --- Sérialiseur pour les Feux ---
-class FeuSerializer(serializers.ModelSerializer):
+class FeuSerializer(ZoneToleranteMixin, serializers.ModelSerializer):
     point_actuel_details = PointSerializer(source="position", read_only=True)
     historique = serializers.SerializerMethodField()
     type_api = serializers.ReadOnlyField(default="feux")
@@ -94,7 +124,7 @@ class FeuSerializer(serializers.ModelSerializer):
 
 
 # --- Sérialiseur pour les Parkings ---
-class ParkingSerializer(serializers.ModelSerializer):
+class ParkingSerializer(ZoneToleranteMixin, serializers.ModelSerializer):
     point_actuel_details = PointSerializer(source="position", read_only=True)
     historique = serializers.SerializerMethodField()
     type_api = serializers.ReadOnlyField(default="parkings")
@@ -120,7 +150,7 @@ class ParkingSerializer(serializers.ModelSerializer):
         return ActionLogSerializer(logs, many=True).data
 
 
-class LieuInteretSerializer(serializers.ModelSerializer):
+class LieuInteretSerializer(ZoneToleranteMixin, serializers.ModelSerializer):
     # On utilise la même clé 'point_actuel_details' pour la compatibilité Front-end
     point_actuel_details = PointSerializer(source="position", read_only=True)
     historique = serializers.SerializerMethodField()
@@ -149,7 +179,7 @@ class LieuInteretSerializer(serializers.ModelSerializer):
         return ActionLogSerializer(logs, many=True).data
 
 
-class EvenementSerializer(serializers.ModelSerializer):
+class EvenementSerializer(ZoneToleranteMixin, serializers.ModelSerializer):
     point_actuel_details = PointSerializer(source="position", read_only=True)
     historique = serializers.SerializerMethodField()
     type_api = serializers.ReadOnlyField(default="evenements")
