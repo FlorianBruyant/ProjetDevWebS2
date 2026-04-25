@@ -17,9 +17,6 @@ class Zone(models.Model):
 class Point(models.Model):
     latitude = models.FloatField()
     longitude = models.FloatField()
-    zone = models.ForeignKey(
-        Zone, on_delete=models.SET_NULL, null=True, blank=True, related_name="points"
-    )
 
     def __str__(self):
         return f"Point ({self.latitude}, {self.longitude})"
