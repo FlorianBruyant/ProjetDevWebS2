@@ -16,7 +16,7 @@ class MapConfig(AppConfig):
             sim = Command()
             while True:
                 # Temps d'attente entre chaque simu en secondes
-                time.sleep(5)
+                time.sleep(30)
                 try:
                     sim.handle()
                     print(" Simulation auto : Historique mis à jour.")
