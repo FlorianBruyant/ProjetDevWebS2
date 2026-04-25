@@ -17,7 +17,17 @@ import {
     Select,
     MenuItem,
 } from '@mui/material';
-import { Search, History, Close, DirectionsBus, LocalParking, Traffic, Map as MapIcon } from '@mui/icons-material';
+import {
+    Search,
+    History,
+    Close,
+    DirectionsBus,
+    LocalParking,
+    Traffic,
+    Map as MapIcon,
+    LocationOn,
+    Event,
+} from '@mui/icons-material';
 
 const historique = ['Gare de Cergy Préfecture', 'ESSEC Business School', 'Centre Commercial Trois Fontaines'];
 
@@ -54,13 +64,7 @@ const BarreRecherche = ({
                 transition: 'all 0.3s ease-in-out',
                 minHeight: rechercheActive ? '100vh' : 'auto',
             }}>
-            <Box
-                sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    px: 2,
-                    mb: rechercheActive ? 2 : 0,
-                }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', px: 2, mb: rechercheActive ? 2 : 0 }}>
                 {rechercheActive && (
                     <IconButton onClick={() => setRechercheActive(false)} sx={{ mr: 1 }}>
                         <Close />
@@ -95,7 +99,16 @@ const BarreRecherche = ({
 
             {rechercheActive && (
                 <Box sx={{ px: 2 }}>
-                    <Stack direction="row" spacing={1} sx={{ mb: 3, overflowX: 'auto', pb: 1 }}>
+                    <Stack
+                        direction="row"
+                        spacing={1}
+                        sx={{
+                            mb: 3,
+                            overflowX: 'auto',
+                            pb: 1,
+                            '&::-webkit-scrollbar': { height: 6 },
+                            '&::-webkit-scrollbar-thumb': { backgroundColor: '#e0e0e0', borderRadius: 10 },
+                        }}>
                         <Chip
                             icon={<MapIcon />}
                             label="Toute la ville"
@@ -136,6 +149,27 @@ const BarreRecherche = ({
                             color={categorieActuelle === 'feux' ? 'primary' : 'default'}
                             clickable
                         />
+                        {/* --- NOUVEAUX FILTRES --- */}
+                        <Chip
+                            icon={<LocationOn />}
+                            label="Lieux"
+                            onClick={() => {
+                                chargerDonnees('lieux', recherche, false, zoneSelectionnee);
+                                setRechercheActive(false);
+                            }}
+                            color={categorieActuelle === 'lieux' ? 'primary' : 'default'}
+                            clickable
+                        />
+                        <Chip
+                            icon={<Event />}
+                            label="Événements"
+                            onClick={() => {
+                                chargerDonnees('evenements', recherche, false, zoneSelectionnee);
+                                setRechercheActive(false);
+                            }}
+                            color={categorieActuelle === 'evenements' ? 'primary' : 'default'}
+                            clickable
+                        />
                     </Stack>
 
                     <FormControl fullWidth size="small" sx={{ mt: 2, mb: 1 }}>
@@ -160,24 +194,13 @@ const BarreRecherche = ({
                     </FormControl>
 
                     {chargement && donneesMap.length === 0 && (
-                        <Typography
-                            sx={{
-                                py: 2,
-                                textAlign: 'center',
-                                color: 'text.secondary',
-                            }}>
+                        <Typography sx={{ py: 2, textAlign: 'center', color: 'text.secondary' }}>
                             Analyse de la ville en cours...
                         </Typography>
                     )}
 
                     {aucunResultat && (
-                        <Paper
-                            sx={{
-                                p: 2,
-                                mt: 1,
-                                bgcolor: '#fff5f5',
-                                borderRadius: 2,
-                            }}>
+                        <Paper sx={{ p: 2, mt: 1, bgcolor: '#fff5f5', borderRadius: 2 }}>
                             <Typography color="error" variant="body2">
                                 Aucun objet trouvé pour "<strong>{termeFixe}</strong>".
                             </Typography>
