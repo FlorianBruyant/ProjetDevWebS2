@@ -35,10 +35,11 @@ export default function Profil() {
 
     // Fonction pour vérifier si une donnée sensible a été touchée
     const aModifieDonneesSensibles = () => {
+        const normalize = (v) => v ?? '';
         return (
-            editData.username !== user?.username ||
-            editData.email !== user?.email ||
-            showPasswordFields // Si le bloc mot de passe est ouvert
+            normalize(editData.username) !== normalize(user?.username) ||
+            normalize(editData.email) !== normalize(user?.email) ||
+            showPasswordFields
         );
     };
 
@@ -82,11 +83,13 @@ export default function Profil() {
         const payload = {
             genre: editData.genre,
             type_membre: editData.type_membre,
-            username: editData.username,
+            first_name: editData.first_name,
+            last_name: editData.last_name,
         };
 
         let isEmailChanged = false;
         let isPasswordChanged = false;
+        let isUsernameChanged = false;
 
         // 2. Gestion des données sensibles (Username, Email, Password)
         if (aModifieDonneesSensibles()) {
@@ -106,7 +109,11 @@ export default function Profil() {
                 payload.email = editData.email;
                 isEmailChanged = true;
             }
-
+            // Si l'username a changé
+            if (editData.username !== user.username) {
+                payload.username = editData.username;
+                isUsernameChanged = true;
+            }
             // Si on veut changer le mot de passe et que le champ est rempli
             if (showPasswordFields && editData.password) {
                 if (editData.password !== editData.confirmPassword) {
@@ -135,10 +142,14 @@ export default function Profil() {
 
             if (response.ok) {
                 // Si l'email OU le mot de passe a changé, on déconnecte l'utilisateur
-                if (isEmailChanged || isPasswordChanged) {
+                if (isEmailChanged || isPasswordChanged || isUsernameChanged) {
                     if (isEmailChanged) {
                         alert(
                             'Email modifié. Veuillez valider le lien envoyé à votre nouvelle adresse avant de vous reconnecter.',
+                        );
+                    } else if (isUsernameChanged) {
+                        alert(
+                            "Nom d'utilisateur modifié. Veuillez valider le lien envoyé à votre nouvelle adresse avant de vous reconnecter.",
                         );
                     } else {
                         alert(
@@ -268,7 +279,16 @@ export default function Profil() {
                 </Paper>
 
                 {/* --- BOUTON MODIF PROFIL --- */}
-                <Button size="small" onClick={() => setOpen(true)}>
+                <Button
+                    size="small"
+                    onClick={() => {
+                        setEditData({ ...user }); // reset à l'ouverture
+                        setShowPasswordFields(false);
+                        setCurrentPassword('');
+                        setErrorMsg('');
+                        setOpen(true);
+                    }}
+                >
                     Modifier
                 </Button>
 
@@ -367,6 +387,28 @@ export default function Profil() {
                             </MenuItem>
                         </TextField>
 
+                        <TextField
+                            fullWidth
+                            label="Prénom"
+                            value={editData.first_name || ''}
+                            onChange={(e) =>
+                                setEditData({
+                                    ...editData,
+                                    first_name: e.target.value,
+                                })
+                            }
+                        />
+                        <TextField
+                            fullWidth
+                            label="Nom"
+                            value={editData.last_name || ''}
+                            onChange={(e) =>
+                                setEditData({
+                                    ...editData,
+                                    last_name: e.target.value,
+                                })
+                            }
+                        />
                         <Divider sx={{ my: 1 }} />
 
                         {/* --- ZONE SÉCURISÉE (Détectée par aModifieDonneesSensibles) --- */}
