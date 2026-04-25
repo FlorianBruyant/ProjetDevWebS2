@@ -4,6 +4,7 @@ from users.models import ActionLog
 from .models import (
     Evenement,
     Feu,
+    HistoriqueObjet,
     LieuInteret,
     Parking,
     Point,
@@ -36,11 +37,18 @@ class ZoneToleranteMixin:
         return super().to_internal_value(mutable_data)
 
 
-# --- Sérialiseur pour l'historique (Stats) ---
+# --- Sérialiseur pour l'historique des users (Stats) ---
 class ActionLogSerializer(serializers.ModelSerializer):
     class Meta:
         model = ActionLog
         fields = ["action", "date", "points_gagnes"]
+
+
+# --- Sérialiseur pour l'historique des objets (Stats) ---
+class HistoriqueTechniqueSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = HistoriqueObjet
+        fields = ["date_mesure", "consommation_kwh", "est_en_panne", "frequentation"]
 
 
 # --- Sérialiseur pour les Zones ---
@@ -81,10 +89,11 @@ class VehiculeSerializer(ZoneToleranteMixin, serializers.ModelSerializer):
         ]
 
     def get_historique(self, obj):
-        logs = ActionLog.objects.filter(action__contains=f"ID: {obj.id}").order_by(
-            "-date"
-        )[:5]
-        return ActionLogSerializer(logs, many=True).data
+        # On récupère les 10 derniers relevés techniques du véhicule
+        logs = HistoriqueObjet.objects.filter(
+            type_objet="vehicule", objet_id=obj.id
+        ).order_by("-date_mesure")[:10]
+        return HistoriqueTechniqueSerializer(logs, many=True).data
 
 
 # --- Sérialiseur pour les Feux ---
@@ -111,10 +120,10 @@ class FeuSerializer(ZoneToleranteMixin, serializers.ModelSerializer):
         ]
 
     def get_historique(self, obj):
-        logs = ActionLog.objects.filter(action__contains=f"ID: {obj.id}").order_by(
-            "-date"
-        )[:5]
-        return ActionLogSerializer(logs, many=True).data
+        logs = HistoriqueObjet.objects.filter(
+            type_objet="feu", objet_id=obj.id
+        ).order_by("-date_mesure")[:10]
+        return HistoriqueTechniqueSerializer(logs, many=True).data
 
 
 # --- Sérialiseur pour les Parkings ---
@@ -141,10 +150,10 @@ class ParkingSerializer(ZoneToleranteMixin, serializers.ModelSerializer):
         ]
 
     def get_historique(self, obj):
-        logs = ActionLog.objects.filter(action__contains=f"ID: {obj.id}").order_by(
-            "-date"
-        )[:5]
-        return ActionLogSerializer(logs, many=True).data
+        logs = HistoriqueObjet.objects.filter(
+            type_objet="parking", objet_id=obj.id
+        ).order_by("-date_mesure")[:10]
+        return HistoriqueTechniqueSerializer(logs, many=True).data
 
 
 # --- Sérialiseur pour les Lieux d'intérêt ---
@@ -171,10 +180,11 @@ class LieuInteretSerializer(ZoneToleranteMixin, serializers.ModelSerializer):
         ]
 
     def get_historique(self, obj):
-        logs = ActionLog.objects.filter(action__contains=f"Lieu ID: {obj.id}").order_by(
-            "-date"
-        )[:5]
-        return ActionLogSerializer(logs, many=True).data
+        # On filtre par type 'lieu'
+        logs = HistoriqueObjet.objects.filter(
+            type_objet="lieu", objet_id=obj.id
+        ).order_by("-date_mesure")[:10]
+        return HistoriqueTechniqueSerializer(logs, many=True).data
 
 
 # --- Sérialiseur pour les Événements ---
@@ -201,10 +211,11 @@ class EvenementSerializer(ZoneToleranteMixin, serializers.ModelSerializer):
         ]
 
     def get_historique(self, obj):
-        logs = ActionLog.objects.filter(
-            action__contains=f"Evénement ID: {obj.id}"
-        ).order_by("-date")[:5]
-        return ActionLogSerializer(logs, many=True).data
+        # On filtre par type 'evenement'
+        logs = HistoriqueObjet.objects.filter(
+            type_objet="evenement", objet_id=obj.id
+        ).order_by("-date_mesure")[:10]
+        return HistoriqueTechniqueSerializer(logs, many=True).data
 
 
 class ScenarioSerializer(serializers.ModelSerializer):

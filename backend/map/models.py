@@ -261,18 +261,23 @@ class HistoriqueObjet(models.Model):
         ("vehicule", "Véhicule"),
         ("feu", "Feu"),
         ("parking", "Parking"),
+        ("lieu", "Lieu d'intérêt"),
+        ("evenement", "Événement"),
     ]
 
-    objet_id = models.IntegerField()  # L'ID de l'objet d'origine
+    objet_id = models.PositiveIntegerField()  # L'ID de l'objet d'origine
     type_objet = models.CharField(max_length=20, choices=TYPES_CHOICES)
     date_mesure = models.DateTimeField(auto_now_add=True)
 
-    # Métriques à surveiller
+    # --- Champs techniques (pour objets) ---
     consommation_kwh = models.FloatField(default=0.0)
     est_en_panne = models.BooleanField(default=False)
 
     # Donnée contextuelle (ex: % de remplissage pour parking, vitesse pour bus)
     valeur_specifique = models.FloatField(null=True, blank=True)
+
+    # --- Champs sociaux (pour lieux et événements) ---
+    frequentation = models.PositiveIntegerField(null=True, blank=True, default=0)
 
     class Meta:
         ordering = ["-date_mesure"]

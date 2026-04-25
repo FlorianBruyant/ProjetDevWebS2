@@ -1,6 +1,16 @@
 from django.contrib import admin
 
-from .models import Feu, Incident, Parking, Point, Route, Scenario, Vehicule, Zone
+from .models import (
+    Feu,
+    HistoriqueObjet,
+    Incident,
+    Parking,
+    Point,
+    Route,
+    Scenario,
+    Vehicule,
+    Zone,
+)
 
 # On enregistre tous nos modèles pour pouvoir les gérer
 admin.site.register(Zone)
@@ -10,6 +20,24 @@ admin.site.register(Parking)
 admin.site.register(Vehicule)
 admin.site.register(Route)
 admin.site.register(Incident)
+
+
+@admin.register(HistoriqueObjet)
+class HistoriqueObjetAdmin(admin.ModelAdmin):
+    # Liste des colonnes affichées dans le tableau
+    list_display = (
+        "date_mesure",
+        "type_objet",
+        "objet_id",
+        "consommation_kwh",
+        "est_en_panne",
+    )
+
+    # Filtres sur le côté droit
+    list_filter = ("type_objet", "est_en_panne", "date_mesure")
+
+    # Barre de recherche
+    search_fields = ("type_objet", "objet_id")
 
 
 # 👇 C'est cette ligne qui te manque pour voir les scénarios !

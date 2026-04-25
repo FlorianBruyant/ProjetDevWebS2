@@ -587,10 +587,41 @@ export default function GestionObjet() {
                                             }
                                         >
                                             <ListItemText
-                                                primary={log.action}
-                                                secondary={new Date(
-                                                    log.date || log.date_action,
-                                                ).toLocaleString('fr-FR')}
+                                                primary={(() => {
+                                                    if (
+                                                        objet.type_api ===
+                                                            'lieux' ||
+                                                        objet.type_api ===
+                                                            'evenements'
+                                                    ) {
+                                                        return `Affluence : ${log.frequentation} personnes`;
+                                                    }
+                                                    return log.est_en_panne
+                                                        ? 'Panne signalée'
+                                                        : `Consommation : ${log.consommation_kwh} kWh`;
+                                                })()}
+                                                secondary={
+                                                    // On vérifie tous les noms de champs possibles pour éviter le "Invalid Date"
+                                                    (() => {
+                                                        const dateBrute =
+                                                            log.date_mesure ||
+                                                            log.date ||
+                                                            log.date_action;
+                                                        if (!dateBrute)
+                                                            return 'Date inconnue';
+
+                                                        const d = new Date(
+                                                            dateBrute,
+                                                        );
+                                                        return isNaN(
+                                                            d.getTime(),
+                                                        )
+                                                            ? 'Format date invalide'
+                                                            : d.toLocaleString(
+                                                                  'fr-FR',
+                                                              );
+                                                    })()
+                                                }
                                             />
                                             {log.points_gagnes > 0 && (
                                                 <Chip
