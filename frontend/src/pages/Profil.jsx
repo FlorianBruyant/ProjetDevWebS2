@@ -16,8 +16,10 @@ import {
     TextField,
     Alert,
     MenuItem,
+    IconButton,
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
+import { PhotoCamera } from '@mui/icons-material';
 
 export default function Profil() {
     const navigate = useNavigate();
@@ -33,6 +35,35 @@ export default function Profil() {
     const [showPasswordFields, setShowPasswordFields] = useState(false);
     const [errorMsg, setErrorMsg] = useState('');
 
+    // Fonction pour modif photo de profil
+    const handlePhotoChange = async event => {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const formData = new FormData();
+        formData.append('photo', file); // 'photo' doit correspondre au nom du champ dans ton modèle Django
+
+        const token = localStorage.getItem('access_token');
+        try {
+            const response = await fetch('http://localhost:8000/api/me/', {
+                method: 'PATCH',
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    // Note: On ne met PAS de Content-Type ici, le navigateur le fait seul pour FormData
+                },
+                body: formData,
+            });
+
+            if (response.ok) {
+                const updatedUser = await response.json();
+                setUser(updatedUser);
+            } else {
+                alert("Erreur lors de l'upload de l'image");
+            }
+        } catch (error) {
+            console.error('Erreur upload:', error);
+        }
+    };
     // Fonction pour vérifier si une donnée sensible a été touchée
     const aModifieDonneesSensibles = () => {
         const normalize = v => v ?? '';
@@ -171,7 +202,7 @@ export default function Profil() {
                 else if (data.email) setErrorMsg('Cette adresse email est déjà utilisée.');
                 else setErrorMsg(data.detail || 'Erreur lors de la mise à jour.');
             }
-        } catch (error) {
+        } catch {
             setErrorMsg('Erreur de connexion au serveur.');
         } finally {
             setIsUpdating(false);
@@ -217,17 +248,37 @@ export default function Profil() {
                         alignItems: 'center',
                         mb: 4,
                     }}>
-                    <Avatar
-                        sx={{
-                            width: 100,
-                            height: 100,
-                            border: '4px solid white',
-                            bgcolor: '#3f51b5',
-                            fontSize: '2.5rem',
-                            mb: 2,
-                        }}>
-                        {user?.username?.charAt(0).toUpperCase()}
-                    </Avatar>
+                    {/* --- ZONE AVATAR AVEC BOUTON PHOTO --- */}
+                    <Box sx={{ position: 'relative' }}>
+                        <Avatar
+                            src={user?.photo_url || ''}
+                            sx={{
+                                width: 100,
+                                height: 100,
+                                border: '4px solid white',
+                                bgcolor: '#3f51b5',
+                                fontSize: '2.5rem',
+                                mb: 2,
+                            }}>
+                            {!user?.photo_url && user?.username?.charAt(0).toUpperCase()}
+                        </Avatar>
+
+                        <IconButton
+                            color="primary"
+                            aria-label="upload picture"
+                            component="label"
+                            sx={{
+                                position: 'absolute',
+                                bottom: 15,
+                                right: -5,
+                                bgcolor: 'white',
+                                boxShadow: 2,
+                                '&:hover': { bgcolor: '#f5f5f5' },
+                            }}>
+                            <input hidden accept="image/*" type="file" onChange={handlePhotoChange} />
+                            <PhotoCamera fontSize="small" />
+                        </IconButton>
+                    </Box>
                     <Typography variant="h5" fontWeight="bold">
                         {user?.username}
                     </Typography>
