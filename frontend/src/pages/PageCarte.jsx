@@ -254,12 +254,7 @@ const PageCarte = () => {
                     filter: rechercheActive ? 'blur(2px)' : 'none',
                     transition: 'filter 0.3s',
                 }}>
-                <Carte
-                    donnees={donneesMap}
-                    enModeAjout={modeAjout}
-                    auClicCarte={handleClicCarte}
-                    doitCentrer={doitCentrer}
-                />
+                <Carte donnees={donneesMap} enModeAjout={modeAjout} auClicCarte={handleClicCarte} doitCentrer={doitCentrer} />
             </Box>
 
             <BarreRecherche

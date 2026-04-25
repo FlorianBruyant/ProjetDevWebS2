@@ -13,14 +13,7 @@ import {
     Container,
     CircularProgress,
 } from '@mui/material';
-import {
-    Search,
-    Traffic,
-    LocalParking,
-    DirectionsBus,
-    WarningAmberRounded,
-    ConstructionRounded,
-} from '@mui/icons-material';
+import { Search, Traffic, LocalParking, DirectionsBus, WarningAmberRounded, ConstructionRounded } from '@mui/icons-material';
 import Carte from '../components/Carte';
 
 const Accueil = () => {
@@ -335,9 +328,7 @@ const Accueil = () => {
                                     onClick={() => navigate(`/objet/${alerte.type_api}/${alerte.id}`)}
                                     sx={{ cursor: 'pointer' }}>
                                     <AlertItem
-                                        icon={
-                                            alerte.type === 'Urgent' ? <WarningAmberRounded /> : <ConstructionRounded />
-                                        }
+                                        icon={alerte.type === 'Urgent' ? <WarningAmberRounded /> : <ConstructionRounded />}
                                         title={alerte.titre}
                                         date={alerte.sousTitre}
                                         status={alerte.type}

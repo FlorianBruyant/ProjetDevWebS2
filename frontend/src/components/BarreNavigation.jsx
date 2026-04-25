@@ -295,9 +295,7 @@ const BarreNavigation = () => {
                 )}
 
                 {!estConnecte && (
-                    <IconButton
-                        onClick={() => navigate('/connexion')}
-                        sx={{ color: '#3b82f6', flexDirection: 'column', p: 1 }}>
+                    <IconButton onClick={() => navigate('/connexion')} sx={{ color: '#3b82f6', flexDirection: 'column', p: 1 }}>
                         <Login fontSize="small" />
                         <Typography
                             variant="caption"

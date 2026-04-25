@@ -164,10 +164,7 @@ const Horaires = () => {
                                         </TableCell>
                                         <TableCell>
                                             <Stack direction="row" alignItems="center" spacing={1}>
-                                                <AccessTime
-                                                    fontSize="small"
-                                                    color={estTempsReel ? 'success' : 'action'}
-                                                />
+                                                <AccessTime fontSize="small" color={estTempsReel ? 'success' : 'action'} />
                                                 <Typography
                                                     sx={{
                                                         fontWeight: 'bold',
@@ -185,9 +182,7 @@ const Horaires = () => {
                                         <TableCell>
                                             <Chip
                                                 label={
-                                                    call.ArrivalStatus === 'onTime'
-                                                        ? "À l'heure"
-                                                        : call.ArrivalStatus || 'Normal'
+                                                    call.ArrivalStatus === 'onTime' ? "À l'heure" : call.ArrivalStatus || 'Normal'
                                                 }
                                                 size="small"
                                                 color={call.ArrivalStatus === 'delayed' ? 'error' : 'success'}

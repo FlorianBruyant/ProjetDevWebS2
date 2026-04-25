@@ -183,11 +183,7 @@ export default function GestionObjet() {
     const nbPannes = logs.filter(log => log.est_en_panne).length;
     // On considère "éteint" si la consommation est à 0 et que ce n'est pas une panne.
     const nbEteint = logs.filter(
-        log =>
-            log.consommation_kwh === 0 &&
-            !log.est_en_panne &&
-            objet?.type_api !== 'lieux' &&
-            objet?.type_api !== 'evenements'
+        log => log.consommation_kwh === 0 && !log.est_en_panne && objet?.type_api !== 'lieux' && objet?.type_api !== 'evenements'
     ).length;
 
     // Calcul du remplissage pour les parkings
@@ -199,10 +195,7 @@ export default function GestionObjet() {
     return (
         <Box sx={{ bgcolor: '#F4F6F8', minHeight: '100vh', py: 4, mt: 8 }}>
             <Container maxWidth="md">
-                <Button
-                    startIcon={<ArrowBack />}
-                    onClick={() => navigate('/carte')}
-                    sx={{ mb: 2, textTransform: 'none' }}>
+                <Button startIcon={<ArrowBack />} onClick={() => navigate('/carte')} sx={{ mb: 2, textTransform: 'none' }}>
                     Retour à la gestion urbaine
                 </Button>
 
@@ -378,10 +371,7 @@ export default function GestionObjet() {
                                                 <Traffic
                                                     sx={{
                                                         mr: 1,
-                                                        color:
-                                                            objet?.etat_actuel === 'VERT'
-                                                                ? 'success.main'
-                                                                : 'error.main',
+                                                        color: objet?.etat_actuel === 'VERT' ? 'success.main' : 'error.main',
                                                     }}
                                                 />
                                                 <Typography>
@@ -627,8 +617,8 @@ export default function GestionObjet() {
                 <DialogTitle>Confirmer la mise hors service ?</DialogTitle>
                 <DialogContent>
                     <DialogContentText>
-                        Cette action supprimera définitivement l'objet <strong>{objet?.nom}</strong> de la base de
-                        données urbaine.
+                        Cette action supprimera définitivement l'objet <strong>{objet?.nom}</strong> de la base de données
+                        urbaine.
                     </DialogContentText>
                 </DialogContent>
                 <DialogActions sx={{ p: 3 }}>

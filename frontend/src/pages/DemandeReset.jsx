@@ -1,15 +1,5 @@
 import React, { useState } from 'react';
-import {
-    Box,
-    TextField,
-    Button,
-    Typography,
-    Paper,
-    Container,
-    Alert,
-    CircularProgress,
-    IconButton,
-} from '@mui/material';
+import { Box, TextField, Button, Typography, Paper, Container, Alert, CircularProgress, IconButton } from '@mui/material';
 import { ArrowBack } from '@mui/icons-material';
 import { useNavigate, Link as RouterLink } from 'react-router-dom';
 
@@ -110,11 +100,7 @@ const DemandeReset = () => {
                                     borderRadius: 2,
                                     fontWeight: 'bold',
                                 }}>
-                                {status === 'loading' ? (
-                                    <CircularProgress size={24} color="inherit" />
-                                ) : (
-                                    'Envoyer le lien'
-                                )}
+                                {status === 'loading' ? <CircularProgress size={24} color="inherit" /> : 'Envoyer le lien'}
                             </Button>
                         </form>
                     )}

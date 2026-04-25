@@ -72,8 +72,7 @@ const Inscription = () => {
                 setIsSuccess(true);
             } else {
                 // Extraction des erreurs renvoyées par le Serializer Django
-                const message =
-                    data.username || data.email || data.password || data.detail || "Erreur lors de l'inscription";
+                const message = data.username || data.email || data.password || data.detail || "Erreur lors de l'inscription";
                 setErreur(Array.isArray(message) ? message[0] : message);
             }
         } catch {
@@ -134,8 +133,8 @@ const Inscription = () => {
                                 Un e-mail de confirmation a été envoyé à <strong>{formData.email}</strong>.
                                 <br />
                                 <br />
-                                Veuillez cliquer sur le lien dans l'e-mail (sur <strong>Mailtrap</strong>) pour activer
-                                votre compte avant de vous connecter.
+                                Veuillez cliquer sur le lien dans l'e-mail (sur <strong>Mailtrap</strong>) pour activer votre
+                                compte avant de vous connecter.
                             </Alert>
                             <Button
                                 component={RouterLink}
@@ -149,20 +148,8 @@ const Inscription = () => {
                     ) : (
                         <form onSubmit={handleSubmit}>
                             <Box sx={{ display: 'flex', gap: 1 }}>
-                                <TextField
-                                    margin="normal"
-                                    fullWidth
-                                    label="Prénom"
-                                    name="first_name"
-                                    onChange={handleChange}
-                                />
-                                <TextField
-                                    margin="normal"
-                                    fullWidth
-                                    label="Nom"
-                                    name="last_name"
-                                    onChange={handleChange}
-                                />
+                                <TextField margin="normal" fullWidth label="Prénom" name="first_name" onChange={handleChange} />
+                                <TextField margin="normal" fullWidth label="Nom" name="last_name" onChange={handleChange} />
                             </Box>
 
                             <TextField

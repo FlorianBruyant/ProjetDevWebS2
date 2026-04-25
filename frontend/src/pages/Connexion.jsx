@@ -192,11 +192,7 @@ const Connexion = () => {
                         </Button>
 
                         <Grid container justifyContent="center">
-                            <MuiLink
-                                component={RouterLink}
-                                to="/inscription"
-                                variant="body2"
-                                sx={{ textDecoration: 'none' }}>
+                            <MuiLink component={RouterLink} to="/inscription" variant="body2" sx={{ textDecoration: 'none' }}>
                                 {"Pas encore de compte ? S'inscrire"}
                             </MuiLink>
                             <MuiLink

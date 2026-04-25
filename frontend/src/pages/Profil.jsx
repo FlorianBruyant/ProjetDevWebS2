@@ -148,9 +148,7 @@ export default function Profil() {
                             "Nom d'utilisateur modifié. Veuillez valider le lien envoyé à votre nouvelle adresse avant de vous reconnecter."
                         );
                     } else {
-                        alert(
-                            'Mot de passe modifié avec succès. Veuillez vous reconnecter avec vos nouveaux identifiants.'
-                        );
+                        alert('Mot de passe modifié avec succès. Veuillez vous reconnecter avec vos nouveaux identifiants.');
                     }
                     handleLogout();
                 } else {

@@ -153,11 +153,7 @@ const Carte = ({ hauteur = '100%', donnees = [], enModeAjout = false, auClicCart
                 overflow: 'hidden',
                 cursor: enModeAjout ? 'crosshair' : 'grab',
             }}>
-            <MapContainer
-                center={positionCergy}
-                zoom={14}
-                style={{ height: '100%', width: '100%' }}
-                zoomControl={false}>
+            <MapContainer center={positionCergy} zoom={14} style={{ height: '100%', width: '100%' }} zoomControl={false}>
                 <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
 
                 {/* On passe le flag de contrôle ici */}
@@ -190,11 +186,7 @@ const Carte = ({ hauteur = '100%', donnees = [], enModeAjout = false, auClicCart
                                         }}>
                                         <Chip
                                             label={
-                                                item.en_panne
-                                                    ? 'MAINTENANCE'
-                                                    : item.est_actif === false
-                                                      ? 'INACTIF'
-                                                      : 'SANTÉ OK'
+                                                item.en_panne ? 'MAINTENANCE' : item.est_actif === false ? 'INACTIF' : 'SANTÉ OK'
                                             }
                                             size="small"
                                             color={item.en_panne || item.est_actif === false ? 'error' : 'success'}
