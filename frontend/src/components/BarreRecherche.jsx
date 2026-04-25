@@ -17,21 +17,9 @@ import {
     Select,
     MenuItem,
 } from '@mui/material';
-import {
-    Search,
-    History,
-    Close,
-    DirectionsBus,
-    LocalParking,
-    Traffic,
-    Map as MapIcon,
-} from '@mui/icons-material';
+import { Search, History, Close, DirectionsBus, LocalParking, Traffic, Map as MapIcon } from '@mui/icons-material';
 
-const historique = [
-    'Gare de Cergy Préfecture',
-    'ESSEC Business School',
-    'Centre Commercial Trois Fontaines',
-];
+const historique = ['Gare de Cergy Préfecture', 'ESSEC Business School', 'Centre Commercial Trois Fontaines'];
 
 const BarreRecherche = ({
     recherche,
@@ -65,21 +53,16 @@ const BarreRecherche = ({
                 zIndex: 1000,
                 transition: 'all 0.3s ease-in-out',
                 minHeight: rechercheActive ? '100vh' : 'auto',
-            }}
-        >
+            }}>
             <Box
                 sx={{
                     display: 'flex',
                     alignItems: 'center',
                     px: 2,
                     mb: rechercheActive ? 2 : 0,
-                }}
-            >
+                }}>
                 {rechercheActive && (
-                    <IconButton
-                        onClick={() => setRechercheActive(false)}
-                        sx={{ mr: 1 }}
-                    >
+                    <IconButton onClick={() => setRechercheActive(false)} sx={{ mr: 1 }}>
                         <Close />
                     </IconButton>
                 )}
@@ -90,15 +73,10 @@ const BarreRecherche = ({
                     inputRef={inputRef}
                     onFocus={() => setRechercheActive(true)}
                     value={recherche}
-                    onChange={(e) => setRecherche(e.target.value)}
-                    onKeyDown={(e) => {
+                    onChange={e => setRecherche(e.target.value)}
+                    onKeyDown={e => {
                         if (e.key === 'Enter') {
-                            chargerDonnees(
-                                categorieActuelle,
-                                recherche,
-                                false,
-                                zoneSelectionnee,
-                            );
+                            chargerDonnees(categorieActuelle, recherche, false, zoneSelectionnee);
                             setRechercheActive(false);
                             inputRef.current?.blur();
                         }
@@ -117,85 +95,45 @@ const BarreRecherche = ({
 
             {rechercheActive && (
                 <Box sx={{ px: 2 }}>
-                    <Stack
-                        direction="row"
-                        spacing={1}
-                        sx={{ mb: 3, overflowX: 'auto', pb: 1 }}
-                    >
+                    <Stack direction="row" spacing={1} sx={{ mb: 3, overflowX: 'auto', pb: 1 }}>
                         <Chip
                             icon={<MapIcon />}
                             label="Toute la ville"
                             onClick={() => {
-                                chargerDonnees(
-                                    'global',
-                                    recherche,
-                                    false,
-                                    zoneSelectionnee,
-                                );
+                                chargerDonnees('global', recherche, false, zoneSelectionnee);
                                 setRechercheActive(false);
                             }}
-                            color={
-                                categorieActuelle === 'global'
-                                    ? 'primary'
-                                    : 'default'
-                            }
+                            color={categorieActuelle === 'global' ? 'primary' : 'default'}
                             clickable
                         />
                         <Chip
                             icon={<DirectionsBus />}
                             label="Bus & Vélibs"
                             onClick={() => {
-                                chargerDonnees(
-                                    'vehicules',
-                                    recherche,
-                                    false,
-                                    zoneSelectionnee,
-                                );
+                                chargerDonnees('vehicules', recherche, false, zoneSelectionnee);
                                 setRechercheActive(false);
                             }}
-                            color={
-                                categorieActuelle === 'vehicules'
-                                    ? 'primary'
-                                    : 'default'
-                            }
+                            color={categorieActuelle === 'vehicules' ? 'primary' : 'default'}
                             clickable
                         />
                         <Chip
                             icon={<LocalParking />}
                             label="Parkings"
                             onClick={() => {
-                                chargerDonnees(
-                                    'parkings',
-                                    recherche,
-                                    false,
-                                    zoneSelectionnee,
-                                );
+                                chargerDonnees('parkings', recherche, false, zoneSelectionnee);
                                 setRechercheActive(false);
                             }}
-                            color={
-                                categorieActuelle === 'parkings'
-                                    ? 'primary'
-                                    : 'default'
-                            }
+                            color={categorieActuelle === 'parkings' ? 'primary' : 'default'}
                             clickable
                         />
                         <Chip
                             icon={<Traffic />}
                             label="Feux"
                             onClick={() => {
-                                chargerDonnees(
-                                    'feux',
-                                    recherche,
-                                    false,
-                                    zoneSelectionnee,
-                                );
+                                chargerDonnees('feux', recherche, false, zoneSelectionnee);
                                 setRechercheActive(false);
                             }}
-                            color={
-                                categorieActuelle === 'feux'
-                                    ? 'primary'
-                                    : 'default'
-                            }
+                            color={categorieActuelle === 'feux' ? 'primary' : 'default'}
                             clickable
                         />
                     </Stack>
@@ -205,21 +143,15 @@ const BarreRecherche = ({
                         <Select
                             value={zoneSelectionnee}
                             label="Filtrer par quartier"
-                            onChange={(e) => {
+                            onChange={e => {
                                 const val = e.target.value;
                                 setZoneSelectionnee(val);
-                                chargerDonnees(
-                                    categorieActuelle,
-                                    recherche,
-                                    false,
-                                    val,
-                                );
-                            }}
-                        >
+                                chargerDonnees(categorieActuelle, recherche, false, val);
+                            }}>
                             <MenuItem value="">
                                 <em>Tous les quartiers</em>
                             </MenuItem>
-                            {zones.map((z) => (
+                            {zones.map(z => (
                                 <MenuItem key={z.id} value={z.id}>
                                     {z.nom}
                                 </MenuItem>
@@ -233,8 +165,7 @@ const BarreRecherche = ({
                                 py: 2,
                                 textAlign: 'center',
                                 color: 'text.secondary',
-                            }}
-                        >
+                            }}>
                             Analyse de la ville en cours...
                         </Typography>
                     )}
@@ -246,19 +177,14 @@ const BarreRecherche = ({
                                 mt: 1,
                                 bgcolor: '#fff5f5',
                                 borderRadius: 2,
-                            }}
-                        >
+                            }}>
                             <Typography color="error" variant="body2">
-                                Aucun objet trouvé pour "
-                                <strong>{termeFixe}</strong>".
+                                Aucun objet trouvé pour "<strong>{termeFixe}</strong>".
                             </Typography>
                         </Paper>
                     )}
 
-                    <Typography
-                        variant="overline"
-                        sx={{ color: 'text.secondary', fontWeight: 'bold' }}
-                    >
+                    <Typography variant="overline" sx={{ color: 'text.secondary', fontWeight: 'bold' }}>
                         Recherches récentes
                     </Typography>
                     <List>
@@ -271,8 +197,7 @@ const BarreRecherche = ({
                                     setRecherche(item);
                                     chargerDonnees('global', item);
                                     setRechercheActive(false);
-                                }}
-                            >
+                                }}>
                                 <ListItemIcon sx={{ minWidth: 40 }}>
                                     <History fontSize="small" />
                                 </ListItemIcon>

@@ -83,36 +83,25 @@ export default function GestionObjet() {
                 });
                 if (resUser.ok) {
                     const userData = await resUser.json();
-                    setIsAdmin(
-                        userData.role === 'ADMIN' ||
-                            userData.role === 'COMPLEXE',
-                    );
+                    setIsAdmin(userData.role === 'ADMIN' || userData.role === 'COMPLEXE');
                 }
 
                 // 2. Récupération des Zones
-                const resZones = await fetch(
-                    'http://localhost:8000/api/map/zones/',
-                    {
-                        headers: { Authorization: `Bearer ${token}` },
-                    },
-                );
+                const resZones = await fetch('http://localhost:8000/api/map/zones/', {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
                 if (resZones.ok) {
                     const zonesData = await resZones.json();
                     setZonesPossibles(zonesData);
                 }
 
                 // 3. Récupération de l'objet
-                const resObj = await fetch(
-                    `http://localhost:8000/api/map/${type_api}/${id}/`,
-                    {
-                        headers: { Authorization: `Bearer ${token}` },
-                    },
-                );
+                const resObj = await fetch(`http://localhost:8000/api/map/${type_api}/${id}/`, {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
 
                 if (!resObj.ok) {
-                    throw new Error(
-                        "L'objet est introuvable dans la base de données.",
-                    );
+                    throw new Error("L'objet est introuvable dans la base de données.");
                 }
 
                 const dataObj = await resObj.json();
@@ -140,16 +129,13 @@ export default function GestionObjet() {
             if (!token || !id || !objet) return;
 
             try {
-                const res = await fetch(
-                    `http://localhost:8000/api/map/consulter/${id}/`,
-                    {
-                        method: 'POST',
-                        headers: {
-                            Authorization: `Bearer ${token}`,
-                            'Content-Type': 'application/json',
-                        },
+                const res = await fetch(`http://localhost:8000/api/map/consulter/${id}/`, {
+                    method: 'POST',
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        'Content-Type': 'application/json',
                     },
-                );
+                });
                 if (res.ok) console.log('💎 Points de citoyenneté ajoutés !');
             } catch (err) {
                 console.error('Erreur réseau points:', err);
@@ -164,17 +150,14 @@ export default function GestionObjet() {
         const token = localStorage.getItem('access_token');
 
         try {
-            const res = await fetch(
-                `http://localhost:8000/api/map/${type_api}/${id}/`,
-                {
-                    method: 'PATCH',
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(formData),
+            const res = await fetch(`http://localhost:8000/api/map/${type_api}/${id}/`, {
+                method: 'PATCH',
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    'Content-Type': 'application/json',
                 },
-            );
+                body: JSON.stringify(formData),
+            });
 
             if (res.ok) {
                 const updatedData = await res.json();
@@ -197,14 +180,14 @@ export default function GestionObjet() {
 
     // --- CALCULS POUR L'EN-TÊTE DES STATS ---
     const logs = objet?.historique || [];
-    const nbPannes = logs.filter((log) => log.est_en_panne).length;
+    const nbPannes = logs.filter(log => log.est_en_panne).length;
     // On considère "éteint" si la consommation est à 0 et que ce n'est pas une panne.
     const nbEteint = logs.filter(
-        (log) =>
+        log =>
             log.consommation_kwh === 0 &&
             !log.est_en_panne &&
             objet?.type_api !== 'lieux' &&
-            objet?.type_api !== 'evenements',
+            objet?.type_api !== 'evenements'
     ).length;
 
     // Calcul du remplissage pour les parkings
@@ -219,8 +202,7 @@ export default function GestionObjet() {
                 <Button
                     startIcon={<ArrowBack />}
                     onClick={() => navigate('/carte')}
-                    sx={{ mb: 2, textTransform: 'none' }}
-                >
+                    sx={{ mb: 2, textTransform: 'none' }}>
                     Retour à la gestion urbaine
                 </Button>
 
@@ -230,14 +212,9 @@ export default function GestionObjet() {
                             display: 'flex',
                             justifyContent: 'space-between',
                             mb: 3,
-                        }}
-                    >
+                        }}>
                         <Box>
-                            <Typography
-                                variant="h4"
-                                fontWeight="900"
-                                color="primary"
-                            >
+                            <Typography variant="h4" fontWeight="900" color="primary">
                                 {objet?.nom}
                                 {!isAdmin && (
                                     <Lock
@@ -250,8 +227,7 @@ export default function GestionObjet() {
                                 )}
                             </Typography>
                             <Typography variant="body2" color="text.secondary">
-                                Catégorie : {type_api.toUpperCase()} | ID
-                                Système : #{id}
+                                Catégorie : {type_api.toUpperCase()} | ID Système : #{id}
                             </Typography>
                         </Box>
                         <Chip
@@ -264,25 +240,13 @@ export default function GestionObjet() {
                     <Tabs
                         value={tabActif}
                         onChange={(e, v) => setTabActif(v)}
-                        sx={{ mb: 4, borderBottom: 1, borderColor: 'divider' }}
-                    >
-                        <Tab
-                            icon={<Build fontSize="small" />}
-                            iconPosition="start"
-                            label="Configuration"
-                        />
-                        <Tab
-                            icon={<History fontSize="small" />}
-                            iconPosition="start"
-                            label="Statistiques & Logs"
-                        />
+                        sx={{ mb: 4, borderBottom: 1, borderColor: 'divider' }}>
+                        <Tab icon={<Build fontSize="small" />} iconPosition="start" label="Configuration" />
+                        <Tab icon={<History fontSize="small" />} iconPosition="start" label="Statistiques & Logs" />
                     </Tabs>
 
                     {messageSucces && (
-                        <Alert
-                            severity="success"
-                            sx={{ mb: 3, borderRadius: 2 }}
-                        >
+                        <Alert severity="success" sx={{ mb: 3, borderRadius: 2 }}>
                             {messageSucces}
                         </Alert>
                     )}
@@ -301,7 +265,7 @@ export default function GestionObjet() {
                                     label="Nom de l'équipement"
                                     value={formData.nom}
                                     disabled={!isAdmin}
-                                    onChange={(e) =>
+                                    onChange={e =>
                                         setFormData({
                                             ...formData,
                                             nom: e.target.value,
@@ -317,7 +281,7 @@ export default function GestionObjet() {
                                     rows={1}
                                     value={formData.description}
                                     disabled={!isAdmin}
-                                    onChange={(e) =>
+                                    onChange={e =>
                                         setFormData({
                                             ...formData,
                                             description: e.target.value,
@@ -331,23 +295,14 @@ export default function GestionObjet() {
                                 <Autocomplete
                                     fullWidth
                                     disabled={!isAdmin}
-                                    value={
-                                        zonesPossibles.find(
-                                            (z) => z.id === formData.zone,
-                                        ) ||
-                                        formData.zone ||
-                                        null
-                                    }
+                                    value={zonesPossibles.find(z => z.id === formData.zone) || formData.zone || null}
                                     onChange={(event, newValue) => {
                                         if (typeof newValue === 'string') {
                                             setFormData({
                                                 ...formData,
                                                 zone: newValue,
                                             });
-                                        } else if (
-                                            newValue &&
-                                            newValue.inputValue
-                                        ) {
+                                        } else if (newValue && newValue.inputValue) {
                                             setFormData({
                                                 ...formData,
                                                 zone: newValue.inputValue,
@@ -360,15 +315,9 @@ export default function GestionObjet() {
                                         }
                                     }}
                                     filterOptions={(options, params) => {
-                                        const filtered = filter(
-                                            options,
-                                            params,
-                                        );
+                                        const filtered = filter(options, params);
                                         const { inputValue } = params;
-                                        const isExisting = options.some(
-                                            (option) =>
-                                                inputValue === option.nom,
-                                        );
+                                        const isExisting = options.some(option => inputValue === option.nom);
                                         if (inputValue !== '' && !isExisting) {
                                             filtered.push({
                                                 inputValue,
@@ -378,17 +327,14 @@ export default function GestionObjet() {
                                         return filtered;
                                     }}
                                     options={zonesPossibles}
-                                    getOptionLabel={(option) => {
-                                        if (typeof option === 'string')
-                                            return option;
-                                        if (option.inputValue)
-                                            return option.inputValue;
+                                    getOptionLabel={option => {
+                                        if (typeof option === 'string') return option;
+                                        if (option.inputValue) return option.inputValue;
                                         return option.nom || '';
                                     }}
                                     freeSolo
-                                    renderInput={(params) => {
-                                        const { InputProps, ...restParams } =
-                                            params;
+                                    renderInput={params => {
+                                        const { InputProps, ...restParams } = params;
                                         return (
                                             <TextField
                                                 {...restParams}
@@ -405,9 +351,7 @@ export default function GestionObjet() {
                                                                     ml: 1,
                                                                 }}
                                                             />
-                                                            {
-                                                                InputProps?.startAdornment
-                                                            }
+                                                            {InputProps?.startAdornment}
                                                         </>
                                                     ),
                                                 }}
@@ -418,15 +362,8 @@ export default function GestionObjet() {
                             </Grid>
 
                             <Grid item xs={12}>
-                                <Paper
-                                    variant="outlined"
-                                    sx={{ p: 2, bgcolor: '#f8f9fa' }}
-                                >
-                                    <Typography
-                                        variant="subtitle2"
-                                        gutterBottom
-                                        color="text.secondary"
-                                    >
+                                <Paper variant="outlined" sx={{ p: 2, bgcolor: '#f8f9fa' }}>
+                                    <Typography variant="subtitle2" gutterBottom color="text.secondary">
                                         Informations en temps réel
                                     </Typography>
                                     <Grid container spacing={2}>
@@ -437,23 +374,18 @@ export default function GestionObjet() {
                                                 sx={{
                                                     display: 'flex',
                                                     alignItems: 'center',
-                                                }}
-                                            >
+                                                }}>
                                                 <Traffic
                                                     sx={{
                                                         mr: 1,
                                                         color:
-                                                            objet?.etat_actuel ===
-                                                            'VERT'
+                                                            objet?.etat_actuel === 'VERT'
                                                                 ? 'success.main'
                                                                 : 'error.main',
                                                     }}
                                                 />
                                                 <Typography>
-                                                    Couleur :{' '}
-                                                    <strong>
-                                                        {objet?.etat_actuel}
-                                                    </strong>
+                                                    Couleur : <strong>{objet?.etat_actuel}</strong>
                                                 </Typography>
                                             </Grid>
                                         )}
@@ -464,8 +396,7 @@ export default function GestionObjet() {
                                                 sx={{
                                                     display: 'flex',
                                                     alignItems: 'center',
-                                                }}
-                                            >
+                                                }}>
                                                 <Speed
                                                     sx={{
                                                         mr: 1,
@@ -473,10 +404,7 @@ export default function GestionObjet() {
                                                     }}
                                                 />
                                                 <Typography>
-                                                    Vitesse :{' '}
-                                                    <strong>
-                                                        {objet?.vitesse} km/h
-                                                    </strong>
+                                                    Vitesse : <strong>{objet?.vitesse} km/h</strong>
                                                 </Typography>
                                             </Grid>
                                         )}
@@ -487,8 +415,7 @@ export default function GestionObjet() {
                                                 sx={{
                                                     display: 'flex',
                                                     alignItems: 'center',
-                                                }}
-                                            >
+                                                }}>
                                                 <LocalParking
                                                     sx={{
                                                         mr: 1,
@@ -498,9 +425,7 @@ export default function GestionObjet() {
                                                 <Typography>
                                                     Occupation :{' '}
                                                     <strong>
-                                                        {objet?.places_occupees}{' '}
-                                                        /{' '}
-                                                        {objet?.places_totales}
+                                                        {objet?.places_occupees} / {objet?.places_totales}
                                                     </strong>
                                                 </Typography>
                                             </Grid>
@@ -515,7 +440,7 @@ export default function GestionObjet() {
                                         <Switch
                                             checked={formData.est_actif}
                                             disabled={!isAdmin}
-                                            onChange={(e) =>
+                                            onChange={e =>
                                                 setFormData({
                                                     ...formData,
                                                     est_actif: e.target.checked,
@@ -532,7 +457,7 @@ export default function GestionObjet() {
                                         <Switch
                                             checked={formData.en_panne}
                                             disabled={!isAdmin}
-                                            onChange={(e) =>
+                                            onChange={e =>
                                                 setFormData({
                                                     ...formData,
                                                     en_panne: e.target.checked,
@@ -553,14 +478,12 @@ export default function GestionObjet() {
                                         display: 'flex',
                                         justifyContent: 'space-between',
                                         mt: 3,
-                                    }}
-                                >
+                                    }}>
                                     <Button
                                         color="error"
                                         variant="text"
                                         startIcon={<Delete />}
-                                        onClick={() => setOpenDeleteModal(true)}
-                                    >
+                                        onClick={() => setOpenDeleteModal(true)}>
                                         Supprimer l'unité
                                     </Button>
                                     <Button
@@ -568,8 +491,7 @@ export default function GestionObjet() {
                                         size="large"
                                         startIcon={<Save />}
                                         onClick={handleSave}
-                                        sx={{ borderRadius: 2, px: 4 }}
-                                    >
+                                        sx={{ borderRadius: 2, px: 4 }}>
                                         Appliquer les changements
                                     </Button>
                                 </Grid>
@@ -590,63 +512,43 @@ export default function GestionObjet() {
                                             bgcolor: '#ffebee',
                                             borderRadius: 3,
                                             border: '1px solid #ffcdd2',
-                                        }}
-                                    >
-                                        <Warning
-                                            color="error"
-                                            sx={{ fontSize: 32, mb: 1 }}
-                                        />
-                                        <Typography
-                                            variant="h5"
-                                            color="error"
-                                            fontWeight="bold"
-                                        >
+                                        }}>
+                                        <Warning color="error" sx={{ fontSize: 32, mb: 1 }} />
+                                        <Typography variant="h5" color="error" fontWeight="bold">
                                             {nbPannes}
                                         </Typography>
-                                        <Typography
-                                            variant="body2"
-                                            color="text.secondary"
-                                        >
+                                        <Typography variant="body2" color="text.secondary">
                                             Pannes Historiques
                                         </Typography>
                                     </Paper>
                                 </Grid>
 
-                                {objet?.type_api !== 'lieux' &&
-                                    objet?.type_api !== 'evenements' && (
-                                        <Grid item xs={12} sm={4}>
-                                            <Paper
+                                {objet?.type_api !== 'lieux' && objet?.type_api !== 'evenements' && (
+                                    <Grid item xs={12} sm={4}>
+                                        <Paper
+                                            sx={{
+                                                p: 2,
+                                                textAlign: 'center',
+                                                bgcolor: '#eceff1',
+                                                borderRadius: 3,
+                                                border: '1px solid #cfd8dc',
+                                            }}>
+                                            <PowerOff
                                                 sx={{
-                                                    p: 2,
-                                                    textAlign: 'center',
-                                                    bgcolor: '#eceff1',
-                                                    borderRadius: 3,
-                                                    border: '1px solid #cfd8dc',
+                                                    fontSize: 32,
+                                                    mb: 1,
+                                                    color: '#78909c',
                                                 }}
-                                            >
-                                                <PowerOff
-                                                    sx={{
-                                                        fontSize: 32,
-                                                        mb: 1,
-                                                        color: '#78909c',
-                                                    }}
-                                                />
-                                                <Typography
-                                                    variant="h5"
-                                                    color="text.secondary"
-                                                    fontWeight="bold"
-                                                >
-                                                    {nbEteint}
-                                                </Typography>
-                                                <Typography
-                                                    variant="body2"
-                                                    color="text.secondary"
-                                                >
-                                                    Mises hors tension
-                                                </Typography>
-                                            </Paper>
-                                        </Grid>
-                                    )}
+                                            />
+                                            <Typography variant="h5" color="text.secondary" fontWeight="bold">
+                                                {nbEteint}
+                                            </Typography>
+                                            <Typography variant="body2" color="text.secondary">
+                                                Mises hors tension
+                                            </Typography>
+                                        </Paper>
+                                    </Grid>
+                                )}
 
                                 {objet?.type_api === 'parkings' && (
                                     <Grid item xs={12} sm={4}>
@@ -657,23 +559,12 @@ export default function GestionObjet() {
                                                 bgcolor: '#e3f2fd',
                                                 borderRadius: 3,
                                                 border: '1px solid #bbdefb',
-                                            }}
-                                        >
-                                            <LocalParking
-                                                color="primary"
-                                                sx={{ fontSize: 32, mb: 1 }}
-                                            />
-                                            <Typography
-                                                variant="h5"
-                                                color="primary"
-                                                fontWeight="bold"
-                                            >
+                                            }}>
+                                            <LocalParking color="primary" sx={{ fontSize: 32, mb: 1 }} />
+                                            <Typography variant="h5" color="primary" fontWeight="bold">
                                                 {tauxRemplissage}%
                                             </Typography>
-                                            <Typography
-                                                variant="body2"
-                                                color="text.secondary"
-                                            >
+                                            <Typography variant="body2" color="text.secondary">
                                                 Taux de remplissage
                                             </Typography>
                                         </Paper>
@@ -682,35 +573,20 @@ export default function GestionObjet() {
                             </Grid>
                             {/* --- FIN EN-TÊTE --- */}
 
-                            <Typography
-                                variant="h6"
-                                gutterBottom
-                                sx={{ display: 'flex', alignItems: 'center' }}
-                            >
+                            <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center' }}>
                                 <EventNote sx={{ mr: 1 }} /> Dernières activités
                             </Typography>
 
                             <List>
                                 {logs.length > 0 ? (
                                     logs.map((log, index) => (
-                                        <ListItem
-                                            key={index}
-                                            divider={index !== logs.length - 1}
-                                        >
+                                        <ListItem key={index} divider={index !== logs.length - 1}>
                                             <ListItemText
                                                 primary={(() => {
-                                                    if (
-                                                        objet.type_api ===
-                                                            'lieux' ||
-                                                        objet.type_api ===
-                                                            'evenements'
-                                                    ) {
+                                                    if (objet.type_api === 'lieux' || objet.type_api === 'evenements') {
                                                         return `Affluence : ${log.frequentation || 0} personnes`;
                                                     }
-                                                    if (
-                                                        objet.type_api ===
-                                                        'parkings'
-                                                    ) {
+                                                    if (objet.type_api === 'parkings') {
                                                         return `Fréquentation : ${log.frequentation || 0} véhicules | Conso: ${log.consommation_kwh} kWh`;
                                                     }
                                                     return log.est_en_panne
@@ -718,20 +594,12 @@ export default function GestionObjet() {
                                                         : `Consommation : ${log.consommation_kwh} kWh`;
                                                 })()}
                                                 secondary={(() => {
-                                                    const dateBrute =
-                                                        log.date_mesure ||
-                                                        log.date ||
-                                                        log.date_action;
-                                                    if (!dateBrute)
-                                                        return 'Date inconnue';
-                                                    const d = new Date(
-                                                        dateBrute,
-                                                    );
+                                                    const dateBrute = log.date_mesure || log.date || log.date_action;
+                                                    if (!dateBrute) return 'Date inconnue';
+                                                    const d = new Date(dateBrute);
                                                     return isNaN(d.getTime())
                                                         ? 'Format date invalide'
-                                                        : d.toLocaleString(
-                                                              'fr-FR',
-                                                          );
+                                                        : d.toLocaleString('fr-FR');
                                                 })()}
                                             />
                                             {log.points_gagnes > 0 && (
@@ -745,12 +613,8 @@ export default function GestionObjet() {
                                         </ListItem>
                                     ))
                                 ) : (
-                                    <Typography
-                                        sx={{ py: 4, textAlign: 'center' }}
-                                        color="text.secondary"
-                                    >
-                                        Aucun historique disponible pour cet
-                                        équipement.
+                                    <Typography sx={{ py: 4, textAlign: 'center' }} color="text.secondary">
+                                        Aucun historique disponible pour cet équipement.
                                     </Typography>
                                 )}
                             </List>
@@ -759,39 +623,29 @@ export default function GestionObjet() {
                 </Paper>
             </Container>
 
-            <Dialog
-                open={openDeleteModal}
-                onClose={() => setOpenDeleteModal(false)}
-            >
+            <Dialog open={openDeleteModal} onClose={() => setOpenDeleteModal(false)}>
                 <DialogTitle>Confirmer la mise hors service ?</DialogTitle>
                 <DialogContent>
                     <DialogContentText>
-                        Cette action supprimera définitivement l'objet{' '}
-                        <strong>{objet?.nom}</strong> de la base de données
-                        urbaine.
+                        Cette action supprimera définitivement l'objet <strong>{objet?.nom}</strong> de la base de
+                        données urbaine.
                     </DialogContentText>
                 </DialogContent>
                 <DialogActions sx={{ p: 3 }}>
-                    <Button onClick={() => setOpenDeleteModal(false)}>
-                        Annuler
-                    </Button>
+                    <Button onClick={() => setOpenDeleteModal(false)}>Annuler</Button>
                     <Button
                         color="error"
                         variant="contained"
                         onClick={async () => {
                             const token = localStorage.getItem('access_token');
-                            await fetch(
-                                `http://localhost:8000/api/map/${type_api}/${id}/`,
-                                {
-                                    method: 'DELETE',
-                                    headers: {
-                                        Authorization: `Bearer ${token}`,
-                                    },
+                            await fetch(`http://localhost:8000/api/map/${type_api}/${id}/`, {
+                                method: 'DELETE',
+                                headers: {
+                                    Authorization: `Bearer ${token}`,
                                 },
-                            );
+                            });
                             navigate('/carte');
-                        }}
-                    >
+                        }}>
                         Confirmer la suppression
                     </Button>
                 </DialogActions>

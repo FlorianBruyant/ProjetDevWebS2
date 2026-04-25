@@ -36,7 +36,7 @@ const Accueil = () => {
     const [chargement, setChargement] = useState(true);
     const [filtreActif, setFiltreActif] = useState('Tout'); // Pour les boutons "Tout", "Trafic", etc.
 
-    const envoyerVersCarte = (e) => {
+    const envoyerVersCarte = e => {
         if (e) e.preventDefault();
         navigate('/carte', {
             state: { focusRecherche: true, texteInitial: saisie },
@@ -48,9 +48,7 @@ const Accueil = () => {
         const fetchDonneesAccueil = async () => {
             try {
                 // On récupère TOUTE la ville pour faire nos statistiques
-                const response = await fetch(
-                    'http://localhost:8000/api/map/global/',
-                );
+                const response = await fetch('http://localhost:8000/api/map/global/');
                 if (response.ok) {
                     const data = await response.json();
                     setDonneesVille(data);
@@ -61,7 +59,7 @@ const Accueil = () => {
                     let busEnService = 0;
                     let nouvellesAlertes = [];
 
-                    data.forEach((item) => {
+                    data.forEach(item => {
                         // 1. Feux en panne
                         if (item.type_api === 'feux' && item.en_panne) {
                             feuxEnPanne++;
@@ -75,15 +73,10 @@ const Accueil = () => {
                         }
                         // 2. Parkings (Places disponibles)
                         if (item.type_api === 'parkings') {
-                            placesDispoTotales +=
-                                item.places_totales - item.places_occupees;
+                            placesDispoTotales += item.places_totales - item.places_occupees;
                         }
                         // 3. Bus en circulation (actifs et pas en panne)
-                        if (
-                            item.type_api === 'vehicules' &&
-                            item.est_actif &&
-                            !item.en_panne
-                        ) {
+                        if (item.type_api === 'vehicules' && item.est_actif && !item.en_panne) {
                             busEnService++;
                         }
                         // 4. Véhicules en panne
@@ -118,7 +111,7 @@ const Accueil = () => {
     }, []);
 
     // --- FILTRAGE DE LA MINI-CARTE ---
-    const donneesFiltrees = donneesVille.filter((item) => {
+    const donneesFiltrees = donneesVille.filter(item => {
         if (filtreActif === 'Tout') return true;
         if (filtreActif === 'Trafic') return item.type_api === 'feux';
         if (filtreActif === 'Transports') return item.type_api === 'vehicules';
@@ -128,11 +121,7 @@ const Accueil = () => {
 
     return (
         <Box sx={{ bgcolor: '#f9fafb', minHeight: '100vh', pb: 12 }}>
-            <Container
-                maxWidth="md"
-                disableGutters
-                sx={{ px: { xs: 2, sm: 3 } }}
-            >
+            <Container maxWidth="md" disableGutters sx={{ px: { xs: 2, sm: 3 } }}>
                 {/* HEADER */}
                 <Box
                     sx={{
@@ -141,22 +130,12 @@ const Accueil = () => {
                         display: 'flex',
                         justifyContent: 'space-between',
                         alignItems: 'center',
-                    }}
-                >
+                    }}>
                     <Box>
-                        <Typography
-                            variant="overline"
-                            color="text.secondary"
-                            fontWeight="600"
-                            letterSpacing={1.5}
-                        >
+                        <Typography variant="overline" color="text.secondary" fontWeight="600" letterSpacing={1.5}>
                             Tableau de bord
                         </Typography>
-                        <Typography
-                            variant="h4"
-                            fontWeight="800"
-                            sx={{ color: '#111827', mt: -0.5 }}
-                        >
+                        <Typography variant="h4" fontWeight="800" sx={{ color: '#111827', mt: -0.5 }}>
                             Cergy Live
                         </Typography>
                     </Box>
@@ -169,8 +148,7 @@ const Accueil = () => {
                             boxShadow: '0px 4px 12px rgba(37, 99, 235, 0.3)',
                             cursor: 'pointer',
                         }}
-                        onClick={() => navigate('/profil')}
-                    >
+                        onClick={() => navigate('/profil')}>
                         U
                     </Avatar>
                 </Box>
@@ -191,15 +169,10 @@ const Accueil = () => {
                             transition: 'all 0.2s ease',
                             '&:focus-within': {
                                 border: '1px solid #2563eb',
-                                boxShadow:
-                                    '0px 4px 20px rgba(37, 99, 235, 0.1)',
+                                boxShadow: '0px 4px 20px rgba(37, 99, 235, 0.1)',
                             },
-                        }}
-                    >
-                        <IconButton
-                            sx={{ p: '10px', color: '#6b7280' }}
-                            onClick={envoyerVersCarte}
-                        >
+                        }}>
+                        <IconButton sx={{ p: '10px', color: '#6b7280' }} onClick={envoyerVersCarte}>
                             <Search />
                         </IconButton>
                         <InputBase
@@ -211,7 +184,7 @@ const Accueil = () => {
                             }}
                             placeholder="Rechercher un équipement..."
                             value={saisie}
-                            onChange={(e) => setSaisie(e.target.value)}
+                            onChange={e => setSaisie(e.target.value)}
                         />
                     </Paper>
                 </Box>
@@ -228,11 +201,8 @@ const Accueil = () => {
                             overflow: 'hidden',
                             border: '1px solid #f3f4f6',
                             boxShadow: '0px 8px 24px rgba(0, 0, 0, 0.04)',
-                        }}
-                    >
-                        <Box
-                            sx={{ height: '100%', width: '100%', opacity: 0.9 }}
-                        >
+                        }}>
+                        <Box sx={{ height: '100%', width: '100%', opacity: 0.9 }}>
                             {chargement ? (
                                 <Box
                                     sx={{
@@ -240,15 +210,11 @@ const Accueil = () => {
                                         justifyContent: 'center',
                                         alignItems: 'center',
                                         height: '100%',
-                                    }}
-                                >
+                                    }}>
                                     <CircularProgress />
                                 </Box>
                             ) : (
-                                <Carte
-                                    donnees={donneesFiltrees}
-                                    hauteur="220px"
-                                />
+                                <Carte donnees={donneesFiltrees} hauteur="220px" />
                             )}
                         </Box>
 
@@ -289,18 +255,15 @@ const Accueil = () => {
                         '&::-webkit-scrollbar': { display: 'none' },
                         msOverflowStyle: 'none',
                         scrollbarWidth: 'none',
-                    }}
-                >
-                    {['Tout', 'Trafic', 'Transports', 'Parkings'].map(
-                        (filtre) => (
-                            <FilterChip
-                                key={filtre}
-                                label={filtre}
-                                active={filtreActif === filtre}
-                                onClick={() => setFiltreActif(filtre)}
-                            />
-                        ),
-                    )}
+                    }}>
+                    {['Tout', 'Trafic', 'Transports', 'Parkings'].map(filtre => (
+                        <FilterChip
+                            key={filtre}
+                            label={filtre}
+                            active={filtreActif === filtre}
+                            onClick={() => setFiltreActif(filtre)}
+                        />
+                    ))}
                 </Box>
 
                 {/* GRILLE EVENEMENTS (AVEC VRAIES DONNÉES) */}
@@ -310,16 +273,10 @@ const Accueil = () => {
                             <StatusCard
                                 icon={<Traffic />}
                                 title="État du Réseau"
-                                val={
-                                    stats.feuxPanne > 0 ? 'Attention' : 'Fluide'
-                                }
+                                val={stats.feuxPanne > 0 ? 'Attention' : 'Fluide'}
                                 sub={`${stats.feuxPanne} feu(x) en panne`}
-                                color={
-                                    stats.feuxPanne > 0 ? '#ea580c' : '#16a34a'
-                                }
-                                bgColor={
-                                    stats.feuxPanne > 0 ? '#ffedd5' : '#dcfce7'
-                                }
+                                color={stats.feuxPanne > 0 ? '#ea580c' : '#16a34a'}
+                                bgColor={stats.feuxPanne > 0 ? '#ffedd5' : '#dcfce7'}
                             />
                         </Grid>
                         <Grid item xs={6} md={3}>
@@ -348,16 +305,8 @@ const Accueil = () => {
                                 title="Alertes"
                                 val={stats.alertes.length.toString()}
                                 sub="En cours"
-                                color={
-                                    stats.alertes.length > 0
-                                        ? '#dc2626'
-                                        : '#6b7280'
-                                }
-                                bgColor={
-                                    stats.alertes.length > 0
-                                        ? '#fee2e2'
-                                        : '#f3f4f6'
-                                }
+                                color={stats.alertes.length > 0 ? '#dc2626' : '#6b7280'}
+                                bgColor={stats.alertes.length > 0 ? '#fee2e2' : '#f3f4f6'}
                             />
                         </Grid>
                     </Grid>
@@ -365,11 +314,7 @@ const Accueil = () => {
 
                 {/* ALERTES EN DIRECT */}
                 <Box>
-                    <Typography
-                        variant="h6"
-                        fontWeight="800"
-                        sx={{ color: '#111827', mb: 2 }}
-                    >
+                    <Typography variant="h6" fontWeight="800" sx={{ color: '#111827', mb: 2 }}>
                         Alertes en direct
                     </Typography>
                     <List
@@ -378,47 +323,26 @@ const Accueil = () => {
                             display: 'flex',
                             flexDirection: 'column',
                             gap: 1.5,
-                        }}
-                    >
+                        }}>
                         {stats.alertes.length === 0 ? (
-                            <Typography
-                                color="text.secondary"
-                                sx={{ textAlign: 'center', py: 2 }}
-                            >
+                            <Typography color="text.secondary" sx={{ textAlign: 'center', py: 2 }}>
                                 Aucun incident signalé sur le réseau.
                             </Typography>
                         ) : (
                             stats.alertes.map((alerte, index) => (
                                 <Box
                                     key={index}
-                                    onClick={() =>
-                                        navigate(
-                                            `/objet/${alerte.type_api}/${alerte.id}`,
-                                        )
-                                    }
-                                    sx={{ cursor: 'pointer' }}
-                                >
+                                    onClick={() => navigate(`/objet/${alerte.type_api}/${alerte.id}`)}
+                                    sx={{ cursor: 'pointer' }}>
                                     <AlertItem
                                         icon={
-                                            alerte.type === 'Urgent' ? (
-                                                <WarningAmberRounded />
-                                            ) : (
-                                                <ConstructionRounded />
-                                            )
+                                            alerte.type === 'Urgent' ? <WarningAmberRounded /> : <ConstructionRounded />
                                         }
                                         title={alerte.titre}
                                         date={alerte.sousTitre}
                                         status={alerte.type}
-                                        color={
-                                            alerte.type === 'Urgent'
-                                                ? '#dc2626'
-                                                : '#ea580c'
-                                        }
-                                        bgColor={
-                                            alerte.type === 'Urgent'
-                                                ? '#fee2e2'
-                                                : '#ffedd5'
-                                        }
+                                        color={alerte.type === 'Urgent' ? '#dc2626' : '#ea580c'}
+                                        bgColor={alerte.type === 'Urgent' ? '#fee2e2' : '#ffedd5'}
                                     />
                                 </Box>
                             ))
@@ -469,8 +393,7 @@ const StatusCard = ({ icon, title, val, sub, color, bgColor }) => (
                 transform: 'translateY(-2px)',
                 boxShadow: '0px 6px 16px rgba(0, 0, 0, 0.04)',
             },
-        }}
-    >
+        }}>
         <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.5 }}>
             <Box
                 sx={{
@@ -480,19 +403,14 @@ const StatusCard = ({ icon, title, val, sub, color, bgColor }) => (
                     borderRadius: '8px',
                     display: 'flex',
                     mr: 1.5,
-                }}
-            >
+                }}>
                 {React.cloneElement(icon, { sx: { fontSize: 20 } })}
             </Box>
             <Typography variant="body2" fontWeight="600" color="text.secondary">
                 {title}
             </Typography>
         </Box>
-        <Typography
-            variant="h5"
-            fontWeight="800"
-            sx={{ color: '#111827', mb: 0.2 }}
-        >
+        <Typography variant="h5" fontWeight="800" sx={{ color: '#111827', mb: 0.2 }}>
             {val}
         </Typography>
         <Typography variant="caption" fontWeight="600" sx={{ color: color }}>
@@ -515,8 +433,7 @@ const AlertItem = ({ icon, title, date, status, color, bgColor }) => (
             borderLeft: `4px solid ${color}`,
             transition: 'background-color 0.2s',
             '&:hover': { bgcolor: '#f9fafb' },
-        }}
-    >
+        }}>
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
             <Box
                 sx={{
@@ -526,23 +443,14 @@ const AlertItem = ({ icon, title, date, status, color, bgColor }) => (
                     borderRadius: '10px',
                     display: 'flex',
                     mr: 2,
-                }}
-            >
+                }}>
                 {icon}
             </Box>
             <Box>
-                <Typography
-                    variant="body1"
-                    fontWeight="700"
-                    sx={{ color: '#111827' }}
-                >
+                <Typography variant="body1" fontWeight="700" sx={{ color: '#111827' }}>
                     {title}
                 </Typography>
-                <Typography
-                    variant="caption"
-                    fontWeight="500"
-                    color="text.secondary"
-                >
+                <Typography variant="caption" fontWeight="500" color="text.secondary">
                     {date}
                 </Typography>
             </Box>

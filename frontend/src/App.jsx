@@ -1,9 +1,4 @@
-import {
-    BrowserRouter as Router,
-    Routes,
-    Route,
-    Navigate,
-} from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Box } from '@mui/material';
 import Accueil from './pages/Accueil';
 import PageCarte from './pages/PageCarte';
@@ -49,24 +44,14 @@ function App() {
                     pb: { xs: '80px', md: 0 },
                     pt: { xs: 0, md: '64px' },
                     minHeight: '100vh',
-                }}
-            >
+                }}>
                 <Routes>
                     <Route path="/" element={<Accueil />} />
                     <Route path="/inscription" element={<Inscription />} />
                     <Route path="/connexion" element={<Connexion />} />
-                    <Route
-                        path="/confirmer-email/:uid/:token"
-                        element={<ConfirmEmail />}
-                    />
-                    <Route
-                        path="/mot-de-passe-oublie"
-                        element={<DemandeReset />}
-                    />
-                    <Route
-                        path="/reset-password/:uid/:token"
-                        element={<NouveauMotDePasse />}
-                    />
+                    <Route path="/confirmer-email/:uid/:token" element={<ConfirmEmail />} />
+                    <Route path="/mot-de-passe-oublie" element={<DemandeReset />} />
+                    <Route path="/reset-password/:uid/:token" element={<NouveauMotDePasse />} />
 
                     {/* Routes pour tous les connectés */}
                     <Route
@@ -106,9 +91,7 @@ function App() {
                     <Route
                         path="/stats"
                         element={
-                            <RouteProtegee
-                                rolesAutorises={['ADMIN', 'COMPLEXE']}
-                            >
+                            <RouteProtegee rolesAutorises={['ADMIN', 'COMPLEXE']}>
                                 <Dashboard />
                             </RouteProtegee>
                         }

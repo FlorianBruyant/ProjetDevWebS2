@@ -29,12 +29,9 @@ export default function ProfilMembre() {
             const token = localStorage.getItem('access_token');
             try {
                 // 1. Récupérer le profil consulté
-                const resMember = await fetch(
-                    `http://localhost:8000/api/members/${id}/`,
-                    {
-                        headers: { Authorization: `Bearer ${token}` },
-                    },
-                );
+                const resMember = await fetch(`http://localhost:8000/api/members/${id}/`, {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
                 // 2. Récupérer mon propre profil pour vérifier mon rôle
                 const resMe = await fetch(`http://localhost:8000/api/me/`, {
                     headers: { Authorization: `Bearer ${token}` },
@@ -57,17 +54,14 @@ export default function ProfilMembre() {
         setIsUpdating(true);
         const token = localStorage.getItem('access_token');
         try {
-            const response = await fetch(
-                `http://localhost:8000/api/members/${id}/`,
-                {
-                    method: 'PATCH',
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ [field]: value }),
+            const response = await fetch(`http://localhost:8000/api/members/${id}/`, {
+                method: 'PATCH',
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    'Content-Type': 'application/json',
                 },
-            );
+                body: JSON.stringify({ [field]: value }),
+            });
 
             if (response.ok) {
                 const updatedMember = await response.json();
@@ -88,12 +82,7 @@ export default function ProfilMembre() {
                 <CircularProgress />
             </Box>
         );
-    if (!member)
-        return (
-            <Typography sx={{ mt: 10, textAlign: 'center' }}>
-                Membre introuvable.
-            </Typography>
-        );
+    if (!member) return <Typography sx={{ mt: 10, textAlign: 'center' }}>Membre introuvable.</Typography>;
 
     const isAdmin = currentUser?.role === 'ADMIN';
 
@@ -102,16 +91,12 @@ export default function ProfilMembre() {
             <Box
                 sx={{
                     height: '120px',
-                    background:
-                        'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                 }}
             />
 
             <Container maxWidth="sm" sx={{ mt: -6 }}>
-                <Button
-                    onClick={() => navigate(-1)}
-                    sx={{ color: 'white', mb: 2 }}
-                >
+                <Button onClick={() => navigate(-1)} sx={{ color: 'white', mb: 2 }}>
                     ← Retour
                 </Button>
 
@@ -121,8 +106,7 @@ export default function ProfilMembre() {
                         flexDirection: 'column',
                         alignItems: 'center',
                         mb: 4,
-                    }}
-                >
+                    }}>
                     <Avatar
                         sx={{
                             width: 100,
@@ -131,8 +115,7 @@ export default function ProfilMembre() {
                             bgcolor: '#764ba2',
                             fontSize: '2.5rem',
                             mb: 2,
-                        }}
-                    >
+                        }}>
                         {member.username?.charAt(0).toUpperCase()}
                     </Avatar>
                     <Typography variant="h5" fontWeight="bold">
@@ -158,14 +141,8 @@ export default function ProfilMembre() {
                             mb: 3,
                             borderRadius: 3,
                             border: '2px solid #ed6c02',
-                        }}
-                    >
-                        <Typography
-                            variant="subtitle1"
-                            fontWeight="bold"
-                            color="warning.main"
-                            gutterBottom
-                        >
+                        }}>
+                        <Typography variant="subtitle1" fontWeight="bold" color="warning.main" gutterBottom>
                             Panel Administrateur
                         </Typography>
                         <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
@@ -174,17 +151,12 @@ export default function ProfilMembre() {
                                 label="Changer le Rôle"
                                 fullWidth
                                 value={member.role}
-                                onChange={(e) =>
-                                    handleAdminUpdate('role', e.target.value)
-                                }
-                                disabled={isUpdating}
-                            >
+                                onChange={e => handleAdminUpdate('role', e.target.value)}
+                                disabled={isUpdating}>
                                 <MenuItem value="VISITEUR">Visiteur</MenuItem>
                                 <MenuItem value="SIMPLE">Simple</MenuItem>
                                 <MenuItem value="COMPLEXE">Complexe</MenuItem>
-                                <MenuItem value="ADMIN">
-                                    Administrateur
-                                </MenuItem>
+                                <MenuItem value="ADMIN">Administrateur</MenuItem>
                             </TextField>
 
                             <TextField
@@ -192,15 +164,10 @@ export default function ProfilMembre() {
                                 label="Changer le Niveau"
                                 fullWidth
                                 value={member.niveau}
-                                onChange={(e) =>
-                                    handleAdminUpdate('niveau', e.target.value)
-                                }
-                                disabled={isUpdating}
-                            >
+                                onChange={e => handleAdminUpdate('niveau', e.target.value)}
+                                disabled={isUpdating}>
                                 <MenuItem value="DEBUTANT">Débutant</MenuItem>
-                                <MenuItem value="INTERMEDIAIRE">
-                                    Intermédiaire
-                                </MenuItem>
+                                <MenuItem value="INTERMEDIAIRE">Intermédiaire</MenuItem>
                                 <MenuItem value="AVANCE">Avancé</MenuItem>
                                 <MenuItem value="EXPERT">Expert</MenuItem>
                             </TextField>
@@ -213,9 +180,7 @@ export default function ProfilMembre() {
                     <Typography variant="h6" fontWeight="bold" color="primary">
                         Niveau {member.niveau}
                     </Typography>
-                    <Typography variant="body2">
-                        Points d'expérience : {member.points || 0} XP
-                    </Typography>
+                    <Typography variant="body2">Points d'expérience : {member.points || 0} XP</Typography>
                 </Paper>
 
                 <Paper elevation={2} sx={{ p: 3, borderRadius: 3 }}>

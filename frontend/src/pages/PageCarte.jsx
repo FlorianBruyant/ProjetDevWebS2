@@ -13,12 +13,8 @@ const PageCarte = () => {
     const [termeFixe, setTermeFixe] = useState('');
     const [chargement, setChargement] = useState(false);
     const [aucunResultat, setAucunResultat] = useState(false);
-    const [rechercheActive, setRechercheActive] = useState(
-        () => location.state?.focusRecherche ?? false,
-    );
-    const [recherche, setRecherche] = useState(
-        () => location.state?.texteInitial ?? '',
-    );
+    const [rechercheActive, setRechercheActive] = useState(() => location.state?.focusRecherche ?? false);
+    const [recherche, setRecherche] = useState(() => location.state?.texteInitial ?? '');
     const [categorieActuelle, setCategorieActuelle] = useState('global');
     const inputRef = useRef(null);
 
@@ -78,7 +74,7 @@ const PageCarte = () => {
         categorie = categorieActuelle,
         texte = recherche,
         isRefresh = false,
-        zoneId = zoneSelectionnee,
+        zoneId = zoneSelectionnee
     ) => {
         if (!isRefresh) {
             setDoitCentrer(true);
@@ -100,8 +96,7 @@ const PageCarte = () => {
 
             setDonneesMap(listeFinale);
 
-            if (listeFinale.length === 0 && texte !== '')
-                setAucunResultat(true);
+            if (listeFinale.length === 0 && texte !== '') setAucunResultat(true);
         } catch (error) {
             console.error('Erreur API Carte:', error);
             setDonneesMap([]);
@@ -113,12 +108,7 @@ const PageCarte = () => {
     // --- REFRESH RÉGULIER ---
     useEffect(() => {
         const intervalle = setInterval(() => {
-            chargerDonnees(
-                categorieActuelle,
-                recherche,
-                true,
-                zoneSelectionnee,
-            );
+            chargerDonnees(categorieActuelle, recherche, true, zoneSelectionnee);
         }, 5000);
         return () => clearInterval(intervalle);
     }, [categorieActuelle, recherche, zoneSelectionnee]);
@@ -138,7 +128,7 @@ const PageCarte = () => {
     }, [location]);
 
     // --- GESTION DU CLIC SUR LA CARTE ---
-    const handleClicCarte = (latlng) => {
+    const handleClicCarte = latlng => {
         setCoordsSelectionnees(latlng);
         setOpenModal(true);
         setModeAjout(false);
@@ -151,29 +141,24 @@ const PageCarte = () => {
 
         try {
             // --- 1. CRÉATION DU POINT GPS ---
-            const resPoint = await fetch(
-                'http://localhost:8000/api/map/points/',
-                {
-                    method: 'POST',
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        latitude: coordsSelectionnees.lat,
-                        longitude: coordsSelectionnees.lng,
-                    }),
+            const resPoint = await fetch('http://localhost:8000/api/map/points/', {
+                method: 'POST',
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    'Content-Type': 'application/json',
                 },
-            );
+                body: JSON.stringify({
+                    latitude: coordsSelectionnees.lat,
+                    longitude: coordsSelectionnees.lng,
+                }),
+            });
 
             let pointId = null;
             if (resPoint.ok) {
                 const pointData = await resPoint.json();
                 pointId = pointData.id;
             } else {
-                console.warn(
-                    "Échec création point, tentative d'envoi imbriqué...",
-                );
+                console.warn("Échec création point, tentative d'envoi imbriqué...");
             }
 
             // --- 2. PRÉPARATION DU PAYLOAD COMMUN ---
@@ -186,9 +171,7 @@ const PageCarte = () => {
 
             // --- 3. LOGIQUE SPÉCIFIQUE PAR TYPE (Intégration nouveaux types) ---
             if (nouveauObjet.type_api === 'vehicules') {
-                payload.immatriculation =
-                    nouveauObjet.details ||
-                    `BUS-${Math.floor(Math.random() * 1000)}`;
+                payload.immatriculation = nouveauObjet.details || `BUS-${Math.floor(Math.random() * 1000)}`;
                 if (pointId) payload.point_actuel = pointId;
             } else if (nouveauObjet.type_api === 'parkings') {
                 payload.places_totales = parseInt(nouveauObjet.details) || 100;
@@ -210,17 +193,14 @@ const PageCarte = () => {
             }
 
             // --- 4. ENVOI À L'API FINALE ---
-            const res = await fetch(
-                `http://localhost:8000/api/map/${nouveauObjet.type_api}/`,
-                {
-                    method: 'POST',
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(payload),
+            const res = await fetch(`http://localhost:8000/api/map/${nouveauObjet.type_api}/`, {
+                method: 'POST',
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    'Content-Type': 'application/json',
                 },
-            );
+                body: JSON.stringify(payload),
+            });
 
             if (res.ok) {
                 setOpenModal(false);
@@ -254,8 +234,7 @@ const PageCarte = () => {
                 flexDirection: 'column',
                 position: 'relative',
                 bgcolor: 'white',
-            }}
-        >
+            }}>
             <AjoutObjet
                 isAdmin={isAdmin}
                 modeAjout={modeAjout}
@@ -274,8 +253,7 @@ const PageCarte = () => {
                     zIndex: 0,
                     filter: rechercheActive ? 'blur(2px)' : 'none',
                     transition: 'filter 0.3s',
-                }}
-            >
+                }}>
                 <Carte
                     donnees={donneesMap}
                     enModeAjout={modeAjout}

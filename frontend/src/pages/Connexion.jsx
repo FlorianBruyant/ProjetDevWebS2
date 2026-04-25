@@ -35,11 +35,11 @@ const Connexion = () => {
     // Message de succès venant de la page d'inscription
     const messageSucces = location.state?.message;
 
-    const handleChange = (e) => {
+    const handleChange = e => {
         setCredentials({ ...credentials, [e.target.name]: e.target.value });
     };
 
-    const handleSubmit = async (e) => {
+    const handleSubmit = async e => {
         e.preventDefault();
         setErreur('');
         setChargement(true);
@@ -63,12 +63,9 @@ const Connexion = () => {
                 localStorage.setItem('username', credentials.username);
 
                 // On stocke le rôle pour RouteProtegee
-                const resProfile = await fetch(
-                    'http://localhost:8000/api/me/',
-                    {
-                        headers: { Authorization: `Bearer ${data.access}` },
-                    },
-                );
+                const resProfile = await fetch('http://localhost:8000/api/me/', {
+                    headers: { Authorization: `Bearer ${data.access}` },
+                });
                 if (resProfile.ok) {
                     const userProfile = await resProfile.json();
                     // On enregistre le rôle dans le localStorage
@@ -95,8 +92,7 @@ const Connexion = () => {
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'center',
-                }}
-            >
+                }}>
                 <Paper
                     elevation={4}
                     sx={{
@@ -104,8 +100,7 @@ const Connexion = () => {
                         width: '100%',
                         borderRadius: 3,
                         textAlign: 'center',
-                    }}
-                >
+                    }}>
                     <Box
                         sx={{
                             bgcolor: 'secondary.main',
@@ -114,19 +109,14 @@ const Connexion = () => {
                             borderRadius: '50%',
                             display: 'inline-flex',
                             mb: 2,
-                        }}
-                    >
+                        }}>
                         <LockOutlined fontSize="large" />
                     </Box>
 
                     <Typography component="h1" variant="h5" fontWeight="bold">
                         Connexion
                     </Typography>
-                    <Typography
-                        variant="body2"
-                        color="text.secondary"
-                        sx={{ mb: 3 }}
-                    >
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
                         Accédez à votre tableau de bord Smart City
                     </Typography>
 
@@ -165,16 +155,8 @@ const Connexion = () => {
                             InputProps={{
                                 endAdornment: (
                                     <InputAdornment position="end">
-                                        <IconButton
-                                            onClick={() =>
-                                                setShowPassword(!showPassword)
-                                            }
-                                        >
-                                            {showPassword ? (
-                                                <VisibilityOff />
-                                            ) : (
-                                                <Visibility />
-                                            )}
+                                        <IconButton onClick={() => setShowPassword(!showPassword)}>
+                                            {showPassword ? <VisibilityOff /> : <Visibility />}
                                         </IconButton>
                                     </InputAdornment>
                                 ),
@@ -187,20 +169,10 @@ const Connexion = () => {
                                 justifyContent: 'space-between',
                                 alignItems: 'center',
                                 mt: 1,
-                            }}
-                        >
+                            }}>
                             <FormControlLabel
-                                control={
-                                    <Checkbox
-                                        value="remember"
-                                        color="primary"
-                                    />
-                                }
-                                label={
-                                    <Typography variant="body2">
-                                        Se souvenir de moi
-                                    </Typography>
-                                }
+                                control={<Checkbox value="remember" color="primary" />}
+                                label={<Typography variant="body2">Se souvenir de moi</Typography>}
                             />
                         </Box>
 
@@ -215,8 +187,7 @@ const Connexion = () => {
                                 py: 1.5,
                                 borderRadius: 2,
                                 fontWeight: 'bold',
-                            }}
-                        >
+                            }}>
                             {chargement ? 'Connexion...' : 'Se connecter'}
                         </Button>
 
@@ -225,8 +196,7 @@ const Connexion = () => {
                                 component={RouterLink}
                                 to="/inscription"
                                 variant="body2"
-                                sx={{ textDecoration: 'none' }}
-                            >
+                                sx={{ textDecoration: 'none' }}>
                                 {"Pas encore de compte ? S'inscrire"}
                             </MuiLink>
                             <MuiLink
@@ -237,8 +207,7 @@ const Connexion = () => {
                                     mt: 1,
                                     display: 'block',
                                     textAlign: 'right',
-                                }}
-                            >
+                                }}>
                                 Mot de passe oublié ?
                             </MuiLink>
                         </Grid>

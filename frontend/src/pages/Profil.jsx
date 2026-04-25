@@ -35,7 +35,7 @@ export default function Profil() {
 
     // Fonction pour vérifier si une donnée sensible a été touchée
     const aModifieDonneesSensibles = () => {
-        const normalize = (v) => v ?? '';
+        const normalize = v => v ?? '';
         return (
             normalize(editData.username) !== normalize(user?.username) ||
             normalize(editData.email) !== normalize(user?.email) ||
@@ -94,9 +94,7 @@ export default function Profil() {
         // 2. Gestion des données sensibles (Username, Email, Password)
         if (aModifieDonneesSensibles()) {
             if (!currentPassword) {
-                setErrorMsg(
-                    'Veuillez saisir votre mot de passe actuel pour modifier vos identifiants.',
-                );
+                setErrorMsg('Veuillez saisir votre mot de passe actuel pour modifier vos identifiants.');
                 setIsUpdating(false);
                 return;
             }
@@ -117,9 +115,7 @@ export default function Profil() {
             // Si on veut changer le mot de passe et que le champ est rempli
             if (showPasswordFields && editData.password) {
                 if (editData.password !== editData.confirmPassword) {
-                    setErrorMsg(
-                        'Les nouveaux mots de passe ne correspondent pas.',
-                    );
+                    setErrorMsg('Les nouveaux mots de passe ne correspondent pas.');
                     setIsUpdating(false);
                     return;
                 }
@@ -145,15 +141,15 @@ export default function Profil() {
                 if (isEmailChanged || isPasswordChanged || isUsernameChanged) {
                     if (isEmailChanged) {
                         alert(
-                            'Email modifié. Veuillez valider le lien envoyé à votre nouvelle adresse avant de vous reconnecter.',
+                            'Email modifié. Veuillez valider le lien envoyé à votre nouvelle adresse avant de vous reconnecter.'
                         );
                     } else if (isUsernameChanged) {
                         alert(
-                            "Nom d'utilisateur modifié. Veuillez valider le lien envoyé à votre nouvelle adresse avant de vous reconnecter.",
+                            "Nom d'utilisateur modifié. Veuillez valider le lien envoyé à votre nouvelle adresse avant de vous reconnecter."
                         );
                     } else {
                         alert(
-                            'Mot de passe modifié avec succès. Veuillez vous reconnecter avec vos nouveaux identifiants.',
+                            'Mot de passe modifié avec succès. Veuillez vous reconnecter avec vos nouveaux identifiants.'
                         );
                     }
                     handleLogout();
@@ -164,7 +160,7 @@ export default function Profil() {
                     setShowPasswordFields(false);
                     setCurrentPassword('');
                     // On nettoie les champs de mot de passe pour la prochaine ouverture
-                    setEditData((prev) => ({
+                    setEditData(prev => ({
                         ...prev,
                         password: '',
                         confirmPassword: '',
@@ -172,16 +168,10 @@ export default function Profil() {
                 }
             } else {
                 // Traduction des erreurs backend
-                if (data.current_password)
-                    setErrorMsg('Mot de passe actuel incorrect.');
-                else if (data.username)
-                    setErrorMsg("Ce nom d'utilisateur est déjà pris.");
-                else if (data.email)
-                    setErrorMsg('Cette adresse email est déjà utilisée.');
-                else
-                    setErrorMsg(
-                        data.detail || 'Erreur lors de la mise à jour.',
-                    );
+                if (data.current_password) setErrorMsg('Mot de passe actuel incorrect.');
+                else if (data.username) setErrorMsg("Ce nom d'utilisateur est déjà pris.");
+                else if (data.email) setErrorMsg('Cette adresse email est déjà utilisée.');
+                else setErrorMsg(data.detail || 'Erreur lors de la mise à jour.');
             }
         } catch (error) {
             setErrorMsg('Erreur de connexion au serveur.');
@@ -195,7 +185,7 @@ export default function Profil() {
         navigate('/connexion');
     };
 
-    const calculerProgression = (pts) => {
+    const calculerProgression = pts => {
         const safePts = pts || 0;
         if (safePts < 3) return (safePts / 3) * 100;
         if (safePts < 5) return ((safePts - 3) / 2) * 100;
@@ -216,8 +206,7 @@ export default function Profil() {
             <Box
                 sx={{
                     height: '120px',
-                    background:
-                        'linear-gradient(135deg, #e0e7ff 0%, #ede9fe 100%)',
+                    background: 'linear-gradient(135deg, #e0e7ff 0%, #ede9fe 100%)',
                 }}
             />
 
@@ -229,8 +218,7 @@ export default function Profil() {
                         flexDirection: 'column',
                         alignItems: 'center',
                         mb: 4,
-                    }}
-                >
+                    }}>
                     <Avatar
                         sx={{
                             width: 100,
@@ -239,8 +227,7 @@ export default function Profil() {
                             bgcolor: '#3f51b5',
                             fontSize: '2.5rem',
                             mb: 2,
-                        }}
-                    >
+                        }}>
                         {user?.username?.charAt(0).toUpperCase()}
                     </Avatar>
                     <Typography variant="h5" fontWeight="bold">
@@ -255,13 +242,8 @@ export default function Profil() {
                             display: 'flex',
                             justifyContent: 'space-between',
                             mb: 1,
-                        }}
-                    >
-                        <Typography
-                            variant="h6"
-                            fontWeight="bold"
-                            color="primary"
-                        >
+                        }}>
+                        <Typography variant="h6" fontWeight="bold" color="primary">
                             Niveau {user?.niveau || 'Débutant'}
                         </Typography>
                         <Typography variant="body1" fontWeight="bold">
@@ -287,8 +269,7 @@ export default function Profil() {
                         setCurrentPassword('');
                         setErrorMsg('');
                         setOpen(true);
-                    }}
-                >
+                    }}>
                     Modifier
                 </Button>
 
@@ -301,12 +282,10 @@ export default function Profil() {
                         <strong>Rôle :</strong> {user?.role || 'Utilisateur'}
                     </Typography>
                     <Typography sx={{ mb: 1 }}>
-                        <strong>Genre :</strong>{' '}
-                        {user?.genre || 'Non renseigné'}
+                        <strong>Genre :</strong> {user?.genre || 'Non renseigné'}
                     </Typography>
                     <Typography>
-                        <strong>Type de membre :</strong>{' '}
-                        {user?.type_membre || 'Citoyen'}
+                        <strong>Type de membre :</strong> {user?.type_membre || 'Citoyen'}
                     </Typography>
                 </Paper>
 
@@ -319,22 +298,15 @@ export default function Profil() {
                         <strong>Email :</strong> {user?.email}
                     </Typography>
                     <Typography sx={{ mb: 1 }}>
-                        <strong>Prénom :</strong>{' '}
-                        {user?.first_name || 'Non renseigné'}
+                        <strong>Prénom :</strong> {user?.first_name || 'Non renseigné'}
                     </Typography>
                     <Typography sx={{ mb: 1 }}>
-                        <strong>Nom :</strong>{' '}
-                        {user?.last_name || 'Non renseigné'}
+                        <strong>Nom :</strong> {user?.last_name || 'Non renseigné'}
                     </Typography>
                 </Paper>
 
                 {/* --- DIALOG DE MODIFICATION --- */}
-                <Dialog
-                    open={open}
-                    onClose={() => setOpen(false)}
-                    fullWidth
-                    maxWidth="xs"
-                >
+                <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="xs">
                     <DialogTitle>Modifier mon profil</DialogTitle>
                     <DialogContent
                         sx={{
@@ -342,8 +314,7 @@ export default function Profil() {
                             flexDirection: 'column',
                             gap: 2,
                             pt: 1,
-                        }}
-                    >
+                        }}>
                         {errorMsg && <Alert severity="error">{errorMsg}</Alert>}
 
                         {/* --- ZONE LIBRE (Pas besoin de mot de passe) --- */}
@@ -355,13 +326,12 @@ export default function Profil() {
                             fullWidth
                             label="Genre"
                             value={editData.genre || ''}
-                            onChange={(e) =>
+                            onChange={e =>
                                 setEditData({
                                     ...editData,
                                     genre: e.target.value,
                                 })
-                            }
-                        >
+                            }>
                             <MenuItem value="M">Masculin</MenuItem>
                             <MenuItem value="F">Féminin</MenuItem>
                             <MenuItem value="A">Autre</MenuItem>
@@ -373,25 +343,22 @@ export default function Profil() {
                             fullWidth
                             label="Type de membre"
                             value={editData.type_membre || ''}
-                            onChange={(e) =>
+                            onChange={e =>
                                 setEditData({
                                     ...editData,
                                     type_membre: e.target.value,
                                 })
-                            }
-                        >
+                            }>
                             <MenuItem value="Citoyen">Citoyen</MenuItem>
                             <MenuItem value="Étudiant">Étudiant</MenuItem>
-                            <MenuItem value="Professionnel">
-                                Professionnel
-                            </MenuItem>
+                            <MenuItem value="Professionnel">Professionnel</MenuItem>
                         </TextField>
 
                         <TextField
                             fullWidth
                             label="Prénom"
                             value={editData.first_name || ''}
-                            onChange={(e) =>
+                            onChange={e =>
                                 setEditData({
                                     ...editData,
                                     first_name: e.target.value,
@@ -402,7 +369,7 @@ export default function Profil() {
                             fullWidth
                             label="Nom"
                             value={editData.last_name || ''}
-                            onChange={(e) =>
+                            onChange={e =>
                                 setEditData({
                                     ...editData,
                                     last_name: e.target.value,
@@ -420,7 +387,7 @@ export default function Profil() {
                             fullWidth
                             label="Nom d'utilisateur"
                             value={editData.username || ''}
-                            onChange={(e) =>
+                            onChange={e =>
                                 setEditData({
                                     ...editData,
                                     username: e.target.value,
@@ -432,7 +399,7 @@ export default function Profil() {
                             fullWidth
                             label="Email"
                             value={editData.email || ''}
-                            onChange={(e) =>
+                            onChange={e =>
                                 setEditData({
                                     ...editData,
                                     email: e.target.value,
@@ -441,10 +408,7 @@ export default function Profil() {
                         />
 
                         {!showPasswordFields ? (
-                            <Button
-                                size="small"
-                                onClick={() => setShowPasswordFields(true)}
-                            >
+                            <Button size="small" onClick={() => setShowPasswordFields(true)}>
                                 Changer le mot de passe
                             </Button>
                         ) : (
@@ -453,7 +417,7 @@ export default function Profil() {
                                     fullWidth
                                     label="Nouveau mot de passe"
                                     type="password"
-                                    onChange={(e) =>
+                                    onChange={e =>
                                         setEditData({
                                             ...editData,
                                             password: e.target.value,
@@ -464,18 +428,14 @@ export default function Profil() {
                                     fullWidth
                                     label="Confirmer nouveau mot de passe"
                                     type="password"
-                                    onChange={(e) =>
+                                    onChange={e =>
                                         setEditData({
                                             ...editData,
                                             confirmPassword: e.target.value,
                                         })
                                     }
                                 />
-                                <Button
-                                    size="small"
-                                    color="error"
-                                    onClick={() => setShowPasswordFields(false)}
-                                >
+                                <Button size="small" color="error" onClick={() => setShowPasswordFields(false)}>
                                     Annuler le changement
                                 </Button>
                             </>
@@ -489,15 +449,9 @@ export default function Profil() {
                                     p: 2,
                                     bgcolor: '#fff4e5',
                                     borderRadius: 2,
-                                }}
-                            >
-                                <Typography
-                                    variant="caption"
-                                    color="warning.main"
-                                    sx={{ display: 'block', mb: 1 }}
-                                >
-                                    Confirmation requise pour modifier vos
-                                    identifiants :
+                                }}>
+                                <Typography variant="caption" color="warning.main" sx={{ display: 'block', mb: 1 }}>
+                                    Confirmation requise pour modifier vos identifiants :
                                 </Typography>
 
                                 <TextField
@@ -506,9 +460,7 @@ export default function Profil() {
                                     label="Mot de passe actuel"
                                     type="password"
                                     value={currentPassword}
-                                    onChange={(e) =>
-                                        setCurrentPassword(e.target.value)
-                                    }
+                                    onChange={e => setCurrentPassword(e.target.value)}
                                     color="warning"
                                 />
 
@@ -516,9 +468,7 @@ export default function Profil() {
                                 <Box sx={{ textAlign: 'right', mt: 1 }}>
                                     <Typography
                                         variant="caption"
-                                        onClick={() =>
-                                            navigate('/mot-de-passe-oublie')
-                                        }
+                                        onClick={() => navigate('/mot-de-passe-oublie')}
                                         sx={{
                                             cursor: 'pointer',
                                             color: 'primary.main',
@@ -526,8 +476,7 @@ export default function Profil() {
                                             '&:hover': {
                                                 color: 'primary.dark',
                                             },
-                                        }}
-                                    >
+                                        }}>
                                         J'ai oublié mon mot de passe
                                     </Typography>
                                 </Box>
@@ -537,11 +486,7 @@ export default function Profil() {
 
                     <DialogActions>
                         <Button onClick={() => setOpen(false)}>Annuler</Button>
-                        <Button
-                            onClick={handleUpdate}
-                            variant="contained"
-                            disabled={isUpdating}
-                        >
+                        <Button onClick={handleUpdate} variant="contained" disabled={isUpdating}>
                             Sauvegarder
                         </Button>
                     </DialogActions>
@@ -553,16 +498,11 @@ export default function Profil() {
                         Statistiques
                     </Typography>
                     <Typography sx={{ mb: 1 }}>
-                        <strong>Connexions totales :</strong>{' '}
-                        {user?.nb_acces || 0}
+                        <strong>Connexions totales :</strong> {user?.nb_acces || 0}
                     </Typography>
                     <Typography>
                         <strong>Dernière action :</strong>{' '}
-                        {user?.date_derniere_action
-                            ? new Date(
-                                  user.date_derniere_action,
-                              ).toLocaleString()
-                            : '--'}
+                        {user?.date_derniere_action ? new Date(user.date_derniere_action).toLocaleString() : '--'}
                     </Typography>
                 </Paper>
 
@@ -571,8 +511,7 @@ export default function Profil() {
                     variant="contained"
                     color="error"
                     onClick={handleLogout}
-                    sx={{ py: 1.5, borderRadius: 2, fontWeight: 'bold' }}
-                >
+                    sx={{ py: 1.5, borderRadius: 2, fontWeight: 'bold' }}>
                     Se déconnecter
                 </Button>
             </Container>

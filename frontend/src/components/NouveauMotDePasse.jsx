@@ -1,14 +1,6 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import {
-    Box,
-    TextField,
-    Button,
-    Typography,
-    Paper,
-    Container,
-    Alert,
-} from '@mui/material';
+import { Box, TextField, Button, Typography, Paper, Container, Alert } from '@mui/material';
 
 const NouveauMotDePasse = () => {
     const { uid, token } = useParams(); // Récupère l'UID et le Token de l'URL
@@ -19,7 +11,7 @@ const NouveauMotDePasse = () => {
     const [status, setStatus] = useState('idle'); // idle, loading, success, error
     const [message, setMessage] = useState('');
 
-    const handleSubmit = async (e) => {
+    const handleSubmit = async e => {
         e.preventDefault();
         if (password !== confirmPassword) {
             setStatus('error');
@@ -30,14 +22,11 @@ const NouveauMotDePasse = () => {
         setStatus('loading');
 
         try {
-            const response = await fetch(
-                `http://localhost:8000/api/password_reset_confirm/${uid}/${token}/`,
-                {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ password }),
-                },
-            );
+            const response = await fetch(`http://localhost:8000/api/password_reset_confirm/${uid}/${token}/`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ password }),
+            });
 
             if (response.ok) {
                 setStatus('success');
@@ -56,20 +45,12 @@ const NouveauMotDePasse = () => {
         <Container maxWidth="xs">
             <Box sx={{ mt: 8 }}>
                 <Paper elevation={3} sx={{ p: 4, borderRadius: 3 }}>
-                    <Typography
-                        variant="h5"
-                        textAlign="center"
-                        fontWeight="bold"
-                        gutterBottom
-                    >
+                    <Typography variant="h5" textAlign="center" fontWeight="bold" gutterBottom>
                         Nouveau mot de passe
                     </Typography>
 
                     {status === 'success' ? (
-                        <Alert severity="success">
-                            Mot de passe modifié ! Redirection vers la
-                            connexion...
-                        </Alert>
+                        <Alert severity="success">Mot de passe modifié ! Redirection vers la connexion...</Alert>
                     ) : (
                         <form onSubmit={handleSubmit}>
                             {status === 'error' && (
@@ -85,7 +66,7 @@ const NouveauMotDePasse = () => {
                                 label="Nouveau mot de passe"
                                 type="password"
                                 value={password}
-                                onChange={(e) => setPassword(e.target.value)}
+                                onChange={e => setPassword(e.target.value)}
                             />
                             <TextField
                                 margin="normal"
@@ -94,17 +75,14 @@ const NouveauMotDePasse = () => {
                                 label="Confirmer le mot de passe"
                                 type="password"
                                 value={confirmPassword}
-                                onChange={(e) =>
-                                    setConfirmPassword(e.target.value)
-                                }
+                                onChange={e => setConfirmPassword(e.target.value)}
                             />
                             <Button
                                 type="submit"
                                 fullWidth
                                 variant="contained"
                                 sx={{ mt: 3, py: 1.5, borderRadius: 2 }}
-                                disabled={status === 'loading'}
-                            >
+                                disabled={status === 'loading'}>
                                 Réinitialiser
                             </Button>
                         </form>

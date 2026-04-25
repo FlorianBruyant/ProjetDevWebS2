@@ -37,8 +37,7 @@ const AjoutObjet = ({
                         right: { xs: 20, md: 30 },
                         zIndex: 1000,
                     }}
-                    onClick={() => setModeAjout(!modeAjout)}
-                >
+                    onClick={() => setModeAjout(!modeAjout)}>
                     {modeAjout ? <Close /> : <Add />}
                 </Fab>
             )}
@@ -54,52 +53,38 @@ const AjoutObjet = ({
                         right: { xs: 20, md: 30 },
                         zIndex: 1000,
                         boxShadow: 3,
-                    }}
-                >
+                    }}>
                     Cliquez n'importe où sur la carte pour placer l'objet.
                 </Alert>
             )}
 
             {/* --- LE MODAL DE CRÉATION DE L'OBJET --- */}
-            <Dialog
-                open={openModal}
-                onClose={() => setOpenModal(false)}
-                fullWidth
-                maxWidth="sm"
-            >
-                <DialogTitle sx={{ fontWeight: 'bold' }}>
-                    Créer un équipement connecté
-                </DialogTitle>
+            <Dialog open={openModal} onClose={() => setOpenModal(false)} fullWidth maxWidth="sm">
+                <DialogTitle sx={{ fontWeight: 'bold' }}>Créer un équipement connecté</DialogTitle>
                 <DialogContent
                     sx={{
                         pt: '20px !important',
                         display: 'flex',
                         flexDirection: 'column',
                         gap: 3,
-                    }}
-                >
+                    }}>
                     <FormControl fullWidth>
                         <InputLabel>Type d'équipement</InputLabel>
                         <Select
                             value={nouveauObjet.type_api}
                             label="Type d'équipement"
-                            onChange={(e) =>
+                            onChange={e =>
                                 setNouveauObjet({
                                     ...nouveauObjet,
                                     type_api: e.target.value,
                                     sous_type: '', // Reset du sous-type lors du changement de catégorie
                                 })
-                            }
-                        >
+                            }>
                             <MenuItem value="feux">Feu Tricolore</MenuItem>
-                            <MenuItem value="vehicules">
-                                Bus / Véhicule
-                            </MenuItem>
+                            <MenuItem value="vehicules">Bus / Véhicule</MenuItem>
                             <MenuItem value="parkings">Parking</MenuItem>
                             <MenuItem value="lieux">Lieu d'intérêt</MenuItem>
-                            <MenuItem value="evenements">
-                                Événement local
-                            </MenuItem>
+                            <MenuItem value="evenements">Événement local</MenuItem>
                         </Select>
                     </FormControl>
 
@@ -107,7 +92,7 @@ const AjoutObjet = ({
                         label="Nom de l'objet"
                         fullWidth
                         value={nouveauObjet.nom}
-                        onChange={(e) =>
+                        onChange={e =>
                             setNouveauObjet({
                                 ...nouveauObjet,
                                 nom: e.target.value,
@@ -121,7 +106,7 @@ const AjoutObjet = ({
                             label="Plaque d'immatriculation"
                             fullWidth
                             value={nouveauObjet.details}
-                            onChange={(e) =>
+                            onChange={e =>
                                 setNouveauObjet({
                                     ...nouveauObjet,
                                     details: e.target.value,
@@ -137,7 +122,7 @@ const AjoutObjet = ({
                             type="number"
                             fullWidth
                             value={nouveauObjet.details}
-                            onChange={(e) =>
+                            onChange={e =>
                                 setNouveauObjet({
                                     ...nouveauObjet,
                                     details: e.target.value,
@@ -154,30 +139,23 @@ const AjoutObjet = ({
                                 <Select
                                     value={nouveauObjet.sous_type || ''}
                                     label="Catégorie du lieu"
-                                    onChange={(e) =>
+                                    onChange={e =>
                                         setNouveauObjet({
                                             ...nouveauObjet,
                                             sous_type: e.target.value,
                                         })
-                                    }
-                                >
+                                    }>
                                     <MenuItem value="musee">Musée</MenuItem>
-                                    <MenuItem value="parc">
-                                        Parc / Jardin
-                                    </MenuItem>
-                                    <MenuItem value="restaurant">
-                                        Restaurant
-                                    </MenuItem>
-                                    <MenuItem value="bibliotheque">
-                                        Bibliothèque
-                                    </MenuItem>
+                                    <MenuItem value="parc">Parc / Jardin</MenuItem>
+                                    <MenuItem value="restaurant">Restaurant</MenuItem>
+                                    <MenuItem value="bibliotheque">Bibliothèque</MenuItem>
                                 </Select>
                             </FormControl>
                             <TextField
                                 label="Site Web (URL)"
                                 fullWidth
                                 value={nouveauObjet.site_web || ''}
-                                onChange={(e) =>
+                                onChange={e =>
                                     setNouveauObjet({
                                         ...nouveauObjet,
                                         site_web: e.target.value,
@@ -195,16 +173,13 @@ const AjoutObjet = ({
                                 <Select
                                     value={nouveauObjet.sous_type || ''}
                                     label="Type d'événement"
-                                    onChange={(e) =>
+                                    onChange={e =>
                                         setNouveauObjet({
                                             ...nouveauObjet,
                                             sous_type: e.target.value,
                                         })
-                                    }
-                                >
-                                    <MenuItem value="festival">
-                                        Festival
-                                    </MenuItem>
+                                    }>
+                                    <MenuItem value="festival">Festival</MenuItem>
                                     <MenuItem value="marche">Marché</MenuItem>
                                     <MenuItem value="concert">Concert</MenuItem>
                                 </Select>
@@ -215,7 +190,7 @@ const AjoutObjet = ({
                                 fullWidth
                                 InputLabelProps={{ shrink: true }}
                                 value={nouveauObjet.date_debut || ''}
-                                onChange={(e) =>
+                                onChange={e =>
                                     setNouveauObjet({
                                         ...nouveauObjet,
                                         date_debut: e.target.value,
@@ -231,7 +206,7 @@ const AjoutObjet = ({
                         rows={3}
                         fullWidth
                         value={nouveauObjet.description}
-                        onChange={(e) =>
+                        onChange={e =>
                             setNouveauObjet({
                                 ...nouveauObjet,
                                 description: e.target.value,
@@ -243,11 +218,7 @@ const AjoutObjet = ({
                     <Button onClick={() => setOpenModal(false)} color="inherit">
                         Annuler
                     </Button>
-                    <Button
-                        variant="contained"
-                        onClick={handleCreerObjet}
-                        disableElevation
-                    >
+                    <Button variant="contained" onClick={handleCreerObjet} disableElevation>
                         Placer sur la carte
                     </Button>
                 </DialogActions>

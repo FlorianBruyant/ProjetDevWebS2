@@ -1,23 +1,7 @@
 import React from 'react';
-import {
-    AppBar,
-    Toolbar,
-    Typography,
-    Button,
-    Box,
-    IconButton,
-    Tooltip,
-} from '@mui/material';
+import { AppBar, Toolbar, Typography, Button, Box, IconButton, Tooltip } from '@mui/material';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import {
-    Map,
-    Person,
-    AccessTime,
-    Logout,
-    Login,
-    Home,
-    Assessment,
-} from '@mui/icons-material';
+import { Map, Person, AccessTime, Logout, Login, Home, Assessment } from '@mui/icons-material';
 import PeopleIcon from '@mui/icons-material/People';
 
 const BarreNavigation = () => {
@@ -35,7 +19,7 @@ const BarreNavigation = () => {
         navigate('/');
     };
 
-    const isActive = (path) => location.pathname === path;
+    const isActive = path => location.pathname === path;
 
     return (
         <AppBar
@@ -52,8 +36,7 @@ const BarreNavigation = () => {
                 borderTop: { xs: '1px solid #1f2937', md: 'none' },
                 // Sécurité pour les iPhone récents (encoche du bas)
                 pb: { xs: 'env(safe-area-inset-bottom)', md: 0 },
-            }}
-        >
+            }}>
             {/* ------------------------------------------- */}
             {/* 💻 AFFICHAGE ORDINATEUR (Barre classique)   */}
             {/* ------------------------------------------- */}
@@ -61,16 +44,14 @@ const BarreNavigation = () => {
                 sx={{
                     display: { xs: 'none', md: 'flex' },
                     justifyContent: 'space-between',
-                }}
-            >
+                }}>
                 <Box
                     sx={{
                         display: 'flex',
                         alignItems: 'center',
                         cursor: 'pointer',
                     }}
-                    onClick={() => navigate('/')}
-                >
+                    onClick={() => navigate('/')}>
                     <Home sx={{ color: '#3b82f6', mr: 1, fontSize: 28 }} />
                     <Typography
                         variant="h6"
@@ -78,8 +59,7 @@ const BarreNavigation = () => {
                             fontWeight: '800',
                             letterSpacing: 1,
                             color: 'white',
-                        }}
-                    >
+                        }}>
                         CERGY<span style={{ color: '#3b82f6' }}>LIVE</span>
                     </Typography>
                 </Box>
@@ -91,42 +71,28 @@ const BarreNavigation = () => {
                             onClick={() => navigate('/carte')}
                             sx={{
                                 color: isActive('/carte') ? '#3b82f6' : 'white',
-                                fontWeight: isActive('/carte')
-                                    ? 'bold'
-                                    : 'normal',
-                            }}
-                        >
+                                fontWeight: isActive('/carte') ? 'bold' : 'normal',
+                            }}>
                             Carte Interactive
                         </Button>
                         <Button
                             startIcon={<AccessTime />}
                             onClick={() => navigate('/horaires')}
                             sx={{
-                                color: isActive('/horaires')
-                                    ? '#3b82f6'
-                                    : 'white',
-                                fontWeight: isActive('/horaires')
-                                    ? 'bold'
-                                    : 'normal',
-                            }}
-                        >
+                                color: isActive('/horaires') ? '#3b82f6' : 'white',
+                                fontWeight: isActive('/horaires') ? 'bold' : 'normal',
+                            }}>
                             Horaires
                         </Button>
-                        {(role_token === 'ADMIN' ||
-                            role_token === 'COMPLEXE') && (
+                        {(role_token === 'ADMIN' || role_token === 'COMPLEXE') && (
                             <Button
                                 startIcon={<Assessment />}
                                 onClick={() => navigate('/stats')}
                                 sx={{
-                                    color: isActive('/stats')
-                                        ? '#3b82f6'
-                                        : 'white',
-                                    fontWeight: isActive('/stats')
-                                        ? 'bold'
-                                        : 'normal',
+                                    color: isActive('/stats') ? '#3b82f6' : 'white',
+                                    fontWeight: isActive('/stats') ? 'bold' : 'normal',
                                     textTransform: 'none',
-                                }}
-                            >
+                                }}>
                                 Statistiques
                             </Button>
                         )}
@@ -140,26 +106,20 @@ const BarreNavigation = () => {
                                 onClick={() => navigate('/membres')}
                                 startIcon={<PeopleIcon />}
                                 sx={{
-                                    color: isActive('/profil')
-                                        ? '#3b82f6'
-                                        : 'white',
+                                    color: isActive('/profil') ? '#3b82f6' : 'white',
                                     textTransform: 'none',
                                     fontWeight: 'bold',
-                                }}
-                            >
+                                }}>
                                 Membres
                             </Button>
                             <Button
                                 startIcon={<Person />}
                                 onClick={() => navigate('/profil')}
                                 sx={{
-                                    color: isActive('/profil')
-                                        ? '#3b82f6'
-                                        : 'white',
+                                    color: isActive('/profil') ? '#3b82f6' : 'white',
                                     textTransform: 'none',
                                     fontWeight: 'bold',
-                                }}
-                            >
+                                }}>
                                 Profil
                             </Button>
                             <Tooltip title="Déconnexion">
@@ -172,8 +132,7 @@ const BarreNavigation = () => {
                                         '&:hover': {
                                             bgcolor: 'rgba(239, 68, 68, 0.2)',
                                         },
-                                    }}
-                                >
+                                    }}>
                                     <Logout fontSize="small" />
                                 </IconButton>
                             </Tooltip>
@@ -189,8 +148,7 @@ const BarreNavigation = () => {
                                 fontWeight: 'bold',
                                 textTransform: 'none',
                                 borderRadius: 2,
-                            }}
-                        >
+                            }}>
                             Connexion
                         </Button>
                     )}
@@ -207,16 +165,14 @@ const BarreNavigation = () => {
                     alignItems: 'center',
                     minHeight: '65px',
                     px: 1,
-                }}
-            >
+                }}>
                 <IconButton
                     onClick={() => navigate('/')}
                     sx={{
                         color: isActive('/') ? '#3b82f6' : '#9ca3af',
                         flexDirection: 'column',
                         p: 1,
-                    }}
-                >
+                    }}>
                     <Home fontSize="small" />
                     <Typography
                         variant="caption"
@@ -224,8 +180,7 @@ const BarreNavigation = () => {
                             fontSize: '0.65rem',
                             mt: 0.5,
                             fontWeight: isActive('/') ? 'bold' : 'normal',
-                        }}
-                    >
+                        }}>
                         Accueil
                     </Typography>
                 </IconButton>
@@ -235,74 +190,55 @@ const BarreNavigation = () => {
                         <IconButton
                             onClick={() => navigate('/carte')}
                             sx={{
-                                color: isActive('/carte')
-                                    ? '#3b82f6'
-                                    : '#9ca3af',
+                                color: isActive('/carte') ? '#3b82f6' : '#9ca3af',
                                 flexDirection: 'column',
                                 p: 1,
-                            }}
-                        >
+                            }}>
                             <Map fontSize="small" />
                             <Typography
                                 variant="caption"
                                 sx={{
                                     fontSize: '0.65rem',
                                     mt: 0.5,
-                                    fontWeight: isActive('/carte')
-                                        ? 'bold'
-                                        : 'normal',
-                                }}
-                            >
+                                    fontWeight: isActive('/carte') ? 'bold' : 'normal',
+                                }}>
                                 Carte
                             </Typography>
                         </IconButton>
                         <IconButton
                             onClick={() => navigate('/horaires')}
                             sx={{
-                                color: isActive('/horaires')
-                                    ? '#3b82f6'
-                                    : '#9ca3af',
+                                color: isActive('/horaires') ? '#3b82f6' : '#9ca3af',
                                 flexDirection: 'column',
                                 p: 1,
-                            }}
-                        >
+                            }}>
                             <AccessTime fontSize="small" />
                             <Typography
                                 variant="caption"
                                 sx={{
                                     fontSize: '0.65rem',
                                     mt: 0.5,
-                                    fontWeight: isActive('/horaires')
-                                        ? 'bold'
-                                        : 'normal',
-                                }}
-                            >
+                                    fontWeight: isActive('/horaires') ? 'bold' : 'normal',
+                                }}>
                                 Horaires
                             </Typography>
                         </IconButton>
-                        {(role_token === 'ADMIN' ||
-                            role_token === 'COMPLEXE') && (
+                        {(role_token === 'ADMIN' || role_token === 'COMPLEXE') && (
                             <IconButton
                                 onClick={() => navigate('/stats')}
                                 sx={{
-                                    color: isActive('/stats')
-                                        ? '#3b82f6'
-                                        : '#9ca3af',
+                                    color: isActive('/stats') ? '#3b82f6' : '#9ca3af',
                                     flexDirection: 'column',
                                     p: 1,
-                                }}
-                            >
+                                }}>
                                 <Assessment fontSize="small" />
                                 <Typography
                                     variant="caption"
                                     sx={{
                                         fontSize: '0.65rem',
                                         mt: 0.5,
-                                        fontWeight: isActive('/stats')
-                                            ? 'bold'
-                                            : 'normal',
-                                    }}
-                                >
+                                        fontWeight: isActive('/stats') ? 'bold' : 'normal',
+                                    }}>
                                     Stats
                                 </Typography>
                             </IconButton>
@@ -310,48 +246,36 @@ const BarreNavigation = () => {
                         <IconButton
                             onClick={() => navigate('/membres')}
                             sx={{
-                                color: isActive('/profil')
-                                    ? '#3b82f6'
-                                    : '#9ca3af',
+                                color: isActive('/profil') ? '#3b82f6' : '#9ca3af',
                                 flexDirection: 'column',
                                 p: 1,
-                            }}
-                        >
+                            }}>
                             <PeopleIcon fontSize="small" />
                             <Typography
                                 variant="caption"
                                 sx={{
                                     fontSize: '0.65rem',
                                     mt: 0.5,
-                                    fontWeight: isActive('/profil')
-                                        ? 'bold'
-                                        : 'normal',
-                                }}
-                            >
+                                    fontWeight: isActive('/profil') ? 'bold' : 'normal',
+                                }}>
                                 Membres
                             </Typography>
                         </IconButton>
                         <IconButton
                             onClick={() => navigate('/profil')}
                             sx={{
-                                color: isActive('/profil')
-                                    ? '#3b82f6'
-                                    : '#9ca3af',
+                                color: isActive('/profil') ? '#3b82f6' : '#9ca3af',
                                 flexDirection: 'column',
                                 p: 1,
-                            }}
-                        >
+                            }}>
                             <Person fontSize="small" />
                             <Typography
                                 variant="caption"
                                 sx={{
                                     fontSize: '0.65rem',
                                     mt: 0.5,
-                                    fontWeight: isActive('/profil')
-                                        ? 'bold'
-                                        : 'normal',
-                                }}
-                            >
+                                    fontWeight: isActive('/profil') ? 'bold' : 'normal',
+                                }}>
                                 Profil
                             </Typography>
                         </IconButton>
@@ -361,13 +285,9 @@ const BarreNavigation = () => {
                                 color: '#ef4444',
                                 flexDirection: 'column',
                                 p: 1,
-                            }}
-                        >
+                            }}>
                             <Logout fontSize="small" />
-                            <Typography
-                                variant="caption"
-                                sx={{ fontSize: '0.65rem', mt: 0.5 }}
-                            >
+                            <Typography variant="caption" sx={{ fontSize: '0.65rem', mt: 0.5 }}>
                                 Quitter
                             </Typography>
                         </IconButton>
@@ -377,8 +297,7 @@ const BarreNavigation = () => {
                 {!estConnecte && (
                     <IconButton
                         onClick={() => navigate('/connexion')}
-                        sx={{ color: '#3b82f6', flexDirection: 'column', p: 1 }}
-                    >
+                        sx={{ color: '#3b82f6', flexDirection: 'column', p: 1 }}>
                         <Login fontSize="small" />
                         <Typography
                             variant="caption"
@@ -386,8 +305,7 @@ const BarreNavigation = () => {
                                 fontSize: '0.65rem',
                                 mt: 0.5,
                                 fontWeight: 'bold',
-                            }}
-                        >
+                            }}>
                             Connexion
                         </Typography>
                     </IconButton>

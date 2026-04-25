@@ -1,14 +1,7 @@
 import React, { useEffect, memo } from 'react';
 import { Box, Typography, Chip, Divider, Button } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import {
-    MapContainer,
-    TileLayer,
-    Marker,
-    Popup,
-    useMap,
-    useMapEvents,
-} from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { renderToStaticMarkup } from 'react-dom/server';
@@ -45,20 +38,16 @@ const generateIconHtml = (IconeMUI, couleur) => {
                 border: '2px solid white',
                 display: 'flex',
                 boxShadow: '0 2px 5px rgba(0,0,0,0.3)',
-            }}
-        >
+            }}>
             <IconeMUI style={{ fontSize: '20px' }} />
-        </div>,
+        </div>
     );
 };
 
-const creerIconeSmart = (item) => {
+const creerIconeSmart = item => {
     // On crée une clé unique basée sur ce qui change (type + état)
     // Ex: "feux-VERT", "parkings-MAINTENANCE", "vehicules-OK"
-    const etat =
-        item.en_panne || item.est_actif === false
-            ? 'HS'
-            : item.etat_actuel || 'OK';
+    const etat = item.en_panne || item.est_actif === false ? 'HS' : item.etat_actuel || 'OK';
     const cle = `${item.type_api}-${etat}`;
 
     // Si l'icône est déjà dans le cache, on la renvoie immédiatement (0ms de calcul JS)
@@ -144,17 +133,11 @@ const GestionnaireClic = ({ enModeAjout, auClic }) => {
 };
 
 // --- COMPOSANT PRINCIPAL CARTE ---
-const Carte = ({
-    hauteur = '100%',
-    donnees = [],
-    enModeAjout = false,
-    auClicCarte,
-    doitCentrer = true,
-}) => {
+const Carte = ({ hauteur = '100%', donnees = [], enModeAjout = false, auClicCarte, doitCentrer = true }) => {
     const navigate = useNavigate();
     const positionCergy = [49.0351, 2.0799];
 
-    const extrairePosition = (item) => {
+    const extrairePosition = item => {
         const coords = item.point_actuel_details || item.position;
         if (coords && coords.latitude && coords.longitude) {
             return [parseFloat(coords.latitude), parseFloat(coords.longitude)];
@@ -169,49 +152,33 @@ const Carte = ({
                 width: '100%',
                 overflow: 'hidden',
                 cursor: enModeAjout ? 'crosshair' : 'grab',
-            }}
-        >
+            }}>
             <MapContainer
                 center={positionCergy}
                 zoom={14}
                 style={{ height: '100%', width: '100%' }}
-                zoomControl={false}
-            >
+                zoomControl={false}>
                 <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
 
                 {/* On passe le flag de contrôle ici */}
-                <RecentreurDeCarte
-                    donnees={donnees}
-                    doitCentrer={doitCentrer}
-                />
+                <RecentreurDeCarte donnees={donnees} doitCentrer={doitCentrer} />
 
-                <GestionnaireClic
-                    enModeAjout={enModeAjout}
-                    auClic={auClicCarte}
-                />
+                <GestionnaireClic enModeAjout={enModeAjout} auClic={auClicCarte} />
 
-                {(donnees || []).map((item) => {
+                {(donnees || []).map(item => {
                     const pos = extrairePosition(item);
                     if (!pos) return null;
 
                     return (
-                        <Marker
-                            key={`${item.type_api}-${item.id}`}
-                            position={pos}
-                            icon={creerIconeSmart(item)}
-                        >
+                        <Marker key={`${item.type_api}-${item.id}`} position={pos} icon={creerIconeSmart(item)}>
                             <Popup>
                                 <Box
                                     sx={{
                                         p: 1,
                                         textAlign: 'center',
                                         minWidth: '180px',
-                                    }}
-                                >
-                                    <Typography
-                                        variant="subtitle2"
-                                        sx={{ fontWeight: 'bold', mb: 0.5 }}
-                                    >
+                                    }}>
+                                    <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 0.5 }}>
                                         {item.nom || item.type_incident}
                                     </Typography>
 
@@ -220,8 +187,7 @@ const Carte = ({
                                             display: 'flex',
                                             justifyContent: 'center',
                                             mb: 1,
-                                        }}
-                                    >
+                                        }}>
                                         <Chip
                                             label={
                                                 item.en_panne
@@ -231,19 +197,8 @@ const Carte = ({
                                                       : 'SANTÉ OK'
                                             }
                                             size="small"
-                                            color={
-                                                item.en_panne ||
-                                                item.est_actif === false
-                                                    ? 'error'
-                                                    : 'success'
-                                            }
-                                            icon={
-                                                item.en_panne ? (
-                                                    <ErrorIcon />
-                                                ) : (
-                                                    <CheckCircle />
-                                                )
-                                            }
+                                            color={item.en_panne || item.est_actif === false ? 'error' : 'success'}
+                                            icon={item.en_panne ? <ErrorIcon /> : <CheckCircle />}
                                             sx={{
                                                 height: '20px',
                                                 fontSize: '0.7rem',
@@ -252,11 +207,7 @@ const Carte = ({
                                     </Box>
 
                                     <Divider sx={{ mb: 1 }} />
-                                    <Typography
-                                        variant="caption"
-                                        display="block"
-                                        color="text.secondary"
-                                    >
+                                    <Typography variant="caption" display="block" color="text.secondary">
                                         Type: {item.type_api}
                                     </Typography>
 
@@ -271,12 +222,7 @@ const Carte = ({
                                             textTransform: 'none',
                                             fontWeight: 'bold',
                                         }}
-                                        onClick={() =>
-                                            navigate(
-                                                `/objet/${item.type_api}/${item.id}`,
-                                            )
-                                        }
-                                    >
+                                        onClick={() => navigate(`/objet/${item.type_api}/${item.id}`)}>
                                         Gérer cet objet
                                     </Button>
                                 </Box>
