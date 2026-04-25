@@ -32,8 +32,8 @@ class Point(models.Model):
 
 class TrafficObject(models.Model):
     nom = models.CharField(max_length=100)
-    type_objet = models.CharField(max_length=50, blank=True)  # Ex: "Feu tricolore"
-    description = models.TextField(blank=True)
+    type_objet = models.CharField(max_length=50, blank=True)
+    description = models.TextField(blank=True, null=True)
     zone = models.ForeignKey(
         Zone,
         on_delete=models.SET_NULL,
@@ -171,9 +171,7 @@ class LieuInteret(TrafficObject):
         ("bibliotheque", "Bibliothèque"),
     ]
     position = models.ForeignKey(Point, on_delete=models.CASCADE)
-    nom = models.CharField(max_length=150)
     categorie = models.CharField(max_length=30, choices=CATEGORIES)
-    description = models.TextField(blank=True)
     site_web = models.URLField(blank=True, null=True)
     date_creation = models.DateTimeField(auto_now_add=True)
 
@@ -189,10 +187,8 @@ class Evenement(TrafficObject):
         ("autre", "Autre Événement"),
     ]
     position = models.ForeignKey(Point, on_delete=models.CASCADE)
-    nom = models.CharField(max_length=150)
     type_evenement = models.CharField(max_length=30, choices=TYPES)
     date_debut = models.DateTimeField()
-    description = models.TextField(blank=True)
 
     def __str__(self):
         return f"{self.nom} - {self.date_debut.strftime('%d/%m/%Y')}"

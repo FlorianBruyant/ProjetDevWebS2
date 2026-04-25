@@ -109,10 +109,11 @@ export default function GestionObjet() {
                     },
                 );
 
-                if (!resObj.ok)
+                if (!resObj.ok) {
                     throw new Error(
                         "L'objet est introuvable dans la base de données.",
                     );
+                }
 
                 const dataObj = await resObj.json();
                 setObjet(dataObj);
@@ -121,8 +122,8 @@ export default function GestionObjet() {
                 setFormData({
                     nom: dataObj.nom || '',
                     description: dataObj.description || '',
-                    est_actif: dataObj.est_actif ?? true,
-                    en_panne: dataObj.en_panne ?? false,
+                    est_actif: Boolean(dataObj.est_actif),
+                    en_panne: Boolean(dataObj.en_panne),
                     zone: dataObj.zone || '',
                 });
             } catch (err) {
@@ -296,6 +297,8 @@ export default function GestionObjet() {
                                 <TextField
                                     fullWidth
                                     label="Description"
+                                    multiline
+                                    rows={1}
                                     value={formData.description}
                                     disabled={!isAdmin}
                                     onChange={(e) =>
@@ -586,7 +589,7 @@ export default function GestionObjet() {
                                             <ListItemText
                                                 primary={log.action}
                                                 secondary={new Date(
-                                                    log.date_action,
+                                                    log.date || log.date_action,
                                                 ).toLocaleString('fr-FR')}
                                             />
                                             {log.points_gagnes > 0 && (
