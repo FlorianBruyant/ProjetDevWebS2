@@ -38,7 +38,7 @@ const BarreNavigation = () => {
                 pb: { xs: 'env(safe-area-inset-bottom)', md: 0 },
             }}>
             {/* ------------------------------------------- */}
-            {/* 💻 AFFICHAGE ORDINATEUR (Barre classique)   */}
+            {/* AFFICHAGE ORDINATEUR (Barre classique)   */}
             {/* ------------------------------------------- */}
             <Toolbar
                 sx={{
@@ -106,7 +106,7 @@ const BarreNavigation = () => {
                                 onClick={() => navigate('/membres')}
                                 startIcon={<PeopleIcon />}
                                 sx={{
-                                    color: isActive('/profil') ? '#3b82f6' : 'white',
+                                    color: isActive('/membres') ? '#3b82f6' : 'white',
                                     textTransform: 'none',
                                     fontWeight: 'bold',
                                 }}>
@@ -246,7 +246,7 @@ const BarreNavigation = () => {
                         <IconButton
                             onClick={() => navigate('/membres')}
                             sx={{
-                                color: isActive('/profil') ? '#3b82f6' : '#9ca3af',
+                                color: isActive('/membres') ? '#3b82f6' : '#9ca3af',
                                 flexDirection: 'column',
                                 p: 1,
                             }}>
@@ -256,7 +256,7 @@ const BarreNavigation = () => {
                                 sx={{
                                     fontSize: '0.65rem',
                                     mt: 0.5,
-                                    fontWeight: isActive('/profil') ? 'bold' : 'normal',
+                                    fontWeight: isActive('/membres') ? 'bold' : 'normal',
                                 }}>
                                 Membres
                             </Typography>
