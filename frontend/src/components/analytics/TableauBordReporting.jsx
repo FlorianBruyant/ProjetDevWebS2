@@ -38,6 +38,8 @@ const FILTERS_TYPES = [
     { value: 'vehicule', label: 'Véhicules' },
     { value: 'feu', label: 'Feux' },
     { value: 'parking', label: 'Parkings' },
+    { value: 'lieu', label: "Lieux d'intérêt" },
+    { value: 'evenement', label: 'Événements' },
 ];
 
 const formatNumber = value => Number(value || 0).toFixed(2);
@@ -54,7 +56,6 @@ const TableauBordReporting = () => {
         zone: '',
     });
 
-    // 1. Chargement des Zones
     useEffect(() => {
         const fetchZones = async () => {
             const token = localStorage.getItem('access_token');
@@ -72,7 +73,6 @@ const TableauBordReporting = () => {
         fetchZones();
     }, []);
 
-    // 2. Chargement Mixte : Historique (Analytics) + Temps Réel (Global)
     useEffect(() => {
         const fetchAnalyticsAndRealTimeAlerts = async (isFirstLoad = true) => {
             const token = localStorage.getItem('access_token');
@@ -85,12 +85,10 @@ const TableauBordReporting = () => {
             setError('');
 
             try {
-                // A. On récupère les graphiques historiques de consommation
                 const resAnalytics = await fetch(`${API_BASE_URL}/analytics/?${params.toString()}`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
 
-                // B. On récupère les VRAIES données de la carte comme sur l'accueil
                 const resGlobal = await fetch(`${API_BASE_URL}/global/`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
@@ -102,39 +100,66 @@ const TableauBordReporting = () => {
                 const jsonAnalytics = await resAnalytics.json();
                 const jsonGlobal = await resGlobal.json();
 
-                // --- CALCUL DES VRAIES ALERTES (Inspiré de l'Accueil) ---
+                // Dictionnaire pour lier ton filtre (singulier) à l'API global (pluriel)
+                const mapTypesAPI = {
+                    vehicule: 'vehicules',
+                    feu: 'feux',
+                    parking: 'parkings',
+                    lieu: 'lieux',
+                    evenement: 'evenements',
+                };
+
                 let alertesReelles = [];
+
                 jsonGlobal.forEach(item => {
-                    // Filtre Zone : On vérifie si l'utilisateur a sélectionné une zone précise
+                    // Filtre Zone
                     if (filters.zone && String(item.zone?.id || item.zone) !== String(filters.zone)) return;
 
                     // Filtre Type d'objet
-                    if (filters.typeObjet === 'vehicule' && item.type_api !== 'vehicules') return;
-                    if (filters.typeObjet === 'feu' && item.type_api !== 'feux') return;
-                    if (filters.typeObjet === 'parking' && item.type_api !== 'parkings') return;
+                    if (filters.typeObjet && item.type_api !== mapTypesAPI[filters.typeObjet]) return;
 
-                    // Détection des Pannes
-                    if (item.type_api === 'feux' && item.en_panne) {
+                    // --- DÉTECTION UNIVERSELLE DES PANNES ---
+                    if (item.en_panne) {
+                        let titreAlerte = '';
+                        let gravite = 'Alerte';
+
+                        // On personnalise le message en fonction du type de l'objet
+                        switch (item.type_api) {
+                            case 'feux':
+                                titreAlerte = `Feu éteint/en panne : ${item.nom || `Feu #${item.id}`}`;
+                                gravite = 'Urgent';
+                                break;
+                            case 'vehicules':
+                                titreAlerte = `Véhicule immobilisé : ${item.nom || `Bus #${item.id}`}`;
+                                gravite = 'Alerte';
+                                break;
+                            case 'parkings':
+                                titreAlerte = `Parking fermé ou en défaut : ${item.nom || `Parking #${item.id}`}`;
+                                gravite = 'Urgent';
+                                break;
+                            case 'evenements':
+                                titreAlerte = `Incident sur l'événement : ${item.nom || `Événement #${item.id}`}`;
+                                gravite = 'Urgent';
+                                break;
+                            case 'lieux':
+                                titreAlerte = `Lieu d'intérêt bloqué : ${item.nom || `Lieu #${item.id}`}`;
+                                gravite = 'Alerte';
+                                break;
+                            default:
+                                titreAlerte = `Anomalie sur équipement : ${item.nom || `#${item.id}`}`;
+                                gravite = 'Alerte';
+                        }
+
                         alertesReelles.push({
                             id: item.id,
-                            titre: `Feu en panne : ${item.nom || `Feu #${item.id}`}`,
+                            titre: titreAlerte,
                             sousTitre: item.zone?.nom ? `Zone : ${item.zone.nom}` : 'Intervention requise',
-                            type: 'Urgent',
-                            type_api: 'feux',
-                        });
-                    }
-                    if (item.type_api === 'vehicules' && item.en_panne) {
-                        alertesReelles.push({
-                            id: item.id,
-                            titre: `Véhicule immobilisé : ${item.nom || `Bus #${item.id}`}`,
-                            sousTitre: item.zone?.nom ? `Zone : ${item.zone.nom}` : 'Trafic perturbé',
-                            type: 'Alerte',
-                            type_api: 'vehicules',
+                            type: gravite,
+                            type_api: item.type_api,
                         });
                     }
                 });
 
-                // On injecte les vraies alertes calculées dans notre objet stats
                 jsonAnalytics.alertes = alertesReelles;
                 jsonAnalytics.resume.alertes_actives = alertesReelles.length;
 
@@ -146,12 +171,9 @@ const TableauBordReporting = () => {
             }
         };
 
-        // On lance immédiatement
         fetchAnalyticsAndRealTimeAlerts(true);
 
-        // Boucle de rafraîchissement toutes les 15 secondes pour les pannes !
         const intervalId = setInterval(() => {
-            console.log('🔄 Rafraîchissement des alertes du Dashboard...');
             fetchAnalyticsAndRealTimeAlerts(false);
         }, 15000);
 
@@ -383,7 +405,6 @@ const TableauBordReporting = () => {
                             </Paper>
                         </Stack>
 
-                        {/* --- NOUVELLE SECTION DES ALERTES (Design inspiré de l'Accueil) --- */}
                         <Paper sx={{ p: 3, borderRadius: 2 }}>
                             <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
                                 <Typography variant="h6" sx={{ fontWeight: 800, color: '#16324f' }}>
@@ -434,7 +455,6 @@ const TableauBordReporting = () => {
     );
 };
 
-// Composant Visuel AlertItem récupéré de ton Accueil.jsx
 const AlertItem = ({ icon, title, date, status, color, bgColor }) => (
     <Paper
         elevation={0}
