@@ -60,7 +60,7 @@ const BarreNavigation = () => {
                             letterSpacing: 1,
                             color: 'white',
                         }}>
-                        CERGY<span style={{ color: '#3b82f6' }}>LIVE</span>
+                        PARIS<span style={{ color: '#3b82f6' }}>LIVE</span>
                     </Typography>
                 </Box>
 
