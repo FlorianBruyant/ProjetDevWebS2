@@ -96,14 +96,3 @@
 *   **Rôle :** Routeur global pour l'API REST v1, regroupant les différentes URLs des autres applications.
 
 ---
-
-## 🎯 Recommandations & Optimisations Possibles
-
-1.  **Goulot d'étranglement avec `get_global_data` (map/views.py) :** 
-    Charger tout le backend en une seule requête va ralentir considérablement les performances une fois la quantité de trafic ou de véhicules élevée.
-    *   *Solution :* Envisager une API à base de "Bounding Box" qui interroge et retourne exclusivement les entités contenues dans le périmètre géographique de la carte côté frontend.
-2.  **Passage en file d'attente pour les Signaux (map/signals.py) :** 
-    Les signaux Django (`post_save`) ralentissent la boucle de sauvegarde s'ils lancent des algorithmes longs, car ils sont exécutés dans le même cycle synchrone.
-    *   *Solution :* Décharger les calculs lourds ou envois d'e-mails via des tâches d'arrière-plan (Tasks Queues) en employant *Celery* avec Redis ou RabbitMQ.
-3.  **Gestion asynchrone des réseaux (Scripts de scraping) :**
-    Si la fréquence requise pour faire les appels réseaux des scrappeurs devient critique, préférez `asyncio` (`aiohttp`) à la place de la syntaxe multi-threads classique `threading` qui est parfois plus lourde pour l'OS.
