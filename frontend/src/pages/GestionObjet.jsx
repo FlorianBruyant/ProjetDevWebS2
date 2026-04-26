@@ -40,6 +40,7 @@ import {
     EventNote,
     Warning,
     PowerOff,
+    People,
 } from '@mui/icons-material';
 
 // Filtre pour l'Autocomplete
@@ -360,14 +361,17 @@ export default function GestionObjet() {
                                         Informations en temps réel
                                     </Typography>
                                     <Grid container spacing={2}>
+                                        {(type_api === 'lieux' || type_api === 'evenements') && (
+                                            <Grid item xs={6} sx={{ display: 'flex', alignItems: 'center' }}>
+                                                <People sx={{ mr: 1, color: 'info.main' }} />
+                                                <Typography>
+                                                    Fréquentation :{' '}
+                                                    <strong>{objet?.frequentation_actuelle || 0} visiteurs</strong>
+                                                </Typography>
+                                            </Grid>
+                                        )}
                                         {type_api === 'feux' && (
-                                            <Grid
-                                                item
-                                                xs={6}
-                                                sx={{
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                }}>
+                                            <Grid item xs={6} sx={{ display: 'flex', alignItems: 'center' }}>
                                                 <Traffic
                                                     sx={{
                                                         mr: 1,
@@ -380,38 +384,16 @@ export default function GestionObjet() {
                                             </Grid>
                                         )}
                                         {type_api === 'vehicules' && (
-                                            <Grid
-                                                item
-                                                xs={6}
-                                                sx={{
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                }}>
-                                                <Speed
-                                                    sx={{
-                                                        mr: 1,
-                                                        color: 'primary.main',
-                                                    }}
-                                                />
+                                            <Grid item xs={6} sx={{ display: 'flex', alignItems: 'center' }}>
+                                                <Speed sx={{ mr: 1, color: 'primary.main' }} />
                                                 <Typography>
                                                     Vitesse : <strong>{objet?.vitesse} km/h</strong>
                                                 </Typography>
                                             </Grid>
                                         )}
                                         {type_api === 'parkings' && (
-                                            <Grid
-                                                item
-                                                xs={6}
-                                                sx={{
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                }}>
-                                                <LocalParking
-                                                    sx={{
-                                                        mr: 1,
-                                                        color: 'secondary.main',
-                                                    }}
-                                                />
+                                            <Grid item xs={6} sx={{ display: 'flex', alignItems: 'center' }}>
+                                                <LocalParking sx={{ mr: 1, color: 'secondary.main' }} />
                                                 <Typography>
                                                     Occupation :{' '}
                                                     <strong>
