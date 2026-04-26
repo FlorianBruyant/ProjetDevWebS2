@@ -1,11 +1,13 @@
 from django.contrib import admin
 
 from .models import (
+    AlerteObjet,
     Feu,
     HistoriqueObjet,
     Incident,
     Parking,
     Point,
+    RegleAlerte,
     Route,
     Scenario,
     Vehicule,
@@ -20,6 +22,21 @@ admin.site.register(Parking)
 admin.site.register(Vehicule)
 admin.site.register(Route)
 admin.site.register(Incident)
+admin.site.register(RegleAlerte)
+
+
+@admin.register(AlerteObjet)
+class AlerteObjetAdmin(admin.ModelAdmin):
+    list_display = (
+        "declenchee_le",
+        "type_objet",
+        "objet_id",
+        "niveau",
+        "statut",
+        "zone",
+    )
+    list_filter = ("type_objet", "niveau", "statut", "zone")
+    search_fields = ("type_objet", "objet_id", "message")
 
 
 @admin.register(HistoriqueObjet)

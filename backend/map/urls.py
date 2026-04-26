@@ -1,6 +1,7 @@
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
+from . import analytics_views
 from . import views
 
 router = DefaultRouter()
@@ -19,5 +20,9 @@ urlpatterns = [
     path("horaires/", views.get_horaires_gare),
     path("global/", views.get_global_data),
     path("consulter/<int:objet_id>/", views.consulter_objet),
-    path("analytics/", views.get_analytics),
+    path("analytics/", analytics_views.get_analytics),
+    path(
+        "analytics/check/<str:type_objet>/<int:objet_id>/",
+        analytics_views.verifier_anomalie_consommation,
+    ),
 ]

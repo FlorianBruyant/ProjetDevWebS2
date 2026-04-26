@@ -288,3 +288,74 @@ class HistoriqueObjet(models.Model):
 
     def __str__(self):
         return f"Mesure {self.type_objet} #{self.objet_id} - {self.date_mesure}"
+
+
+class RegleAlerte(models.Model):
+    TYPES_CHOICES = HistoriqueObjet.TYPES_CHOICES
+
+    nom = models.CharField(max_length=120)
+    type_objet = models.CharField(max_length=20, choices=TYPES_CHOICES)
+    zone = models.ForeignKey(Zone, on_delete=models.CASCADE, null=True, blank=True)
+    seuil_surconsommation = models.FloatField(
+        default=1.35,
+        help_text="Ratio applique a la moyenne historique avant de lever une alerte.",
+    )
+    seuil_absolu_kwh = models.FloatField(
+        default=0.5,
+        help_text="Ecart minimal en kWh pour eviter les faux positifs.",
+    )
+    fenetre_analyse_heures = models.PositiveIntegerField(default=24)
+    echantillons_minimum = models.PositiveIntegerField(default=6)
+    cooldown_minutes = models.PositiveIntegerField(default=30)
+    est_active = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ["type_objet", "zone_id", "nom"]
+        indexes = [
+            models.Index(fields=["type_objet", "zone"]),
+            models.Index(fields=["est_active"]),
+        ]
+
+    def __str__(self):
+        cible = self.zone.nom if self.zone else "global"
+        return f"{self.nom} ({self.type_objet} - {cible})"
+
+
+class AlerteObjet(models.Model):
+    TYPES_CHOICES = HistoriqueObjet.TYPES_CHOICES
+    NIVEAUX = [
+        ("info", "Info"),
+        ("warning", "Warning"),
+        ("critical", "Critical"),
+    ]
+    STATUTS = [
+        ("active", "Active"),
+        ("acknowledged", "Acknowledged"),
+        ("resolved", "Resolved"),
+    ]
+
+    type_objet = models.CharField(max_length=20, choices=TYPES_CHOICES)
+    objet_id = models.PositiveIntegerField()
+    zone = models.ForeignKey(Zone, on_delete=models.SET_NULL, null=True, blank=True)
+    code = models.CharField(max_length=50, default="SURCONSOMMATION")
+    niveau = models.CharField(max_length=20, choices=NIVEAUX, default="warning")
+    message = models.TextField()
+    valeur_mesuree = models.FloatField(default=0.0)
+    valeur_reference = models.FloatField(default=0.0)
+    ecart_percent = models.FloatField(default=0.0)
+    statut = models.CharField(max_length=20, choices=STATUTS, default="active")
+    declenchee_le = models.DateTimeField(auto_now_add=True)
+    acquittee_le = models.DateTimeField(null=True, blank=True)
+    resolue_le = models.DateTimeField(null=True, blank=True)
+    contexte = models.JSONField(default=dict, blank=True)
+
+    class Meta:
+        ordering = ["-declenchee_le"]
+        indexes = [
+            models.Index(fields=["type_objet", "objet_id", "statut"]),
+            models.Index(fields=["zone", "declenchee_le"]),
+            models.Index(fields=["code", "declenchee_le"]),
+        ]
+
+    def __str__(self):
+        return f"{self.code} - {self.type_objet} #{self.objet_id}"
