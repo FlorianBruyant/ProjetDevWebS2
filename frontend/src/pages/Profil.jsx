@@ -151,6 +151,17 @@ export default function Profil() {
                 isUsernameChanged = true;
             }
             if (showPasswordFields && editData.password) {
+                // Regex : Min 8 caractères, 1 Majuscule, 1 Minuscule, 1 Chiffre
+                const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+
+                if (!passwordRegex.test(editData.password)) {
+                    setErrorMsg(
+                        'Le mot de passe doit contenir au moins 8 caractères, une majuscule, une minuscule et un chiffre.'
+                    );
+                    setIsUpdating(false);
+                    return;
+                }
+
                 if (editData.password !== editData.confirmPassword) {
                     setErrorMsg('Les nouveaux mots de passe ne correspondent pas.');
                     setIsUpdating(false);
@@ -520,6 +531,7 @@ export default function Profil() {
                                 fullWidth
                                 label="Nouveau mot de passe"
                                 type="password"
+                                helperText="Min. 8 caractères, 1 majuscule, 1 chiffre"
                                 onChange={e => setEditData({ ...editData, password: e.target.value })}
                             />
                             <TextField

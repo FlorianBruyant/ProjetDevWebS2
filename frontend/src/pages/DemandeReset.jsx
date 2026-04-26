@@ -28,7 +28,7 @@ const DemandeReset = () => {
                 setStatus('error');
                 setMessageErreur(data.error || "Cet email n'est pas reconnu dans notre système.");
             }
-        } catch (error) {
+        } catch {
             setStatus('error');
             setMessageErreur('Connexion au serveur impossible.');
         }
