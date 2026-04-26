@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     Box,
     Paper,
@@ -27,9 +27,8 @@ import {
     Map as MapIcon,
     LocationOn,
     Event,
+    DeleteOutlined,
 } from '@mui/icons-material';
-
-const historique = ['Gare de Cergy Préfecture', 'ESSEC Business School', 'Centre Commercial Trois Fontaines'];
 
 const BarreRecherche = ({
     recherche,
@@ -40,13 +39,43 @@ const BarreRecherche = ({
     zoneSelectionnee,
     setZoneSelectionnee,
     zones,
-    chargement,
-    donneesMap,
     aucunResultat,
     termeFixe,
     inputRef,
     chargerDonnees,
 }) => {
+    // Charger l'historique depuis le localStorage au démarrage
+    const [historique, setHistorique] = useState(() => {
+        const sauvegarde = localStorage.getItem('historique_recherche');
+        return sauvegarde ? JSON.parse(sauvegarde) : [];
+    });
+
+    // Sauvegarder dans le localStorage quand l'historique change
+    useEffect(() => {
+        localStorage.setItem('historique_recherche', JSON.stringify(historique));
+    }, [historique]);
+
+    const ajouterAHistorique = terme => {
+        if (!terme || terme.trim() === '') return;
+        setHistorique(prev => {
+            // On enlève le terme s'il existe déjà pour le remettre en haut, et on limite à 5
+            const nouveau = [terme, ...prev.filter(item => item !== terme)].slice(0, 5);
+            return nouveau;
+        });
+    };
+
+    const supprimerDeLHistorique = (e, terme) => {
+        e.stopPropagation(); // Empêche de déclencher la recherche
+        setHistorique(prev => prev.filter(item => item !== terme));
+    };
+
+    const executerRecherche = (cat, terme) => {
+        ajouterAHistorique(terme);
+        chargerDonnees(cat, terme, false, zoneSelectionnee);
+        setRechercheActive(false);
+        inputRef.current?.blur();
+    };
+
     return (
         <Paper
             elevation={rechercheActive ? 0 : 3}
@@ -64,6 +93,7 @@ const BarreRecherche = ({
                 transition: 'all 0.3s ease-in-out',
                 minHeight: rechercheActive ? '100vh' : 'auto',
             }}>
+            {/* --- Champ de recherche --- */}
             <Box sx={{ display: 'flex', alignItems: 'center', px: 2, mb: rechercheActive ? 2 : 0 }}>
                 {rechercheActive && (
                     <IconButton onClick={() => setRechercheActive(false)} sx={{ mr: 1 }}>
@@ -79,11 +109,7 @@ const BarreRecherche = ({
                     value={recherche}
                     onChange={e => setRecherche(e.target.value)}
                     onKeyDown={e => {
-                        if (e.key === 'Enter') {
-                            chargerDonnees(categorieActuelle, recherche, false, zoneSelectionnee);
-                            setRechercheActive(false);
-                            inputRef.current?.blur();
-                        }
+                        if (e.key === 'Enter') executerRecherche(categorieActuelle, recherche);
                     }}
                     InputProps={{
                         disableUnderline: true,
@@ -99,6 +125,7 @@ const BarreRecherche = ({
 
             {rechercheActive && (
                 <Box sx={{ px: 2 }}>
+                    {/* --- Chips des catégories --- */}
                     <Stack
                         direction="row"
                         spacing={1}
@@ -109,78 +136,34 @@ const BarreRecherche = ({
                             '&::-webkit-scrollbar': { height: 6 },
                             '&::-webkit-scrollbar-thumb': { backgroundColor: '#e0e0e0', borderRadius: 10 },
                         }}>
-                        <Chip
-                            icon={<MapIcon />}
-                            label="Toute la ville"
-                            onClick={() => {
-                                chargerDonnees('global', recherche, false, zoneSelectionnee);
-                                setRechercheActive(false);
-                            }}
-                            color={categorieActuelle === 'global' ? 'primary' : 'default'}
-                            clickable
-                        />
-                        <Chip
-                            icon={<DirectionsBus />}
-                            label="Bus & Vélibs"
-                            onClick={() => {
-                                chargerDonnees('vehicules', recherche, false, zoneSelectionnee);
-                                setRechercheActive(false);
-                            }}
-                            color={categorieActuelle === 'vehicules' ? 'primary' : 'default'}
-                            clickable
-                        />
-                        <Chip
-                            icon={<LocalParking />}
-                            label="Parkings"
-                            onClick={() => {
-                                chargerDonnees('parkings', recherche, false, zoneSelectionnee);
-                                setRechercheActive(false);
-                            }}
-                            color={categorieActuelle === 'parkings' ? 'primary' : 'default'}
-                            clickable
-                        />
-                        <Chip
-                            icon={<Traffic />}
-                            label="Feux"
-                            onClick={() => {
-                                chargerDonnees('feux', recherche, false, zoneSelectionnee);
-                                setRechercheActive(false);
-                            }}
-                            color={categorieActuelle === 'feux' ? 'primary' : 'default'}
-                            clickable
-                        />
-                        {/* --- NOUVEAUX FILTRES --- */}
-                        <Chip
-                            icon={<LocationOn />}
-                            label="Lieux"
-                            onClick={() => {
-                                chargerDonnees('lieux', recherche, false, zoneSelectionnee);
-                                setRechercheActive(false);
-                            }}
-                            color={categorieActuelle === 'lieux' ? 'primary' : 'default'}
-                            clickable
-                        />
-                        <Chip
-                            icon={<Event />}
-                            label="Événements"
-                            onClick={() => {
-                                chargerDonnees('evenements', recherche, false, zoneSelectionnee);
-                                setRechercheActive(false);
-                            }}
-                            color={categorieActuelle === 'evenements' ? 'primary' : 'default'}
-                            clickable
-                        />
+                        {[
+                            { id: 'global', label: 'Toute la ville', icon: <MapIcon /> },
+                            { id: 'vehicules', label: 'Bus & Vélibs', icon: <DirectionsBus /> },
+                            { id: 'parkings', label: 'Parkings', icon: <LocalParking /> },
+                            { id: 'feux', label: 'Feux', icon: <Traffic /> },
+                            { id: 'lieux', label: 'Lieux', icon: <LocationOn /> },
+                            { id: 'evenements', label: 'Événements', icon: <Event /> },
+                        ].map(cat => (
+                            <Chip
+                                key={cat.id}
+                                icon={cat.icon}
+                                label={cat.label}
+                                clickable
+                                color={categorieActuelle === cat.id ? 'primary' : 'default'}
+                                onClick={() => executerRecherche(cat.id, recherche)}
+                            />
+                        ))}
                     </Stack>
 
-                    <FormControl fullWidth size="small" sx={{ mt: 2, mb: 1 }}>
+                    {/* --- Filtre Quartier --- */}
+                    <FormControl fullWidth size="small" sx={{ mt: 2, mb: 3 }}>
                         <InputLabel>Filtrer par quartier</InputLabel>
                         <Select
                             value={zoneSelectionnee}
                             label="Filtrer par quartier"
                             onChange={e => {
-                                const val = e.target.value;
-                                setZoneSelectionnee(val);
-                                chargerDonnees(categorieActuelle, recherche, false, val);
+                                setZoneSelectionnee(e.target.value);
+                                chargerDonnees(categorieActuelle, recherche, false, e.target.value);
                             }}>
                             <MenuItem value="">
                                 <em>Tous les quartiers</em>
@@ -193,41 +176,55 @@ const BarreRecherche = ({
                         </Select>
                     </FormControl>
 
-                    {chargement && donneesMap.length === 0 && (
-                        <Typography sx={{ py: 2, textAlign: 'center', color: 'text.secondary' }}>
-                            Analyse de la ville en cours...
-                        </Typography>
+                    {/* --- Section Historique --- */}
+                    <Typography variant="overline" sx={{ color: 'text.secondary', fontWeight: 'bold' }}>
+                        Recherches récentes
+                    </Typography>
+
+                    {historique.length > 0 ? (
+                        <List sx={{ mb: 2 }}>
+                            {historique.map((item, index) => (
+                                <ListItem
+                                    key={index}
+                                    disableGutters
+                                    sx={{ cursor: 'pointer', '&:hover .delete-icon': { opacity: 1 } }}
+                                    onClick={() => {
+                                        setRecherche(item);
+                                        executerRecherche('global', item);
+                                    }}
+                                    secondaryAction={
+                                        <IconButton
+                                            className="delete-icon"
+                                            edge="end"
+                                            size="small"
+                                            sx={{ opacity: 0, transition: '0.2s' }}
+                                            onClick={e => supprimerDeLHistorique(e, item)}>
+                                            <DeleteOutlined fontSize="small" />
+                                        </IconButton>
+                                    }>
+                                    <ListItemIcon sx={{ minWidth: 40 }}>
+                                        <History fontSize="small" />
+                                    </ListItemIcon>
+                                    <ListItemText primary={item} />
+                                </ListItem>
+                            ))}
+                        </List>
+                    ) : (
+                        <Box sx={{ py: 3, textAlign: 'center' }}>
+                            <Typography variant="body2" sx={{ color: 'text.disabled', fontStyle: 'italic' }}>
+                                Aucune recherche récente
+                            </Typography>
+                        </Box>
                     )}
 
+                    {/* --- Feedback Résultats --- */}
                     {aucunResultat && (
-                        <Paper sx={{ p: 2, mt: 1, bgcolor: '#fff5f5', borderRadius: 2 }}>
+                        <Paper sx={{ p: 2, mt: 1, bgcolor: '#fff5f5', borderRadius: 2, mb: 2 }}>
                             <Typography color="error" variant="body2">
                                 Aucun objet trouvé pour "<strong>{termeFixe}</strong>".
                             </Typography>
                         </Paper>
                     )}
-
-                    <Typography variant="overline" sx={{ color: 'text.secondary', fontWeight: 'bold' }}>
-                        Recherches récentes
-                    </Typography>
-                    <List>
-                        {historique.map((item, index) => (
-                            <ListItem
-                                key={index}
-                                disableGutters
-                                sx={{ cursor: 'pointer' }}
-                                onClick={() => {
-                                    setRecherche(item);
-                                    chargerDonnees('global', item);
-                                    setRechercheActive(false);
-                                }}>
-                                <ListItemIcon sx={{ minWidth: 40 }}>
-                                    <History fontSize="small" />
-                                </ListItemIcon>
-                                <ListItemText primary={item} />
-                            </ListItem>
-                        ))}
-                    </List>
                 </Box>
             )}
         </Paper>
