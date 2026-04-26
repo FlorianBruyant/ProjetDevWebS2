@@ -41,19 +41,25 @@ def get_analytics(request):
     try:
         period_hours = max(1, min(int(period_hours), 24 * 30))
     except ValueError:
-        return Response({"error": "Le parametre period_hours doit etre numerique."}, status=400)
+        return Response(
+            {"error": "Le parametre period_hours doit etre numerique."}, status=400
+        )
 
     if type_objet and type_objet not in TYPE_MODEL_MAP:
         return Response({"error": "Type d'objet non supporte."}, status=400)
 
     date_limite = timezone.now() - timedelta(hours=period_hours)
+
+    # --- 1. HISTORIQUE DE CONSOMMATION ---
     stats_recentes = HistoriqueObjet.objects.filter(date_mesure__gte=date_limite)
 
     if type_objet:
         stats_recentes = stats_recentes.filter(type_objet=type_objet)
 
     if zone_id:
-        stats_recentes = _appliquer_filtre_zone(stats_recentes, zone_id, type_objet or None)
+        stats_recentes = _appliquer_filtre_zone(
+            stats_recentes, zone_id, type_objet or None
+        )
 
     resume = stats_recentes.aggregate(
         consommation_totale=Sum("consommation_kwh"),
@@ -71,7 +77,9 @@ def get_analytics(request):
         .order_by("type_objet")
     )
 
-    fonction_bucket = TruncHour("date_mesure") if period_hours <= 72 else TruncDay("date_mesure")
+    fonction_bucket = (
+        TruncHour("date_mesure") if period_hours <= 72 else TruncDay("date_mesure")
+    )
     graphique = list(
         stats_recentes.annotate(bucket=fonction_bucket)
         .values("bucket")
@@ -81,10 +89,14 @@ def get_analytics(request):
     for point in graphique:
         bucket = point.pop("bucket")
         point["periode"] = (
-            bucket.strftime("%d/%m %Hh") if period_hours <= 72 else bucket.strftime("%d/%m")
+            bucket.strftime("%d/%m %Hh")
+            if period_hours <= 72
+            else bucket.strftime("%d/%m")
         )
 
+    # --- 2. GESTION DES VRAIES ALERTES ET PANNES ---
     alertes = AlerteObjet.objects.filter(declenchee_le__gte=date_limite)
+
     if type_objet:
         alertes = alertes.filter(type_objet=type_objet)
     if zone_id:
@@ -102,9 +114,34 @@ def get_analytics(request):
             "declenchee_le",
             "zone__nom",
         )
-        .order_by("-declenchee_le")[:20]
+        .order_by("-declenchee_le")[
+            :20
+        ]  # On limite aux 20 dernières pannes pour l'affichage
     )
 
+    # Récupération dynamique des vrais noms (nom du bus, nom du parking, etc.)
+    for alerte in alertes_data:
+        model = TYPE_MODEL_MAP.get(alerte["type_objet"])
+        if model:
+            try:
+                # On va chercher le vrai objet dans la base de données (ex: la table Parking)
+                obj = model.objects.get(pk=alerte["objet_id"])
+                # On utilise son nom, ou une valeur par défaut s'il n'en a pas
+                alerte["objet_nom"] = getattr(
+                    obj,
+                    "nom",
+                    f"{alerte['type_objet'].capitalize()} #{alerte['objet_id']}",
+                )
+            except model.DoesNotExist:
+                alerte["objet_nom"] = (
+                    f"{alerte['type_objet'].capitalize()} #{alerte['objet_id']} (Introuvable)"
+                )
+        else:
+            alerte["objet_nom"] = (
+                f"{alerte['type_objet'].capitalize()} #{alerte['objet_id']}"
+            )
+
+    # --- 3. RETOUR DES DONNÉES AU DASHBOARD ---
     return Response(
         {
             "filters": {
@@ -116,6 +153,7 @@ def get_analytics(request):
                 "consommation_totale": float(resume["consommation_totale"] or 0.0),
                 "consommation_moyenne": float(resume["consommation_moyenne"] or 0.0),
                 "mesures": int(resume["mesures"] or 0),
+                # ICI : On compte le VRAI nombre d'alertes actives dans la zone !
                 "alertes_actives": alertes.filter(statut="active").count(),
             },
             "par_type": par_type,
