@@ -11,7 +11,21 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "backend.settings")
 django.setup()
 
 # 2. Imports de tes modèles et scrappeurs
-from map.models import AlerteObjet, Evenement, Feu, Parking, Point, Vehicule, Zone
+from map.models import (
+    AlerteObjet,
+    Evenement,
+    Feu,
+    HistoriqueObjet,
+    Incident,
+    LieuInteret,
+    Parking,
+    Point,
+    RegleAlerte,
+    Route,
+    Scenario,
+    Vehicule,
+    Zone,
+)
 from recuperateur_feux import importer_feux
 from recuperateur_parking import maj_parkings_ouvrage
 from recuperateur_velos import maj_carte_en_temps_reel
@@ -19,10 +33,16 @@ from recuperateur_velos import maj_carte_en_temps_reel
 
 def clear_total():
     print("🧨 DESTRUCTION TOTALE DES DONNÉES...")
-    # On vide tout pour repartir sur une base propre
-    Vehicule.objects.all().delete()
-    Evenement.objects.all().delete()
+    # On vide toutes les tables métiers du projet pour repartir sur une base propre
     AlerteObjet.objects.all().delete()
+    HistoriqueObjet.objects.all().delete()
+    RegleAlerte.objects.all().delete()
+    Scenario.objects.all().delete()
+    Incident.objects.all().delete()
+    Route.objects.all().delete()
+    Evenement.objects.all().delete()
+    LieuInteret.objects.all().delete()
+    Vehicule.objects.all().delete()
     Parking.objects.all().delete()
     Feu.objects.all().delete()
     Point.objects.all().delete()

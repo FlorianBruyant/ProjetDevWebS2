@@ -11,7 +11,7 @@ from rest_framework.response import Response
 
 @api_view(['GET'])
 def test(request):
-    """Retourne un petit message de santé du serveur.
+    """
 
     Entrée : une requête HTTP GET.
     Traitement : construit une réponse JSON très simple.
