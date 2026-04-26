@@ -76,15 +76,27 @@ def recuperer_regle_alerte(instance, type_objet):
 
 
 def analyser_anomalie_consommation(instance, consommation_actuelle=None):
+    """
+    Analyse la consommation d'un objet (feu, parking, etc.) par rapport à son historique.
+    Si la consommation dépasse le seuil défini, une anomalie est détectée.
+    - Entrée: instance de l'objet, consommation actuelle (optionnel)
+    - Traitement: Récupère l'historique récent, calcule la moyenne, et compare la consommation actuelle.
+    - Sortie: Objet ResultatAnomalieConsommation avec le diagnostic.
+    """
     type_objet = determiner_type_objet(instance)
     regle = recuperer_regle_alerte(instance, type_objet)
+    
+    # Récupérer la valeur actuelle à tester
     valeur_actuelle = float(
         consommation_actuelle
         if consommation_actuelle is not None
         else getattr(instance, "consommation_actuelle", 0.0) or 0.0
     )
 
+    # Délimiter la période d'analyse
     date_limite = timezone.now() - timedelta(hours=regle.fenetre_analyse_heures)
+    
+    # Calculer la moyenne de consommation historique sur la période
     agr = HistoriqueObjet.objects.filter(
         type_objet=type_objet,
         objet_id=instance.id,
@@ -94,6 +106,7 @@ def analyser_anomalie_consommation(instance, consommation_actuelle=None):
     moyenne = float(agr["moyenne"] or 0.0)
     echantillons = int(agr["echantillons"] or 0)
 
+    # S'il n'y a pas assez de données pour établir une base fiable
     if echantillons < regle.echantillons_minimum or moyenne <= 0:
         return ResultatAnomalieConsommation(
             anomalie_detectee=False,
@@ -138,11 +151,19 @@ def analyser_anomalie_consommation(instance, consommation_actuelle=None):
 
 
 def declencher_alerte_consommation(instance, resultat):
+    """
+    Crée une alerte en base de données si une anomalie est détectée, tout en évitant le spam (cooldown).
+    - Entrée: instance de l'objet, résultat de l'analyse
+    - Traitement: Vérifie si une alerte existe déjà récemment, sinon en crée une avec une sévérité adaptée.
+    - Sortie: Instance de l'alerte créée ou existante, ou None.
+    """
     if not resultat.anomalie_detectee:
         return None
 
     regle = recuperer_regle_alerte(instance, resultat.type_objet)
     date_cooldown = timezone.now() - timedelta(minutes=regle.cooldown_minutes)
+    
+    # Éviter de créer de multiples alertes pour le même objet trop rapidement (système de cooldown)
     alerte_existante = (
         AlerteObjet.objects.filter(
             type_objet=resultat.type_objet,
