@@ -17,9 +17,21 @@ import {
     Alert,
     MenuItem,
     IconButton,
+    Stack,
+    Chip, // <-- C'était lui l'oublié !
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import { PhotoCamera } from '@mui/icons-material';
+import {
+    PhotoCamera,
+    BadgeRounded,
+    AdminPanelSettingsRounded,
+    LogoutRounded,
+    EmailRounded,
+    SettingsSuggestRounded,
+    MilitaryTechRounded,
+    VerifiedUserRounded,
+    CalendarMonthRounded,
+} from '@mui/icons-material';
 
 export default function Profil() {
     const navigate = useNavigate();
@@ -35,21 +47,22 @@ export default function Profil() {
     const [showPasswordFields, setShowPasswordFields] = useState(false);
     const [errorMsg, setErrorMsg] = useState('');
 
+    const API_BASE = 'http://localhost:8000';
+
     // Fonction pour modif photo de profil
     const handlePhotoChange = async event => {
         const file = event.target.files[0];
         if (!file) return;
 
         const formData = new FormData();
-        formData.append('photo', file); // 'photo' doit correspondre au nom du champ dans ton modèle Django
+        formData.append('photo', file);
 
         const token = localStorage.getItem('access_token');
         try {
-            const response = await fetch('http://localhost:8000/api/me/', {
+            const response = await fetch(`${API_BASE}/api/me/`, {
                 method: 'PATCH',
                 headers: {
                     Authorization: `Bearer ${token}`,
-                    // Note: On ne met PAS de Content-Type ici, le navigateur le fait seul pour FormData
                 },
                 body: formData,
             });
@@ -64,7 +77,7 @@ export default function Profil() {
             console.error('Erreur upload:', error);
         }
     };
-    // Fonction pour vérifier si une donnée sensible a été touchée
+
     const aModifieDonneesSensibles = () => {
         const normalize = v => v ?? '';
         return (
@@ -82,7 +95,7 @@ export default function Profil() {
                 return;
             }
             try {
-                const response = await fetch('http://localhost:8000/api/me/', {
+                const response = await fetch(`${API_BASE}/api/me/`, {
                     headers: {
                         Authorization: `Bearer ${token}`,
                         'Content-Type': 'application/json',
@@ -110,7 +123,6 @@ export default function Profil() {
         setErrorMsg('');
         const token = localStorage.getItem('access_token');
 
-        // 1. On prépare les données de base (non sensibles)
         const payload = {
             genre: editData.genre,
             type_membre: editData.type_membre,
@@ -122,28 +134,22 @@ export default function Profil() {
         let isPasswordChanged = false;
         let isUsernameChanged = false;
 
-        // 2. Gestion des données sensibles (Username, Email, Password)
         if (aModifieDonneesSensibles()) {
             if (!currentPassword) {
                 setErrorMsg('Veuillez saisir votre mot de passe actuel pour modifier vos identifiants.');
                 setIsUpdating(false);
                 return;
             }
-
-            // On ajoute le mot de passe de confirmation requis par le backend
             payload.current_password = currentPassword;
 
-            // Si l'email a changé
             if (editData.email !== user.email) {
                 payload.email = editData.email;
                 isEmailChanged = true;
             }
-            // Si l'username a changé
             if (editData.username !== user.username) {
                 payload.username = editData.username;
                 isUsernameChanged = true;
             }
-            // Si on veut changer le mot de passe et que le champ est rempli
             if (showPasswordFields && editData.password) {
                 if (editData.password !== editData.confirmPassword) {
                     setErrorMsg('Les nouveaux mots de passe ne correspondent pas.');
@@ -156,7 +162,7 @@ export default function Profil() {
         }
 
         try {
-            const response = await fetch('http://localhost:8000/api/me/', {
+            const response = await fetch(`${API_BASE}/api/me/`, {
                 method: 'PATCH',
                 headers: {
                     Authorization: `Bearer ${token}`,
@@ -168,42 +174,21 @@ export default function Profil() {
             const data = await response.json();
 
             if (response.ok) {
-                // Si l'email OU le mot de passe a changé, on déconnecte l'utilisateur
                 if (isEmailChanged || isPasswordChanged || isUsernameChanged) {
-                    if (isEmailChanged) {
-                        alert(
-                            'Email modifié. Veuillez valider le lien envoyé à votre nouvelle adresse avant de vous reconnecter.'
-                        );
-                    } else if (isUsernameChanged) {
-                        alert(
-                            "Nom d'utilisateur modifié. Veuillez valider le lien envoyé à votre nouvelle adresse avant de vous reconnecter."
-                        );
-                    } else {
-                        alert('Mot de passe modifié avec succès. Veuillez vous reconnecter avec vos nouveaux identifiants.');
-                    }
+                    alert('Identifiants modifiés. Veuillez vous reconnecter.');
                     handleLogout();
                 } else {
-                    // Sinon, on met à jour l'interface normalement sans déconnecter
                     setUser(data);
                     setOpen(false);
                     setShowPasswordFields(false);
                     setCurrentPassword('');
-                    // On nettoie les champs de mot de passe pour la prochaine ouverture
-                    setEditData(prev => ({
-                        ...prev,
-                        password: '',
-                        confirmPassword: '',
-                    }));
                 }
             } else {
-                // Traduction des erreurs backend
                 if (data.current_password) setErrorMsg('Mot de passe actuel incorrect.');
-                else if (data.username) setErrorMsg("Ce nom d'utilisateur est déjà pris.");
-                else if (data.email) setErrorMsg('Cette adresse email est déjà utilisée.');
                 else setErrorMsg(data.detail || 'Erreur lors de la mise à jour.');
             }
         } catch {
-            setErrorMsg('Erreur de connexion au serveur.');
+            setErrorMsg('Erreur de connexion.');
         } finally {
             setIsUpdating(false);
         }
@@ -214,356 +199,370 @@ export default function Profil() {
         navigate('/connexion');
     };
 
-    const calculerProgression = pts => {
-        const safePts = pts || 0;
-        if (safePts < 3) return (safePts / 3) * 100;
-        if (safePts < 5) return ((safePts - 3) / 2) * 100;
-        if (safePts < 7) return ((safePts - 5) / 2) * 100;
-        return 100;
-    };
+    const progressionVisuelle = pts => Math.min((pts / 50) * 100, 100);
 
     if (chargement)
         return (
-            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 10 }}>
-                <CircularProgress />
+            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '80vh' }}>
+                <CircularProgress sx={{ color: '#0f766e' }} />
             </Box>
         );
 
     return (
-        <Box sx={{ bgcolor: '#FAFAFA', minHeight: '100vh', pb: 10 }}>
-            {/* Bannière */}
+        <Box sx={{ background: 'linear-gradient(180deg, #f3f8f6 0%, #eef3f8 100%)', minHeight: '100vh', pb: 10 }}>
+            {/* Bannière Smart City */}
             <Box
-                sx={{
-                    height: '120px',
-                    background: 'linear-gradient(135deg, #e0e7ff 0%, #ede9fe 100%)',
-                }}
+                sx={{ height: '220px', background: 'linear-gradient(135deg, #16324f 0%, #0f766e 100%)', position: 'relative' }}
             />
 
-            <Container maxWidth="sm" sx={{ mt: -6 }}>
+            <Container maxWidth="sm" sx={{ mt: -12 }}>
                 {/* En-tête Profil */}
-                <Box
-                    sx={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        mb: 4,
-                    }}>
-                    {/* --- ZONE AVATAR AVEC BOUTON PHOTO --- */}
+                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 4 }}>
                     <Box sx={{ position: 'relative' }}>
                         <Avatar
-                            src={user?.photo_url || ''}
+                            src={
+                                user?.photo_url
+                                    ? user.photo_url.startsWith('http')
+                                        ? user.photo_url
+                                        : `${API_BASE}${user.photo_url}`
+                                    : ''
+                            }
                             sx={{
-                                width: 100,
-                                height: 100,
-                                border: '4px solid white',
-                                bgcolor: '#3f51b5',
-                                fontSize: '2.5rem',
+                                width: 160,
+                                height: 160,
+                                border: '8px solid #fff',
+                                bgcolor: '#16324f',
+                                fontSize: '4rem',
+                                fontWeight: 900,
+                                boxShadow: '0 20px 40px rgba(22, 50, 79, 0.2)',
                                 mb: 2,
                             }}>
                             {!user?.photo_url && user?.username?.charAt(0).toUpperCase()}
                         </Avatar>
-
                         <IconButton
                             color="primary"
-                            aria-label="upload picture"
                             component="label"
                             sx={{
                                 position: 'absolute',
-                                bottom: 15,
-                                right: -5,
-                                bgcolor: 'white',
-                                boxShadow: 2,
+                                bottom: 25,
+                                right: 10,
+                                bgcolor: '#fff',
+                                boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
                                 '&:hover': { bgcolor: '#f5f5f5' },
+                                p: 1.5,
                             }}>
                             <input hidden accept="image/*" type="file" onChange={handlePhotoChange} />
-                            <PhotoCamera fontSize="small" />
+                            <PhotoCamera sx={{ color: '#16324f' }} />
                         </IconButton>
                     </Box>
-                    <Typography variant="h5" fontWeight="bold">
+                    <Typography variant="h3" sx={{ fontWeight: 900, color: '#16324f', letterSpacing: '-1px' }}>
                         {user?.username}
                     </Typography>
+                    <Chip
+                        label={user?.type_membre || 'Citoyen'}
+                        variant="outlined"
+                        sx={{ mt: 1, borderColor: '#0f766e', color: '#0f766e', fontWeight: 800, px: 2 }}
+                    />
                 </Box>
 
-                {/* --- MODULE NIVEAU / XP --- */}
-                <Paper elevation={2} sx={{ p: 3, mb: 3, borderRadius: 3 }}>
-                    <Box
-                        sx={{
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            mb: 1,
-                        }}>
-                        <Typography variant="h6" fontWeight="bold" color="primary">
-                            Niveau {user?.niveau || 'Débutant'}
-                        </Typography>
-                        <Typography variant="body1" fontWeight="bold">
-                            {user?.points || 0} / 7.00 XP
-                        </Typography>
-                    </Box>
+                {/* --- MODULE XP REEL --- */}
+                <Paper
+                    elevation={0}
+                    sx={{
+                        p: 4,
+                        mb: 3,
+                        borderRadius: '28px',
+                        border: '1px solid rgba(22, 50, 79, 0.08)',
+                        boxShadow: '0 15px 35px rgba(22, 50, 79, 0.05)',
+                        bgcolor: '#fff',
+                    }}>
+                    <Stack direction="row" justifyContent="space-between" alignItems="flex-end" sx={{ mb: 2 }}>
+                        <Box>
+                            <Typography variant="overline" sx={{ color: '#0f766e', fontWeight: 800 }}>
+                                Statut Actuel
+                            </Typography>
+                            <Typography variant="h5" sx={{ fontWeight: 900, color: '#16324f' }}>
+                                Niveau {user?.niveau || '1'}
+                            </Typography>
+                        </Box>
+                        <Box sx={{ textAlign: 'right' }}>
+                            <Typography variant="h4" sx={{ fontWeight: 900, color: '#0f766e', lineHeight: 1 }}>
+                                {user?.points || 0}
+                            </Typography>
+                            <Typography variant="caption" sx={{ fontWeight: 700, color: '#64748b' }}>
+                                POINTS TOTAL
+                            </Typography>
+                        </Box>
+                    </Stack>
                     <LinearProgress
                         variant="determinate"
-                        value={calculerProgression(user?.points)}
-                        sx={{ height: 10, borderRadius: 5, mb: 1 }}
-                    />
-                    <Typography variant="body2" color="text.secondary">
-                        Gagnez de l'XP en consultant des objets sur la carte !
-                    </Typography>
-                </Paper>
-
-                {/* --- BOUTON MODIF PROFIL --- */}
-                <Button
-                    size="small"
-                    onClick={() => {
-                        setEditData({ ...user }); // reset à l'ouverture
-                        setShowPasswordFields(false);
-                        setCurrentPassword('');
-                        setErrorMsg('');
-                        setOpen(true);
-                    }}>
-                    Modifier
-                </Button>
-
-                {/* --- INFORMATIONS PUBLIQUES --- */}
-                <Paper elevation={2} sx={{ p: 3, mb: 3, borderRadius: 3 }}>
-                    <Typography variant="h6" fontWeight="bold" sx={{ mb: 2 }}>
-                        Informations publiques
-                    </Typography>
-                    <Typography sx={{ mb: 1 }}>
-                        <strong>Rôle :</strong> {user?.role || 'Utilisateur'}
-                    </Typography>
-                    <Typography sx={{ mb: 1 }}>
-                        <strong>Genre :</strong> {user?.genre || 'Non renseigné'}
-                    </Typography>
-                    <Typography>
-                        <strong>Type de membre :</strong> {user?.type_membre || 'Citoyen'}
-                    </Typography>
-                </Paper>
-
-                {/* --- INFORMATIONS PRIVEES --- */}
-                <Paper elevation={2} sx={{ p: 3, mb: 3, borderRadius: 3 }}>
-                    <Typography variant="h6" fontWeight="bold" sx={{ mb: 2 }}>
-                        Informations privées
-                    </Typography>
-                    <Typography sx={{ mb: 1 }}>
-                        <strong>Email :</strong> {user?.email}
-                    </Typography>
-                    <Typography sx={{ mb: 1 }}>
-                        <strong>Prénom :</strong> {user?.first_name || 'Non renseigné'}
-                    </Typography>
-                    <Typography sx={{ mb: 1 }}>
-                        <strong>Nom :</strong> {user?.last_name || 'Non renseigné'}
-                    </Typography>
-                </Paper>
-
-                {/* --- DIALOG DE MODIFICATION --- */}
-                <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="xs">
-                    <DialogTitle>Modifier mon profil</DialogTitle>
-                    <DialogContent
+                        value={progressionVisuelle(user?.points)}
                         sx={{
-                            display: 'flex',
-                            flexDirection: 'column',
-                            gap: 2,
-                            pt: 1,
-                        }}>
-                        {errorMsg && <Alert severity="error">{errorMsg}</Alert>}
-
-                        {/* --- ZONE LIBRE (Pas besoin de mot de passe) --- */}
-                        <Typography variant="overline" color="text.secondary">
-                            Préférences
+                            height: 14,
+                            borderRadius: 7,
+                            bgcolor: '#f1f5f9',
+                            '& .MuiLinearProgress-bar': { borderRadius: 7, bgcolor: '#0f766e' },
+                        }}
+                    />
+                    <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 2, color: '#64748b' }}>
+                        <MilitaryTechRounded sx={{ fontSize: 20 }} />
+                        <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                            Plus vous interagissez avec la ville, plus vous gagnez de points.
                         </Typography>
-                        <TextField
-                            select
-                            fullWidth
-                            label="Genre"
-                            value={editData.genre || ''}
-                            onChange={e =>
-                                setEditData({
-                                    ...editData,
-                                    genre: e.target.value,
-                                })
-                            }>
-                            <MenuItem value="M">Masculin</MenuItem>
-                            <MenuItem value="F">Féminin</MenuItem>
-                            <MenuItem value="A">Autre</MenuItem>
-                            <MenuItem value="NR">Non renseigné</MenuItem>
-                        </TextField>
+                    </Stack>
+                </Paper>
 
-                        <TextField
-                            select
-                            fullWidth
-                            label="Type de membre"
-                            value={editData.type_membre || ''}
-                            onChange={e =>
-                                setEditData({
-                                    ...editData,
-                                    type_membre: e.target.value,
-                                })
-                            }>
-                            <MenuItem value="Citoyen">Citoyen</MenuItem>
-                            <MenuItem value="Étudiant">Étudiant</MenuItem>
-                            <MenuItem value="Professionnel">Professionnel</MenuItem>
-                        </TextField>
+                {/* --- INFOS PUBLIQUES --- */}
+                <Paper
+                    elevation={0}
+                    sx={{ p: 3, mb: 3, borderRadius: '28px', border: '1px solid rgba(22, 50, 79, 0.08)', bgcolor: '#fff' }}>
+                    <Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 3 }}>
+                        <BadgeRounded sx={{ color: '#0f766e' }} />
+                        <Typography variant="h6" sx={{ fontWeight: 800, color: '#16324f' }}>
+                            Identité Publique
+                        </Typography>
+                        <Box sx={{ flexGrow: 1 }} />
+                        <Button
+                            variant="contained"
+                            size="small"
+                            startIcon={<SettingsSuggestRounded />}
+                            onClick={() => {
+                                setEditData({ ...user });
+                                setShowPasswordFields(false);
+                                setOpen(true);
+                            }}
+                            sx={{
+                                bgcolor: '#16324f',
+                                borderRadius: '10px',
+                                textTransform: 'none',
+                                fontWeight: 700,
+                                '&:hover': { bgcolor: '#0f243a' },
+                            }}>
+                            Gérer
+                        </Button>
+                    </Stack>
 
+                    <Stack spacing={2}>
+                        <Box
+                            sx={{
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                p: 2,
+                                bgcolor: '#f8fafc',
+                                borderRadius: '16px',
+                            }}>
+                            <Typography sx={{ color: '#64748b', fontWeight: 600 }}>Genre</Typography>
+                            <Typography sx={{ color: '#16324f', fontWeight: 800 }}>
+                                {user?.genre === 'M' ? 'Masculin' : user?.genre === 'F' ? 'Féminin' : 'Autre'}
+                            </Typography>
+                        </Box>
+                        <Box
+                            sx={{
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                p: 2,
+                                bgcolor: '#f8fafc',
+                                borderRadius: '16px',
+                            }}>
+                            <Typography sx={{ color: '#64748b', fontWeight: 600 }}>Rôle Système</Typography>
+                            <Typography sx={{ color: '#0f766e', fontWeight: 800 }}>
+                                {user?.role?.toUpperCase() || 'CITOYEN'}
+                            </Typography>
+                        </Box>
+                    </Stack>
+                </Paper>
+
+                {/* --- INFOS PRIVÉES --- */}
+                <Paper
+                    elevation={0}
+                    sx={{ p: 3, mb: 4, borderRadius: '28px', border: '1px solid rgba(22, 50, 79, 0.08)', bgcolor: '#fff' }}>
+                    <Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 3 }}>
+                        <AdminPanelSettingsRounded sx={{ color: '#16324f' }} />
+                        <Typography variant="h6" sx={{ fontWeight: 800, color: '#16324f' }}>
+                            Compte & Sécurité
+                        </Typography>
+                    </Stack>
+
+                    <Stack spacing={3}>
+                        <Stack direction="row" spacing={2} alignItems="center">
+                            <Avatar sx={{ bgcolor: '#eef2ff', color: '#16324f' }}>
+                                <EmailRounded />
+                            </Avatar>
+                            <Box>
+                                <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 700 }}>
+                                    EMAIL ENREGISTRÉ
+                                </Typography>
+                                <Typography sx={{ color: '#16324f', fontWeight: 700 }}>{user?.email}</Typography>
+                            </Box>
+                        </Stack>
+
+                        <Divider sx={{ borderStyle: 'dashed' }} />
+
+                        <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
+                            <Box>
+                                <Typography
+                                    variant="caption"
+                                    sx={{ color: '#64748b', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                    <VerifiedUserRounded sx={{ fontSize: 14 }} /> NOM COMPLET
+                                </Typography>
+                                <Typography sx={{ color: '#16324f', fontWeight: 700 }}>
+                                    {user?.first_name} {user?.last_name}
+                                </Typography>
+                            </Box>
+                            <Box>
+                                <Typography
+                                    variant="caption"
+                                    sx={{ color: '#64748b', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                    <CalendarMonthRounded sx={{ fontSize: 14 }} /> DERNIÈRE ACTIVITÉ
+                                </Typography>
+                                <Typography sx={{ color: '#16324f', fontWeight: 700 }}>
+                                    {user?.date_derniere_action
+                                        ? new Date(user.date_derniere_action).toLocaleDateString()
+                                        : "Aujourd'hui"}
+                                </Typography>
+                            </Box>
+                        </Box>
+                    </Stack>
+                </Paper>
+
+                <Button
+                    fullWidth
+                    variant="outlined"
+                    color="error"
+                    startIcon={<LogoutRounded />}
+                    onClick={handleLogout}
+                    sx={{
+                        py: 2,
+                        borderRadius: '20px',
+                        fontWeight: 900,
+                        borderWidth: '2px',
+                        transition: 'all 0.3s',
+                        '&:hover': { borderWidth: '2px', bgcolor: '#fee2e2', transform: 'translateY(-2px)' },
+                    }}>
+                    DÉCONNEXION DU RÉSEAU
+                </Button>
+            </Container>
+
+            {/* Dialog de Modification */}
+            <Dialog
+                open={open}
+                onClose={() => setOpen(false)}
+                fullWidth
+                maxWidth="xs"
+                PaperProps={{ sx: { borderRadius: '28px', p: 1 } }}>
+                <DialogTitle sx={{ fontWeight: 900, color: '#16324f', fontSize: '1.5rem' }}>Mise à jour du profil</DialogTitle>
+                <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2.5, pt: 2 }}>
+                    {errorMsg && (
+                        <Alert severity="error" sx={{ borderRadius: '14px' }}>
+                            {errorMsg}
+                        </Alert>
+                    )}
+
+                    <TextField
+                        select
+                        fullWidth
+                        label="Genre"
+                        value={editData.genre || ''}
+                        onChange={e => setEditData({ ...editData, genre: e.target.value })}>
+                        <MenuItem value="M">Masculin</MenuItem>
+                        <MenuItem value="F">Féminin</MenuItem>
+                        <MenuItem value="A">Autre</MenuItem>
+                    </TextField>
+
+                    <TextField
+                        select
+                        fullWidth
+                        label="Type de membre"
+                        value={editData.type_membre || ''}
+                        onChange={e => setEditData({ ...editData, type_membre: e.target.value })}>
+                        <MenuItem value="Citoyen">Citoyen</MenuItem>
+                        <MenuItem value="Étudiant">Étudiant</MenuItem>
+                        <MenuItem value="Professionnel">Professionnel</MenuItem>
+                    </TextField>
+
+                    <Stack direction="row" spacing={2}>
                         <TextField
                             fullWidth
                             label="Prénom"
                             value={editData.first_name || ''}
-                            onChange={e =>
-                                setEditData({
-                                    ...editData,
-                                    first_name: e.target.value,
-                                })
-                            }
+                            onChange={e => setEditData({ ...editData, first_name: e.target.value })}
                         />
                         <TextField
                             fullWidth
                             label="Nom"
                             value={editData.last_name || ''}
-                            onChange={e =>
-                                setEditData({
-                                    ...editData,
-                                    last_name: e.target.value,
-                                })
-                            }
+                            onChange={e => setEditData({ ...editData, last_name: e.target.value })}
                         />
-                        <Divider sx={{ my: 1 }} />
+                    </Stack>
 
-                        {/* --- ZONE SÉCURISÉE (Détectée par aModifieDonneesSensibles) --- */}
-                        <Typography variant="overline" color="primary">
-                            Identifiants
-                        </Typography>
+                    <Divider sx={{ my: 1 }}>Identifiants réseau</Divider>
 
-                        <TextField
-                            fullWidth
-                            label="Nom d'utilisateur"
-                            value={editData.username || ''}
-                            onChange={e =>
-                                setEditData({
-                                    ...editData,
-                                    username: e.target.value,
-                                })
-                            }
-                        />
+                    <TextField
+                        fullWidth
+                        label="Username"
+                        value={editData.username || ''}
+                        onChange={e => setEditData({ ...editData, username: e.target.value })}
+                    />
+                    <TextField
+                        fullWidth
+                        label="Email"
+                        value={editData.email || ''}
+                        onChange={e => setEditData({ ...editData, email: e.target.value })}
+                    />
 
-                        <TextField
-                            fullWidth
-                            label="Email"
-                            value={editData.email || ''}
-                            onChange={e =>
-                                setEditData({
-                                    ...editData,
-                                    email: e.target.value,
-                                })
-                            }
-                        />
-
-                        {!showPasswordFields ? (
-                            <Button size="small" onClick={() => setShowPasswordFields(true)}>
-                                Changer le mot de passe
-                            </Button>
-                        ) : (
-                            <>
-                                <TextField
-                                    fullWidth
-                                    label="Nouveau mot de passe"
-                                    type="password"
-                                    onChange={e =>
-                                        setEditData({
-                                            ...editData,
-                                            password: e.target.value,
-                                        })
-                                    }
-                                />
-                                <TextField
-                                    fullWidth
-                                    label="Confirmer nouveau mot de passe"
-                                    type="password"
-                                    onChange={e =>
-                                        setEditData({
-                                            ...editData,
-                                            confirmPassword: e.target.value,
-                                        })
-                                    }
-                                />
-                                <Button size="small" color="error" onClick={() => setShowPasswordFields(false)}>
-                                    Annuler le changement
-                                </Button>
-                            </>
-                        )}
-
-                        {/* --- CHAMP MOT DE PASSE ACTUEL (Apparaît ou s'active si besoin) --- */}
-                        {aModifieDonneesSensibles() && (
-                            <Box
-                                sx={{
-                                    mt: 2,
-                                    p: 2,
-                                    bgcolor: '#fff4e5',
-                                    borderRadius: 2,
-                                }}>
-                                <Typography variant="caption" color="warning.main" sx={{ display: 'block', mb: 1 }}>
-                                    Confirmation requise pour modifier vos identifiants :
-                                </Typography>
-
-                                <TextField
-                                    fullWidth
-                                    required
-                                    label="Mot de passe actuel"
-                                    type="password"
-                                    value={currentPassword}
-                                    onChange={e => setCurrentPassword(e.target.value)}
-                                    color="warning"
-                                />
-
-                                {/* --- BOUTON MOT DE PASSE OUBLIÉ --- */}
-                                <Box sx={{ textAlign: 'right', mt: 1 }}>
-                                    <Typography
-                                        variant="caption"
-                                        onClick={() => navigate('/mot-de-passe-oublie')}
-                                        sx={{
-                                            cursor: 'pointer',
-                                            color: 'primary.main',
-                                            textDecoration: 'underline',
-                                            '&:hover': {
-                                                color: 'primary.dark',
-                                            },
-                                        }}>
-                                        J'ai oublié mon mot de passe
-                                    </Typography>
-                                </Box>
-                            </Box>
-                        )}
-                    </DialogContent>
-
-                    <DialogActions>
-                        <Button onClick={() => setOpen(false)}>Annuler</Button>
-                        <Button onClick={handleUpdate} variant="contained" disabled={isUpdating}>
-                            Sauvegarder
+                    {!showPasswordFields ? (
+                        <Button variant="text" size="small" onClick={() => setShowPasswordFields(true)} sx={{ fontWeight: 800 }}>
+                            Modifier le mot de passe secret
                         </Button>
-                    </DialogActions>
-                </Dialog>
+                    ) : (
+                        <Stack spacing={2}>
+                            <TextField
+                                fullWidth
+                                label="Nouveau mot de passe"
+                                type="password"
+                                onChange={e => setEditData({ ...editData, password: e.target.value })}
+                            />
+                            <TextField
+                                fullWidth
+                                label="Confirmer"
+                                type="password"
+                                onChange={e => setEditData({ ...editData, confirmPassword: e.target.value })}
+                            />
+                            <Button size="small" color="error" onClick={() => setShowPasswordFields(false)}>
+                                Annuler changement
+                            </Button>
+                        </Stack>
+                    )}
 
-                {/* --- STATISTIQUES --- */}
-                <Paper elevation={2} sx={{ p: 3, mb: 4, borderRadius: 3 }}>
-                    <Typography variant="h6" fontWeight="bold" sx={{ mb: 2 }}>
-                        Statistiques
-                    </Typography>
-                    <Typography sx={{ mb: 1 }}>
-                        <strong>Connexions totales :</strong> {user?.nb_acces || 0}
-                    </Typography>
-                    <Typography>
-                        <strong>Dernière action :</strong>{' '}
-                        {user?.date_derniere_action ? new Date(user.date_derniere_action).toLocaleString() : '--'}
-                    </Typography>
-                </Paper>
-
-                <Button
-                    fullWidth
-                    variant="contained"
-                    color="error"
-                    onClick={handleLogout}
-                    sx={{ py: 1.5, borderRadius: 2, fontWeight: 'bold' }}>
-                    Se déconnecter
-                </Button>
-            </Container>
+                    {aModifieDonneesSensibles() && (
+                        <Box sx={{ p: 2.5, bgcolor: '#fff4e5', borderRadius: '20px', border: '1px solid #ffe2b7' }}>
+                            <Typography variant="caption" color="warning.main" sx={{ fontWeight: 800, mb: 1, display: 'block' }}>
+                                CONFIRMATION DE SÉCURITÉ :
+                            </Typography>
+                            <TextField
+                                fullWidth
+                                label="Ton mot de passe actuel"
+                                type="password"
+                                value={currentPassword}
+                                onChange={e => setCurrentPassword(e.target.value)}
+                                size="small"
+                            />
+                        </Box>
+                    )}
+                </DialogContent>
+                <DialogActions sx={{ p: 3 }}>
+                    <Button onClick={() => setOpen(false)} sx={{ fontWeight: 800, color: '#64748b' }}>
+                        Fermer
+                    </Button>
+                    <Button
+                        onClick={handleUpdate}
+                        variant="contained"
+                        disabled={isUpdating}
+                        sx={{ bgcolor: '#16324f', borderRadius: '12px', px: 4, fontWeight: 800 }}>
+                        Sauvegarder
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </Box>
     );
 }
