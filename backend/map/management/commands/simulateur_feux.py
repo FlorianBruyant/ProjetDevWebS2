@@ -12,7 +12,7 @@ from map.models import Feu
 
 
 def demarrer_simulation_feux():
-    print("🚦 Simulateur de feux lancé en arrière-plan...")
+    print(" Simulateur de feux lancé en arrière-plan...")
     while True:
         feux = Feu.objects.filter(en_panne=False, est_actif=True)
 
@@ -37,4 +37,4 @@ if __name__ == "__main__":
     try:
         demarrer_simulation_feux()
     except KeyboardInterrupt:
-        print("\n🛑 Simulateur arrêté.")
+        print("\n Simulateur arrêté.")

@@ -12,7 +12,7 @@ router.register(r"parkings", views.ParkingViewSet)
 router.register(r"points", views.PointViewSet)
 router.register(r"lieux", views.LieuInteretViewSet)
 router.register(r"evenements", views.EvenementViewSet)
-# 👇 AJOUT DE L'ENDPOINT SCENARIOS
+#  AJOUT DE L'ENDPOINT SCENARIOS
 router.register(r"scenarios", views.ScenarioViewSet, basename="scenario")
 
 urlpatterns = [

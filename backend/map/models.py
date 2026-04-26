@@ -1,4 +1,4 @@
-import requests  # 👈 Nécessaire pour appeler l'API externe
+import requests  #  Nécessaire pour appeler l'API externe
 from django.db import models
 
 # ==========================================
@@ -92,7 +92,7 @@ class TrafficObject(models.Model):
         return None
 
     def save(self, *args, **kwargs):
-        # 🎯 LOGIQUE D'AUTOMATISATION
+        #  LOGIQUE D'AUTOMATISATION
         # On essaie de trouver les coordonnées de l'objet
         lat, lon = None, None
 

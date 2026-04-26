@@ -24,14 +24,14 @@ def executer_scenarios_trafic(objet_modifie):
                     # .update() est CRUCIAL ici : il change la BDD sans
                     # déclencher le signal save(), évitant la boucle infinie.
                     Feu.objects.filter(zone=zone).update(etat_actuel="VERT")
-                    print(f"🚦 [Auto] Priorité Bus activée pour la zone : {zone.nom}")
+                    print(f" [Auto] Priorité Bus activée pour la zone : {zone.nom}")
 
             # --- SCÉNARIO TYPE : SÉCURITÉ (SAFETY) ---
             elif s.categorie == "SAFETY" and isinstance(objet_modifie, Incident):
                 # Si l'incident est grave (gravité > seuil)
                 if objet_modifie.gravite >= int(s.valeur_seuil) and zone:
                     Feu.objects.filter(zone=zone).update(etat_actuel="ROUGE")
-                    print(f"🚨 [Auto] Zone {zone.nom} sécurisée (Incident grave)")
+                    print(f" [Auto] Zone {zone.nom} sécurisée (Incident grave)")
 
             # --- SCÉNARIO TYPE : MAINTENANCE ---
             elif s.categorie == "MAINTENANCE":
@@ -43,9 +43,9 @@ def executer_scenarios_trafic(objet_modifie):
                         en_panne=True
                     )
                     print(
-                        f"🔧 [Auto] {objet_modifie.nom} envoyé en maintenance (Batterie faible)"
+                        f" [Auto] {objet_modifie.nom} envoyé en maintenance (Batterie faible)"
                     )
 
         except Exception as e:
             # On log l'erreur pour débugger, mais on ne crash pas le serveur
-            print(f"⚠️ Erreur lors de l'exécution du scénario '{s.nom}': {e}")
+            print(f"️ Erreur lors de l'exécution du scénario '{s.nom}': {e}")

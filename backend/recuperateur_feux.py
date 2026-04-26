@@ -16,10 +16,10 @@ URL_API = "https://opendata.paris.fr/api/explore/v2.1/catalog/datasets/signalisa
 
 
 def importer_feux():
-    print("🧹 Nettoyage de la table des feux...")
+    print(" Nettoyage de la table des feux...")
     Feu.objects.all().delete()
 
-    print("📡 Connexion à l'API Paris Open Data...")
+    print(" Connexion à l'API Paris Open Data...")
 
     try:
         response = requests.get(URL_API, timeout=15)
@@ -27,7 +27,7 @@ def importer_feux():
         records = data.get("results", [])
 
         if not records:
-            print("❌ Aucun résultat reçu.")
+            print(" Aucun résultat reçu.")
             return
 
         for rec in records:
@@ -54,15 +54,15 @@ def importer_feux():
                     est_actif=True,
                     en_panne=False,
                 )
-                print(f"✅ Importé : {nom_voie}")
+                print(f" Importé : {nom_voie}")
 
             except Exception as e:
-                print(f"⚠️ Erreur sur un élément : {e}")
+                print(f"️ Erreur sur un élément : {e}")
 
-        print(f"\n🏁 Terminé ! {Feu.objects.count()} feux créés.")
+        print(f"\n Terminé ! {Feu.objects.count()} feux créés.")
 
     except Exception as e:
-        print(f"❌ Erreur réseau : {e}")
+        print(f" Erreur réseau : {e}")
 
 
 if __name__ == "__main__":

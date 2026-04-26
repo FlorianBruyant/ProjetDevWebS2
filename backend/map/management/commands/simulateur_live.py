@@ -22,7 +22,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         self.stdout.write(
             self.style.SUCCESS(
-                "🚀 Moteur Paris-Live : Pannes globales et Mouvement Fluide activés..."
+                " Moteur Paris-Live : Pannes globales et Mouvement Fluide activés..."
             )
         )
 
@@ -45,11 +45,11 @@ class Command(BaseCommand):
                             zone=v.zone,
                             code="PANNE_BATTERIE",
                             niveau="warning",
-                            message=f"🪫 Véhicule {v.immatriculation} immobilisé : Batterie épuisée.",
+                            message=f" Véhicule {v.immatriculation} immobilisé : Batterie épuisée.",
                             statut="active",
                         )
                         self.stdout.write(
-                            self.style.WARNING(f"🪫 Panne sèche : {v.immatriculation}")
+                            self.style.WARNING(f" Panne sèche : {v.immatriculation}")
                         )
                         continue
 
@@ -84,10 +84,10 @@ class Command(BaseCommand):
                         zone=f.zone,
                         code="PANNE_FEU",
                         niveau="critical",
-                        message=f"🚥 Dysfonctionnement critique : Feu {f.nom} hors service.",
+                        message=f" Dysfonctionnement critique : Feu {f.nom} hors service.",
                         statut="active",
                     )
-                    self.stdout.write(self.style.NOTICE(f"🚥 Feu en panne : {f.nom}"))
+                    self.stdout.write(self.style.NOTICE(f" Feu en panne : {f.nom}"))
 
             # ==========================================
             # 3. PARKINGS (Pannes capteurs ou barrières)
@@ -105,11 +105,11 @@ class Command(BaseCommand):
                         zone=p_obj.zone,
                         code="PANNE_CAPTEUR",
                         niveau="warning",
-                        message=f"🅿️ Erreur système : Parking {p_obj.nom} bloqué / Capteurs inopérants.",
+                        message=f"️ Erreur système : Parking {p_obj.nom} bloqué / Capteurs inopérants.",
                         statut="active",
                     )
                     self.stdout.write(
-                        self.style.WARNING(f"🅿️ Parking bloqué : {p_obj.nom}")
+                        self.style.WARNING(f"️ Parking bloqué : {p_obj.nom}")
                     )
 
             # ==========================================
@@ -128,11 +128,11 @@ class Command(BaseCommand):
                         zone=l.zone,
                         code="COUPURE_INFRA",
                         niveau="warning",
-                        message=f"🏛️ Incident infrastructure : Fermeture d'urgence à {l.nom}.",
+                        message=f"️ Incident infrastructure : Fermeture d'urgence à {l.nom}.",
                         statut="active",
                     )
                     self.stdout.write(
-                        self.style.WARNING(f"🏛️ Lieu hors-service : {l.nom}")
+                        self.style.WARNING(f"️ Lieu hors-service : {l.nom}")
                     )
 
             # ==========================================
@@ -192,11 +192,11 @@ class Command(BaseCommand):
                         zone=evt.zone,
                         code=code.replace(" ", "_"),
                         niveau=niv,
-                        message=f"⚠️ {code} à {evt.zone.nom if evt.zone else 'Paris'}. {desc}",
+                        message=f"️ {code} à {evt.zone.nom if evt.zone else 'Paris'}. {desc}",
                         statut="active",
                     )
                     self.stdout.write(
-                        self.style.ERROR(f"💥 Incident grave : {code} vers {evt.zone}")
+                        self.style.ERROR(f" Incident grave : {code} vers {evt.zone}")
                     )
 
             time.sleep(10)
@@ -204,10 +204,10 @@ class Command(BaseCommand):
 
 def demarrer_simulation_live():
     print("\n" + "=" * 50)
-    print("🚀 LANCEMENT DU SIMULATEUR EN TEMPS RÉEL")
+    print(" LANCEMENT DU SIMULATEUR EN TEMPS RÉEL")
     print("=" * 50)
     try:
         sim = Command()
         sim.handle()
     except KeyboardInterrupt:
-        print("\n🛑 Simulation arrêtée par l'utilisateur.")
+        print("\n Simulation arrêtée par l'utilisateur.")

@@ -13,13 +13,13 @@ HEADERS = {
 
 def lire_panneau_affichage():
     print(
-        "📥 Téléchargement des horaires de TOUTE l'Île-de-France (patiente un peu)..."
+        " Téléchargement des horaires de TOUTE l'Île-de-France (patiente un peu)..."
     )
     try:
         reponse = requests.get(URL_GLOBALE, headers=HEADERS)
 
         if reponse.status_code == 401:
-            print("❌ Jeton API invalide ou expiré.")
+            print(" Jeton API invalide ou expiré.")
             return
 
         donnees = reponse.json()
@@ -31,7 +31,7 @@ def lire_panneau_affichage():
             .get("EstimatedTimetableDelivery", [])
         )
 
-        print("\n🚉 --- PROCHAINS DÉPARTS ---")
+        print("\n --- PROCHAINS DÉPARTS ---")
         compteur = 0
 
         for livraison in livraisons:
@@ -58,19 +58,19 @@ def lire_panneau_affichage():
                         )
 
                         print(
-                            f"🚏 Arrêt : {nom} | 🚌 Ligne : {ligne[-5:]} | ⏱️ Heure : {heure_depart[11:16]}"
+                            f" Arrêt : {nom} |  Ligne : {ligne[-5:]} | ⏱️ Heure : {heure_depart[11:16]}"
                         )
                         compteur += 1
 
-                        # 🚨 SÉCURITÉ : On s'arrête après 10 résultats pour ne pas faire exploser le PC !
+                        #  SÉCURITÉ : On s'arrête après 10 résultats pour ne pas faire exploser le PC !
                         if compteur >= 10:
                             print(
-                                "...\n✅ (Des dizaines de milliers d'autres résultats ont été masqués)"
+                                "...\n (Des dizaines de milliers d'autres résultats ont été masqués)"
                             )
                             return
 
     except Exception as e:
-        print(f"❌ Erreur lors de la lecture : {e}")
+        print(f" Erreur lors de la lecture : {e}")
 
 
 if __name__ == "__main__":

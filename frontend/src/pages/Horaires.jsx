@@ -27,7 +27,7 @@ const Horaires = () => {
     const fetchHoraires = async () => {
         setChargement(true);
         try {
-            // 👇 CORRECTION : URL mise à jour pour correspondre au nouveau Backend
+            //  CORRECTION : URL mise à jour pour correspondre au nouveau Backend
             const response = await fetch(`http://localhost:8000/api/map/horaires/?gare=${ID_CHATELET}`);
 
             if (!response.ok) throw new Error('Erreur de connexion aux serveurs IDFM');

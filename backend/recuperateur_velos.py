@@ -14,7 +14,7 @@ URL_API = "https://opendata.paris.fr/api/explore/v2.1/catalog/datasets/velib-dis
 
 
 def maj_carte_en_temps_reel():
-    print("🌍 Récupération des positions GPS en cours...")
+    print(" Récupération des positions GPS en cours...")
     try:
         reponse = requests.get(URL_API)
         donnees = reponse.json()
@@ -49,14 +49,14 @@ def maj_carte_en_temps_reel():
                 vehicule.point_actuel.save()
 
             vehicule.save()
-            print(f"📍 Placé sur la carte : {vehicule.nom} (Vélos: {velos_dispo})")
+            print(f" Placé sur la carte : {vehicule.nom} (Vélos: {velos_dispo})")
 
     except Exception as e:
-        print(f"❌ Erreur : {e}")
+        print(f" Erreur : {e}")
 
 
 if __name__ == "__main__":
-    print("🧹 Nettoyage uniquement des anciennes stations Velib...")
+    print(" Nettoyage uniquement des anciennes stations Velib...")
     # On ne supprime que les objets dont le nom contient "Station"
     Vehicule.objects.filter(nom__icontains="Station").delete()
 

@@ -32,7 +32,7 @@ from recuperateur_velos import maj_carte_en_temps_reel
 
 
 def clear_total():
-    print("🧨 DESTRUCTION TOTALE DES DONNÉES...")
+    print("DESTRUCTION TOTALE DES DONNEES...")
     # On vide toutes les tables métiers du projet pour repartir sur une base propre
     AlerteObjet.objects.all().delete()
     HistoriqueObjet.objects.all().delete()
@@ -47,11 +47,11 @@ def clear_total():
     Feu.objects.all().delete()
     Point.objects.all().delete()
     Zone.objects.all().delete()
-    print("✅ Base de données nettoyée.\n")
+    print(" Base de données nettoyée.\n")
 
 
 def lancer_scrapping_global():
-    print("📡 SCRAPPING DES DONNÉES RÉELLES DE PARIS (Threads)...")
+    print("SCRAPPING DES DONNEES REELLES DE PARIS (Threads)...")
     t1 = threading.Thread(target=importer_feux)
     t2 = threading.Thread(target=maj_parkings_ouvrage)
     t3 = threading.Thread(target=maj_carte_en_temps_reel)
@@ -63,12 +63,12 @@ def lancer_scrapping_global():
     t1.join()
     t2.join()
     t3.join()
-    print("✅ Données Paris récupérées.")
+    print("Donnees Paris recuperees.")
 
 
 def generer_incidents_initiaux(nombre=3):
     """Crée quelques incidents tout de suite pour peupler la carte au démarrage."""
-    print(f"⚠️  GÉNÉRATION DE {nombre} INCIDENTS DE DÉPART...")
+    print(f"GENERATION DE {nombre} INCIDENTS DE DEPART...")
     ancres = list(Feu.objects.all()) + list(Parking.objects.all())
     if not ancres:
         return
@@ -87,7 +87,7 @@ def generer_incidents_initiaux(nombre=3):
             en_panne=True,
         )
         # La zone sera remplie auto par le save() via ton API Gouv
-    print("✅ Incidents de départ créés.")
+    print("Incidents de depart crees.")
 
 
 if __name__ == "__main__":
@@ -103,4 +103,4 @@ if __name__ == "__main__":
     generer_incidents_initiaux(4)
 
     duree = time.time() - start_time
-    print(f"\n✨ SCRAPPING TERMINÉ en {round(duree, 2)} secondes.")
+    print(f"\nSCRAPPING TERMINE en {round(duree, 2)} secondes.")
