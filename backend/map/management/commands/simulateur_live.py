@@ -201,3 +201,14 @@ class Command(BaseCommand):
 
             # Rythme du moteur (5 secondes = équilibre parfait entre dynamisme et charge CPU)
             time.sleep(3)
+
+
+def demarrer_simulation_live():
+    print("\n" + "=" * 50)
+    print("🚀 LANCEMENT DU SIMULATEUR EN TEMPS RÉEL")
+    print("=" * 50)
+    try:
+        sim = Command()
+        sim.handle()
+    except KeyboardInterrupt:
+        print("\n🛑 Simulation arrêtée par l'utilisateur.")

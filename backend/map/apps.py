@@ -38,9 +38,13 @@ class MapConfig(AppConfig):
 
         if os.environ.get("RUN_MAIN") == "true":
             from .management.commands.simulateur_feux import demarrer_simulation_feux
+            from .management.commands.simulateur_live import demarrer_simulation_live
 
             # 1. On crée et on lance le thread pour les FEUX
             threading.Thread(target=demarrer_simulation_feux, daemon=True).start()
 
             # 2. On crée et on lance le thread pour la CONSOMMATION
             threading.Thread(target=run_simulation_conso, daemon=True).start()
+
+            # 3. On crée et on lance le thread pour les ALERTES
+            threading.Thread(target=demarrer_simulation_live, daemon=True).start()

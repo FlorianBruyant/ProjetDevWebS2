@@ -4,7 +4,6 @@ import threading
 import time
 
 import django
-from django.core.management import call_command  # 👈 Pour appeler le simulateur
 from django.utils import timezone
 
 # 1. Connexion au cerveau de Django
@@ -71,19 +70,6 @@ def generer_incidents_initiaux(nombre=3):
     print("✅ Incidents de départ créés.")
 
 
-# --- LA FONCTION QUE TU VOULAIS ---
-def demarrer_simulation_live():
-    print("\n" + "=" * 50)
-    print("🚀 LANCEMENT DU SIMULATEUR EN TEMPS RÉEL")
-    print("=" * 50)
-    # On appelle ton fichier simulateur_live.py (celui dans management/commands)
-    # Attention : ce code est bloquant (boucle infinie), c'est normal.
-    try:
-        call_command("simulateur_live")
-    except KeyboardInterrupt:
-        print("\n🛑 Simulation arrêtée par l'utilisateur.")
-
-
 if __name__ == "__main__":
     start_time = time.time()
 
@@ -98,6 +84,3 @@ if __name__ == "__main__":
 
     duree = time.time() - start_time
     print(f"\n✨ SCRAPPING TERMINÉ en {round(duree, 2)} secondes.")
-
-    # 4. On lance le moteur de vie de la ville
-    demarrer_simulation_live()
