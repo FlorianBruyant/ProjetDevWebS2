@@ -296,12 +296,12 @@ export default function Profil() {
                                 Niveau {user?.niveau || '1'}
                             </Typography>
                         </Box>
-                        <Box sx={{ textAlign: 'right' }}>
-                            <Typography variant="h4" sx={{ fontWeight: 900, color: '#0f766e', lineHeight: 1 }}>
-                                {user?.points || 0}
-                            </Typography>
+                        <Box sx={{ textAlign: 'right', ml: 10 }}>
                             <Typography variant="caption" sx={{ fontWeight: 700, color: '#64748b' }}>
                                 POINTS TOTAL
+                            </Typography>
+                            <Typography variant="h4" sx={{ fontWeight: 900, color: '#0f766e', lineHeight: 1 }}>
+                                {user?.points || 0}
                             </Typography>
                         </Box>
                     </Stack>
