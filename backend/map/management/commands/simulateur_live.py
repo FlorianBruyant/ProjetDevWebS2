@@ -199,8 +199,7 @@ class Command(BaseCommand):
                         self.style.ERROR(f"💥 Incident grave : {code} vers {evt.zone}")
                     )
 
-            # Rythme du moteur (5 secondes = équilibre parfait entre dynamisme et charge CPU)
-            time.sleep(3)
+            time.sleep(10)
 
 
 def demarrer_simulation_live():
