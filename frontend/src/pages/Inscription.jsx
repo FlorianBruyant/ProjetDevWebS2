@@ -13,11 +13,9 @@ import {
     Link as MuiLink,
 } from '@mui/material';
 import { Visibility, VisibilityOff, PersonAddOutlined } from '@mui/icons-material';
-import { useNavigate, Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink } from 'react-router-dom';
 
 const Inscription = () => {
-    const navigate = useNavigate();
-
     // États pour le formulaire
     const [formData, setFormData] = useState({
         username: '',
@@ -34,6 +32,9 @@ const Inscription = () => {
     const [isSuccess, setIsSuccess] = useState(false);
     const [chargement, setChargement] = useState(false);
 
+    // Regex : 8 caractères, 1 Majuscule, 1 Minuscule, 1 Chiffre
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+
     const handleChange = e => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
@@ -41,14 +42,20 @@ const Inscription = () => {
     const handleSubmit = async e => {
         e.preventDefault();
         setErreur('');
-        setChargement(true);
 
-        // Validation basique côté Front
+        // 1. Validation de correspondance
         if (formData.password !== formData.password_confirm) {
             setErreur('Les mots de passe ne correspondent pas.');
-            setChargement(false);
             return;
         }
+
+        // 2. Validation de force du mot de passe
+        if (!passwordRegex.test(formData.password)) {
+            setErreur('Le mot de passe doit contenir au moins 8 caractères, une majuscule, une minuscule et un chiffre.');
+            return;
+        }
+
+        setChargement(true);
 
         try {
             const response = await fetch('http://localhost:8000/api/register/', {
@@ -61,17 +68,15 @@ const Inscription = () => {
                     password_confirm: formData.password_confirm,
                     first_name: formData.first_name,
                     last_name: formData.last_name,
-                    role: 'VISITEUR', // Valeur par défaut pour le CustomUser
+                    role: 'VISITEUR',
                 }),
             });
 
             const data = await response.json();
 
             if (response.ok) {
-                // Succès
                 setIsSuccess(true);
             } else {
-                // Extraction des erreurs renvoyées par le Serializer Django
                 const message = data.username || data.email || data.password || data.detail || "Erreur lors de l'inscription";
                 setErreur(Array.isArray(message) ? message[0] : message);
             }
@@ -84,22 +89,8 @@ const Inscription = () => {
 
     return (
         <Container maxWidth="xs">
-            <Box
-                sx={{
-                    mt: 8,
-                    mb: 4,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                }}>
-                <Paper
-                    elevation={4}
-                    sx={{
-                        p: 4,
-                        width: '100%',
-                        borderRadius: 3,
-                        textAlign: 'center',
-                    }}>
+            <Box sx={{ mt: 8, mb: 4, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                <Paper elevation={4} sx={{ p: 4, width: '100%', borderRadius: 3, textAlign: 'center' }}>
                     <Box
                         sx={{
                             bgcolor: 'primary.main',
@@ -115,9 +106,8 @@ const Inscription = () => {
                     <Typography component="h1" variant="h5" fontWeight="bold" gutterBottom>
                         Créer un compte
                     </Typography>
-
                     <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                        Rejoignez la plateforme Smart City Cergy
+                        Rejoignez ParisLive
                     </Typography>
 
                     {erreur && (
@@ -125,16 +115,13 @@ const Inscription = () => {
                             {erreur}
                         </Alert>
                     )}
-                    {/* --- AFFICHAGE DU MESSAGE DE SUCCÈS --- */}
+
                     {isSuccess ? (
                         <Box sx={{ mt: 2 }}>
                             <Alert severity="success" variant="outlined" sx={{ borderRadius: 2 }}>
                                 <AlertTitle>Inscription réussie !</AlertTitle>
-                                Un e-mail de confirmation a été envoyé à <strong>{formData.email}</strong>.
-                                <br />
-                                <br />
-                                Veuillez cliquer sur le lien dans l'e-mail (sur <strong>Mailtrap</strong>) pour activer votre
-                                compte avant de vous connecter.
+                                E-mail envoyé à <strong>{formData.email}</strong>. Vérifiez <strong>Mailtrap</strong> pour activer
+                                votre compte.
                             </Alert>
                             <Button
                                 component={RouterLink}
@@ -160,7 +147,6 @@ const Inscription = () => {
                                 name="username"
                                 onChange={handleChange}
                             />
-
                             <TextField
                                 margin="normal"
                                 required
@@ -179,6 +165,8 @@ const Inscription = () => {
                                 name="password"
                                 type={showPassword ? 'text' : 'password'}
                                 onChange={handleChange}
+                                error={formData.password.length > 0 && !passwordRegex.test(formData.password)}
+                                helperText="Min. 8 caractères, 1 majuscule, 1 chiffre"
                                 InputProps={{
                                     endAdornment: (
                                         <InputAdornment position="end">
@@ -198,6 +186,12 @@ const Inscription = () => {
                                 name="password_confirm"
                                 type="password"
                                 onChange={handleChange}
+                                error={formData.password_confirm.length > 0 && formData.password !== formData.password_confirm}
+                                helperText={
+                                    formData.password_confirm.length > 0 && formData.password !== formData.password_confirm
+                                        ? 'Les mots de passe ne correspondent pas'
+                                        : ''
+                                }
                             />
 
                             <Button
@@ -205,26 +199,12 @@ const Inscription = () => {
                                 fullWidth
                                 variant="contained"
                                 disabled={chargement}
-                                sx={{
-                                    mt: 3,
-                                    mb: 2,
-                                    py: 1.5,
-                                    borderRadius: 2,
-                                    fontWeight: 'bold',
-                                    fontSize: '1rem',
-                                }}>
+                                sx={{ mt: 3, mb: 2, py: 1.5, borderRadius: 2, fontWeight: 'bold' }}>
                                 {chargement ? 'Inscription...' : "S'inscrire"}
                             </Button>
 
-                            <MuiLink
-                                component={RouterLink}
-                                to="/connexion"
-                                variant="body2"
-                                sx={{
-                                    cursor: 'pointer',
-                                    textDecoration: 'none',
-                                }}>
-                                {'Déjà un compte ? Connectez-vous'}
+                            <MuiLink component={RouterLink} to="/connexion" variant="body2" sx={{ textDecoration: 'none' }}>
+                                Déjà un compte ? Connectez-vous
                             </MuiLink>
                         </form>
                     )}

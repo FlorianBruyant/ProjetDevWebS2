@@ -13,9 +13,22 @@ const NouveauMotDePasse = () => {
 
     const handleSubmit = async e => {
         e.preventDefault();
+
+        // 1. Vérification de correspondance
         if (password !== confirmPassword) {
             setStatus('error');
             setMessage('Les mots de passe ne correspondent pas.');
+            return;
+        }
+
+        // 2. Vérification de la force du mot de passe (Regex)
+        // Min 8 caractères, 1 Majuscule, 1 Minuscule, 1 Chiffre
+        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+        if (!passwordRegex.test(password)) {
+            setStatus('error');
+            setMessage(
+                'Sécurité insuffisante : le mot de passe doit contenir au moins 8 caractères, une majuscule et un chiffre.'
+            );
             return;
         }
 
@@ -35,7 +48,7 @@ const NouveauMotDePasse = () => {
                 setStatus('error');
                 setMessage('Le lien est invalide ou a expiré.');
             }
-        } catch (err) {
+        } catch {
             setStatus('error');
             setMessage('Erreur de connexion au serveur.');
         }
@@ -67,6 +80,9 @@ const NouveauMotDePasse = () => {
                                 type="password"
                                 value={password}
                                 onChange={e => setPassword(e.target.value)}
+                                helperText="8 caractères min, 1 majuscule, 1 chiffre"
+                                // Affiche le champ en rouge si le format est invalide pendant la saisie
+                                error={password.length > 0 && !/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/.test(password)}
                             />
                             <TextField
                                 margin="normal"
@@ -76,6 +92,7 @@ const NouveauMotDePasse = () => {
                                 type="password"
                                 value={confirmPassword}
                                 onChange={e => setConfirmPassword(e.target.value)}
+                                error={confirmPassword.length > 0 && confirmPassword !== password}
                             />
                             <Button
                                 type="submit"
@@ -83,7 +100,7 @@ const NouveauMotDePasse = () => {
                                 variant="contained"
                                 sx={{ mt: 3, py: 1.5, borderRadius: 2 }}
                                 disabled={status === 'loading'}>
-                                Réinitialiser
+                                {status === 'loading' ? 'Enregistrement...' : 'Réinitialiser'}
                             </Button>
                         </form>
                     )}
