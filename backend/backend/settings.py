@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 import os
 from pathlib import Path
 
+import dj_database_url
 from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -21,12 +22,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv()
 
 SECRET_KEY = os.getenv("SECRET_KEY")
-DEBUG = os.getenv("DEBUG", "True") == "True"
+DEBUG = os.getenv("DEBUG", "False") == "True"
 
 if not SECRET_KEY:
     raise ValueError("SECRET_KEY n'est pas définie dans le fichier .env !")
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "127.0.0.1,localhost").split(",")
 
 # Application definition
 
@@ -36,6 +37,7 @@ INSTALLED_APPS = [
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
+    "whitenoise.runserver_nostatic",
     "django.contrib.staticfiles",
     "rest_framework",
     "django_filters",
@@ -49,6 +51,7 @@ MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -56,11 +59,9 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
-# Autoriser les requêtes du frontend React (dev)
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",  # Vite
-    "http://localhost:3000",  # CRA
-]
+CORS_ALLOWED_ORIGINS = os.getenv("CORS_ALLOWED_ORIGINS", "http://localhost:5173").split(
+    ","
+)
 
 ROOT_URLCONF = "backend.urls"
 
@@ -85,13 +86,19 @@ WSGI_APPLICATION = "backend.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
+# --- BASE DE DONNÉES ---
+# Si DATABASE_URL est présent (Render/Railway), on l'utilise (PostgreSQL). Sinon, SQLite.
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
-    }
+    "default": dj_database_url.config(
+        default=f"sqlite:///{BASE_DIR}/db.sqlite3", conn_max_age=600
+    )
 }
 
+# --- FICHIERS STATIQUES (WhiteNoise) ---
+STATIC_URL = "static/"
+STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
+# Optimisation pour servir les fichiers compressés
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 # Password validation
 # https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators
@@ -152,14 +159,18 @@ AUTH_USER_MODEL = "users.CustomUser"
 MEDIA_URL = "/media/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
-# Configuration Email (Mailtrap)
+# --- EMAIL (Configurable via .env) ---
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-EMAIL_HOST = "sandbox.smtp.mailtrap.io"
-EMAIL_HOST_USER = "f41047b337de35"
-EMAIL_HOST_PASSWORD = "41b35b1798524d"
-EMAIL_PORT = "2525"
+EMAIL_HOST = os.getenv("EMAIL_HOST", "sandbox.smtp.mailtrap.io")
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "f41047b337de35")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "41b35b1798524d")
+EMAIL_PORT = os.getenv("EMAIL_PORT", "2525")
 EMAIL_USE_TLS = True
-EMAIL_USE_SSL = False
-
-# Adresse qui apparaîtra comme expéditeur
 DEFAULT_FROM_EMAIL = "Smart City Cergy <noreply@smartcity-cergy.fr>"
+
+# --- SÉCURITÉ SUPPLÉMENTAIRE PROD ---
+if not DEBUG:
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
