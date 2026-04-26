@@ -171,6 +171,7 @@ class LieuInteret(TrafficObject):
     categorie = models.CharField(max_length=30, choices=CATEGORIES)
     site_web = models.URLField(blank=True, null=True)
     date_creation = models.DateTimeField(auto_now_add=True)
+    frequentation = models.IntegerField(default=0)
 
     def __str__(self):
         return f"{self.nom} ({self.get_categorie_display()})"
@@ -186,6 +187,7 @@ class Evenement(TrafficObject):
     position = models.ForeignKey(Point, on_delete=models.CASCADE)
     type_evenement = models.CharField(max_length=30, choices=TYPES)
     date_debut = models.DateTimeField()
+    frequentation = models.IntegerField(default=0)
 
     def __str__(self):
         return f"{self.nom} - {self.date_debut.strftime('%d/%m/%Y')}"

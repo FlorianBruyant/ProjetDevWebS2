@@ -177,6 +177,7 @@ class LieuInteretSerializer(ZoneToleranteMixin, serializers.ModelSerializer):
             "site_web",
             "historique",
             "type_api",
+            "frequentation",
         ]
 
     def get_historique(self, obj):
@@ -208,6 +209,7 @@ class EvenementSerializer(ZoneToleranteMixin, serializers.ModelSerializer):
             "zone",
             "historique",
             "type_api",
+            "frequentation",
         ]
 
     def get_historique(self, obj):

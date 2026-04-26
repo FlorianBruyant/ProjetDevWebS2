@@ -365,8 +365,7 @@ export default function GestionObjet() {
                                             <Grid item xs={6} sx={{ display: 'flex', alignItems: 'center' }}>
                                                 <People sx={{ mr: 1, color: 'info.main' }} />
                                                 <Typography>
-                                                    Fréquentation :{' '}
-                                                    <strong>{objet?.frequentation_actuelle || 0} visiteurs</strong>
+                                                    Fréquentation : <strong>{objet?.frequentation || 0} visiteurs</strong>
                                                 </Typography>
                                             </Grid>
                                         )}
