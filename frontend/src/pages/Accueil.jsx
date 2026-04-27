@@ -163,7 +163,7 @@ const Accueil = () => {
                             Supervision Globale
                         </Typography>
                         <Typography variant="h4" sx={{ fontWeight: 900, color: '#16324f', mt: -0.5 }}>
-                            Cergy Live
+                            Paris Live
                         </Typography>
                     </Box>
                     <Avatar

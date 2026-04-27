@@ -27,6 +27,11 @@ class IsAdminOrComplexe(permissions.BasePermission):
         if not request.user or not request.user.is_authenticated:
             return False
 
+        # Un superutilisateur Django doit aussi avoir accès, même si son champ
+        # métier role n'est pas forcément renseigné sur ADMIN.
+        if request.user.is_superuser:
+            return True
+
         # 2. Vérifier si son rôle est autorisé
         # On utilise une liste pour faciliter l'ajout de futurs rôles si besoin
         roles_autorises = ["ADMIN", "COMPLEXE"]

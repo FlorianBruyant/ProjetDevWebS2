@@ -137,7 +137,7 @@ export default function GestionObjet() {
                         'Content-Type': 'application/json',
                     },
                 });
-                if (res.ok) console.log('💎 Points de citoyenneté ajoutés !');
+                if (res.ok) console.log(' Points de citoyenneté ajoutés !');
             } catch (err) {
                 console.error('Erreur réseau points:', err);
             }

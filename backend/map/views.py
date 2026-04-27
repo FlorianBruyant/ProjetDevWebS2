@@ -188,7 +188,7 @@ def get_global_data(request):
         )
 
     except Exception as e:
-        print(f"❌ ERREUR SERVEUR : {str(e)}")
+        print(f" ERREUR SERVEUR : {str(e)}")
         return Response(
             {"error": "Erreur interne du serveur", "details": str(e)}, status=500
         )

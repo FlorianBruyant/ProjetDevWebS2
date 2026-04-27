@@ -3,12 +3,14 @@ from django.contrib.auth.forms import PasswordResetForm
 from django.contrib.auth.hashers import check_password
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
+from django.db import transaction
 from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 
 from .models import CustomUser
+from .permissions import IsAdminOrComplexe
 from .serializers import UserListSerializer, UserSerializer
 
 
@@ -152,47 +154,50 @@ class UserProfileView(generics.RetrieveUpdateAPIView):
         return self.request.user
 
     def update(self, request, *args, **kwargs):
-        user = self.get_object()
-        data = request.data
+        with transaction.atomic():
+            user = self.get_object()
+            data = request.data
 
-        # 1. Vérification de sécurité (Ancien mot de passe)
-        changement_sensible = any(k in data for k in ["username", "email", "password"])
-
-        if changement_sensible:
-            current_password = data.get("current_password")
-            if not current_password or not check_password(
-                current_password, user.password
-            ):
-                return Response(
-                    {"current_password": "Mot de passe actuel incorrect."},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
-
-        # 2. CHANGEMENT DE MOT DE PASSE (Le fix est ici)
-        new_password = data.get("password")
-        if new_password:
-            # IMPORTANT : set_password() hache le mot de passe
-            user.set_password(new_password)
-            user.save()
-            # On retire le password des données du serializer pour ne pas
-            # qu'il essaie de le ré-enregistrer par dessus en texte clair
-            data_copy = data.copy()
-            data_copy.pop("password", None)
-            request._full_data = data_copy
-
-        # 3. Gestion Email (Désactivation si changé)
-        new_email = data.get("email")
-        if new_email and new_email != user.email:
-            user.email = new_email
-            user.is_active = False
-            user.save()
-            envoyer_confirmation_email(user)
-            return Response(
-                {"message": "Email modifié, validation requise."},
-                status=status.HTTP_200_OK,
+            # 1. Vérification de sécurité (Ancien mot de passe)
+            changement_sensible = any(
+                k in data for k in ["username", "email", "password"]
             )
 
-        return super().update(request, *args, **kwargs)
+            if changement_sensible:
+                current_password = data.get("current_password")
+                if not current_password or not check_password(
+                    current_password, user.password
+                ):
+                    return Response(
+                        {"current_password": "Mot de passe actuel incorrect."},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+
+            # 2. CHANGEMENT DE MOT DE PASSE
+            new_password = data.get("password")
+            if new_password:
+                # IMPORTANT : set_password() hache le mot de passe
+                user.set_password(new_password)
+                user.save()
+                # On retire le password des données du serializer pour ne pas
+                # qu'il essaie de le ré-enregistrer par dessus en texte clair
+                data_copy = data.copy()
+                data_copy.pop("password", None)
+                request._full_data = data_copy
+
+            # 3. Gestion Email (Désactivation si changé)
+            new_email = data.get("email")
+            if new_email and new_email != user.email:
+                user.email = new_email
+                user.is_active = False
+                user.save()
+                envoyer_confirmation_email(user)
+                return Response(
+                    {"message": "Email modifié, validation requise."},
+                    status=status.HTTP_200_OK,
+                )
+
+            return super().update(request, *args, **kwargs)
 
 
 class MemberProfileView(generics.RetrieveUpdateAPIView):
@@ -202,41 +207,42 @@ class MemberProfileView(generics.RetrieveUpdateAPIView):
     lookup_field = "id"
 
     def update(self, request, *args, **kwargs):
-        # 1. Sécurité Admin
-        if request.user.role != "ADMIN":
-            return Response(
-                {"error": "Accès refusé."},
-                status=status.HTTP_403_FORBIDDEN,
-            )
+        with transaction.atomic():
+            # 1. Sécurité Admin
+            if request.user.role != "ADMIN":
+                return Response(
+                    {"error": "Accès refusé."},
+                    status=status.HTTP_403_FORBIDDEN,
+                )
 
-        instance = self.get_object()
-        nouveau_niveau = request.data.get("niveau")
+            instance = self.get_object()
+            nouveau_niveau = request.data.get("niveau")
 
-        # 2. On force les points AVANT le reste
-        if nouveau_niveau:
-            if nouveau_niveau == "EXPERT":
-                instance.points = 7.0
-            elif nouveau_niveau == "AVANCE":
-                instance.points = 5.0
-            elif nouveau_niveau == "INTERMEDIAIRE":
-                instance.points = 3.0
-            elif nouveau_niveau == "DEBUTANT":
-                instance.points = 0.0
+            # 2. On force les points AVANT le reste
+            if nouveau_niveau:
+                if nouveau_niveau == "EXPERT":
+                    instance.points = 7.0
+                elif nouveau_niveau == "AVANCE":
+                    instance.points = 5.0
+                elif nouveau_niveau == "INTERMEDIAIRE":
+                    instance.points = 3.0
+                elif nouveau_niveau == "DEBUTANT":
+                    instance.points = 0.0
 
-            # On force manuellement le niveau aussi
-            instance.niveau = nouveau_niveau
-            # On enregistre l'objet directement
-            instance.save()
+                # On force manuellement le niveau aussi
+                instance.niveau = nouveau_niveau
+                # On enregistre l'objet directement
+                instance.save()
 
-        # 3. On laisse le serializer gérer les autres champs (comme le rôle)
-        serializer = self.get_serializer(instance, data=request.data, partial=True)
-        serializer.is_valid(raise_exception=True)
-        self.perform_update(serializer)
+            # 3. On laisse le serializer gérer les autres champs (comme le rôle)
+            serializer = self.get_serializer(instance, data=request.data, partial=True)
+            serializer.is_valid(raise_exception=True)
+            self.perform_update(serializer)
 
-        return Response(serializer.data)
+            return Response(serializer.data)
 
 
 class UserListView(generics.ListAPIView):
     queryset = CustomUser.objects.all().order_by("username")
     serializer_class = UserListSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAdminOrComplexe]

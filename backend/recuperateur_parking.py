@@ -15,10 +15,10 @@ URL_API = "https://opendata.paris.fr/api/explore/v2.1/catalog/datasets/stationne
 
 
 def maj_parkings_ouvrage():
-    print("🧹 Nettoyage de la base de données...")
+    print(" Nettoyage de la base de données...")
     Parking.objects.all().delete()
 
-    print("📡 Connexion à l'API : stationnement-en-ouvrage...")
+    print(" Connexion à l'API : stationnement-en-ouvrage...")
 
     try:
         response = requests.get(URL_API, timeout=15)
@@ -26,14 +26,14 @@ def maj_parkings_ouvrage():
         records = data.get("results", [])
 
         if not records:
-            print("❌ Aucun parking trouvé. Vérifie ton accès internet.")
+            print(" Aucun parking trouvé. Vérifie ton accès internet.")
             return
 
-        print(f"✅ {len(records)} parkings détectés. Importation...")
+        print(f" {len(records)} parkings détectés. Importation...")
 
         for rec in records:
             try:
-                # 🚨 Mapping des champs spécifiques à ce dataset
+                #  Mapping des champs spécifiques à ce dataset
                 nom = rec.get("nom", "Parking Public")
                 total = int(rec.get("nb_places", 0))
 
@@ -57,16 +57,16 @@ def maj_parkings_ouvrage():
                     places_occupees=occupees,
                     est_actif=True,
                 )
-                print(f"📍 {nom[:30]} | Capacité : {total} places")
+                print(f" {nom[:30]} | Capacité : {total} places")
 
             except Exception:
-                # print(f"⚠️ Erreur sur une ligne : {e}")
+                # print(f"️ Erreur sur une ligne : {e}")
                 continue
 
-        print(f"\n🏁 Terminé ! {Parking.objects.count()} parkings en ouvrage importés.")
+        print(f"\n Terminé ! {Parking.objects.count()} parkings en ouvrage importés.")
 
     except Exception as e:
-        print(f"❌ Erreur réseau : {e}")
+        print(f" Erreur réseau : {e}")
 
 
 if __name__ == "__main__":

@@ -57,7 +57,7 @@ class HistoriqueObjetAdmin(admin.ModelAdmin):
     search_fields = ("type_objet", "objet_id")
 
 
-# 👇 C'est cette ligne qui te manque pour voir les scénarios !
+#  C'est cette ligne qui te manque pour voir les scénarios !
 @admin.register(Scenario)
 class ScenarioAdmin(admin.ModelAdmin):
     list_display = (

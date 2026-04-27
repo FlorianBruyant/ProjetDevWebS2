@@ -156,7 +156,7 @@ const BarreNavigation = () => {
             </Toolbar>
 
             {/* ------------------------------------------- */}
-            {/* 📱 AFFICHAGE MOBILE (Tab Bar icônes)        */}
+            {/*  AFFICHAGE MOBILE (Tab Bar icônes)        */}
             {/* ------------------------------------------- */}
             <Toolbar
                 sx={{

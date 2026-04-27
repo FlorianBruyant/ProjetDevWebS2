@@ -18,7 +18,7 @@ const PageGestion = () => {
     return (
         <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
             <Typography variant="h4" fontWeight="bold" gutterBottom sx={{ color: '#2c3e50' }}>
-                ⚙️ Centre de Commandement
+                ️ Centre de Commandement
             </Typography>
             <Typography variant="body1" sx={{ mb: 3, color: 'text.secondary' }}>
                 Gérez les équipements de la ville et configurez les scénarios d'automatisation.
@@ -46,28 +46,28 @@ const PageGestion = () => {
                     {/* Contenu dynamique selon l'onglet */}
                     {currentTab === 0 && (
                         <Box>
-                            <Typography variant="h6">🚗 Liste des Véhicules</Typography>
+                            <Typography variant="h6"> Liste des Véhicules</Typography>
                             {/* On mettra ici le composant TableGestion type="vehicules" */}
                         </Box>
                     )}
 
                     {currentTab === 1 && (
                         <Box>
-                            <Typography variant="h6">🚦 Gestion des Feux</Typography>
+                            <Typography variant="h6"> Gestion des Feux</Typography>
                             {/* On mettra ici le composant TableGestion type="feux" */}
                         </Box>
                     )}
 
                     {currentTab === 2 && (
                         <Box>
-                            <Typography variant="h6">🅿️ Occupation des Parkings</Typography>
+                            <Typography variant="h6">️ Occupation des Parkings</Typography>
                             {/* On mettra ici le composant TableGestion type="parkings" */}
                         </Box>
                     )}
 
                     {currentTab === 3 && (
                         <Box>
-                            <Typography variant="h6">🧠 Intelligence des Scénarios</Typography>
+                            <Typography variant="h6"> Intelligence des Scénarios</Typography>
                             {/* On mettra ici la gestion des scénarios */}
                         </Box>
                     )}

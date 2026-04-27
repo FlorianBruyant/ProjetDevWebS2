@@ -12,20 +12,20 @@ const Dashboard = () => {
         if (!token || token === 'undefined') {
             sessionStorage.clear();
             localStorage.clear();
-            window.location.href = '/'; // 🚨 Expulsion instantanée
+            window.location.href = '/'; //  Expulsion instantanée
         } else {
             // 3. Tout va bien, on donne le feu vert pour afficher le tableau
             setAutorisationAccordee(true);
         }
     }, []);
 
-    // 🛑 TANT QUE LE FEU N'EST PAS VERT, ON AFFICHE RIEN.
+    //  TANT QUE LE FEU N'EST PAS VERT, ON AFFICHE RIEN.
     // Ça empêche TableauBordReporting de s'exécuter et de faire crasher React.
     if (!autorisationAccordee) {
         return null;
     }
 
-    // ✅ FEU VERT : On charge les graphiques
+    //  FEU VERT : On charge les graphiques
     return <TableauBordReporting />;
 };
 
