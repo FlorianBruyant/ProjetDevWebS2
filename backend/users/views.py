@@ -245,4 +245,4 @@ class MemberProfileView(generics.RetrieveUpdateAPIView):
 class UserListView(generics.ListAPIView):
     queryset = CustomUser.objects.all().order_by("username")
     serializer_class = UserListSerializer
-    permission_classes = [IsAdminOrComplexe]
+    permission_classes = [permissions.IsAuthenticated]

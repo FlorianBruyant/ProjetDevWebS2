@@ -1,4 +1,4 @@
-# Rapport d'Analyse Complète du Backend
+# 🏗️ Rapport d'Analyse Complète du Backend
 
 ## 1. Vue d'ensemble et Architecture Globale
 
@@ -19,7 +19,7 @@
 
 ## 2. Analyse Fichier par Fichier
 
-### Dossier Racine (Scripts d'Extraction & Commandes)
+### 📂 Dossier Racine (Scripts d'Extraction & Commandes)
 
 **Fichier : `reset_and_scrapp.py`**
 *   **Rôle :** Contrôleur principal pour initialiser l'environnement. Supprime les données obsolètes et lance les différents scrappers en parallèle.
@@ -35,7 +35,7 @@
 
 ---
 
-### Application `map` (Cœur cartographique et Infrastructure)
+### 📂 Application `map` (Cœur cartographique et Infrastructure)
 
 **Fichier : `map/models.py`**
 *   **Rôle :** Définition des entités de la base de données (Zones, Feux, Parkings, Alertes, Événements).
@@ -73,7 +73,7 @@
 
 ---
 
-### Application `users` (Système d'Authentification & Profils)
+### 📂 Application `users` (Système d'Authentification & Profils)
 
 **Fichier : `users/models.py`**
 *   **Rôle :** Redéfinit `AbstractUser` pour l'adapter au contexte (gestion des niveaux, points de gamification).
@@ -91,7 +91,7 @@
 
 ---
 
-### Application `api`
+### 📂 Application `api`
 
 *   **Rôle :** Routeur global pour l'API REST v1, regroupant les différentes URLs des autres applications.
 
