@@ -14,7 +14,7 @@ Surveillance active : Des algorithmes de détection d'anomalies analysent l'hist
 Exposition REST API : Le frontend React requête le backend via des points d'accès (Endpoints). Les serializers s'occupent de transformer la data des objets de la base SQLite en JSON.
 Utilisateurs : Un système d'authentification gère les utilisateurs de la plateforme, avec la journalisation de leurs actions (ActionLog) et un potentiel système de niveaux.
 2. Analyse Fichier par Fichier
-📂 Dossier Racine (Scripts d'Extraction & Commandes)
+    Dossier Racine (Scripts d'Extraction & Commandes)
 Fichier : reset_and_scrapp.py
 Rôle : Contrôleur principal pour initialiser l'environnement. Supprime les données obsolètes et lance les différents scrappers en parallèle.
 Fonctions :
@@ -43,7 +43,7 @@ Fonctions clés :
 Entrée : Appels HTTP REST vers des données OpenData.
 Traitement : Parsing asynchrone du JSON récupéré, vérification de la présence d'une donnée existante, mise à jour ou création de l'objet (via l'ORM Django).
 Sortie : Données fraîches enregistrées en SQLite.
-📂 Application map (Cœur cartographique et Infrastructure)
+   Application map (Cœur cartographique et Infrastructure)
 Fichier : map/models.py
 Rôle : Définition des schémas de la base de données. Contient toutes les classes représentant la ville.
 Fonctions (Méthodes de classe) :
@@ -113,7 +113,7 @@ Rôle : Intégration de scripts personnalisés accessibles via python manage.py 
 Fonctions :
 
 - Command.handle : Boucle infinie exécutant de la mise à jour aléatoire et chronométrée pour feindre l'activité (déplacement des voitures, changement des feux).
-📂 Application users (Gestion de l'Authentification)
+   Application users (Gestion de l'Authentification)
 Fichier : users/models.py
 Rôle : Gérer l'entité humaine connectée et sa gamification.
 Fonctions :
@@ -142,11 +142,11 @@ Fonctions :
 Entrée : API Request.
 Traitement : Vérifie que le endpoint n'est modifié en écriture que si le user HTTP courant est is_staff.
 Sortie : Booléen Autorisation.
-📂 Application api
+   Application api
 Fichiers : api/models.py, api/views.py, etc.
 Rôle : Actuellement un dossier coquille presque vide ou servant de point central de routage pour rassembler l'API V1 globale. Il exporte très probablement le routing principal. Seule une fonction dummy test ressort dans les parcours.
 
-🎯 Constatations & Pistes d'Optimisation
+    Constatations & Pistes d'Optimisation
 Goulot d'étranglement de l'API (get_global_data dans map/views.py) : Charger toute la ville en un point va paralyser le serveur et le front quand la base grossira. Conseil : Utiliser des Bounding Box spatiales (renvoyer uniquement les data présentes sur la portion de carte affichée sur l'écran frontend de l'utilisateur).
 Séparation Modèles / Services : Excellente structure ! Déplacer le code d'anomalie en dehors du modèle Feu ou Parking (services/detection_anomalies.py) respecte parfaitement les principes SOLID.
 Traitement Asynchrone : L'utilisation de signaux (post_save dans map/signals.py) pour la gestion des "scénarios d'impacts" est puissante, mais elle est dite "synchrone" en Django par défaut. Créer une voiture bloque pendant l'exécution de la règle. 
