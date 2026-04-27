@@ -152,14 +152,13 @@ AUTH_USER_MODEL = "users.CustomUser"
 MEDIA_URL = "/media/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
-# Configuration Email (Mailtrap)
+# Configuration Email
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-EMAIL_HOST = "sandbox.smtp.mailtrap.io"
-EMAIL_HOST_USER = "f41047b337de35"
-EMAIL_HOST_PASSWORD = "41b35b1798524d"
-EMAIL_PORT = "2525"
-EMAIL_USE_TLS = True
-EMAIL_USE_SSL = False
+EMAIL_HOST = os.getenv("EMAIL_HOST")
+EMAIL_PORT = os.getenv("EMAIL_PORT")
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
+EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS", "True") == "True"
 
 # Adresse qui apparaîtra comme expéditeur
-DEFAULT_FROM_EMAIL = "Smart City Cergy <noreply@smartcity-cergy.fr>"
+DEFAULT_FROM_EMAIL = "Paris Live <bruyantflorian2@gmail.com>"
