@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import API_BASE_URL from '../api';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Box, Typography, CircularProgress, Paper, Button, Alert } from '@mui/material';
 
@@ -11,7 +12,7 @@ const ConfirmEmail = () => {
         const activerCompte = async () => {
             try {
                 // On appelle la vue ActivateAccountView de Django
-                const response = await fetch(`http://localhost:8000/api/activate/${uid}/${token}/`);
+                const response = await fetch(`${API_BASE_URL}/api/activate/${uid}/${token}/`);
 
                 if (response.ok) {
                     setStatus('success');

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import API_BASE_URL from '../api';
 import {
     Box,
     Typography,
@@ -45,7 +46,7 @@ const Accueil = () => {
             if (!token) return;
 
             try {
-                const response = await fetch('http://localhost:8000/api/me/', {
+                const response = await fetch(`${API_BASE_URL}/api/me/`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
                 if (response.ok) {
@@ -63,7 +64,7 @@ const Accueil = () => {
     useEffect(() => {
         const fetchDonneesAccueil = async () => {
             try {
-                const response = await fetch('http://localhost:8000/api/map/global/');
+                const response = await fetch(`${API_BASE_URL}/api/map/global/`);
                 if (response.ok) {
                     const data = await response.json();
                     setDonneesVille(data);
@@ -150,7 +151,7 @@ const Accueil = () => {
     const photoSrc = profil?.photo_url
         ? profil.photo_url.startsWith('http')
             ? profil.photo_url
-            : `http://localhost:8000${profil.photo_url}`
+            : `${API_BASE_URL}${profil.photo_url}`
         : '';
 
     return (

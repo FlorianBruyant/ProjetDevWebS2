@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import API_BASE_URL from '../api';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
     Box,
@@ -29,11 +30,11 @@ export default function ProfilMembre() {
             const token = localStorage.getItem('access_token');
             try {
                 // 1. Récupérer le profil consulté
-                const resMember = await fetch(`http://localhost:8000/api/members/${id}/`, {
+                const resMember = await fetch(`${API_BASE_URL}/api/members/${id}/`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
                 // 2. Récupérer mon propre profil pour vérifier mon rôle
-                const resMe = await fetch(`http://localhost:8000/api/me/`, {
+                const resMe = await fetch(`${API_BASE_URL}/api/me/`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
 
@@ -54,7 +55,7 @@ export default function ProfilMembre() {
         setIsUpdating(true);
         const token = localStorage.getItem('access_token');
         try {
-            const response = await fetch(`http://localhost:8000/api/members/${id}/`, {
+            const response = await fetch(`${API_BASE_URL}/api/members/${id}/`, {
                 method: 'PATCH',
                 headers: {
                     Authorization: `Bearer ${token}`,

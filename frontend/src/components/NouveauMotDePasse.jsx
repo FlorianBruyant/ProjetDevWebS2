@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import API_BASE_URL from '../api';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Box, TextField, Button, Typography, Paper, Container, Alert } from '@mui/material';
 
@@ -35,7 +36,7 @@ const NouveauMotDePasse = () => {
         setStatus('loading');
 
         try {
-            const response = await fetch(`http://localhost:8000/api/password_reset_confirm/${uid}/${token}/`, {
+            const response = await fetch(`${API_BASE_URL}/api/password_reset_confirm/${uid}/${token}/`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ password }),

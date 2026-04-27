@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import API_BASE_URL from '../api';
+
 import { Box, TextField, Button, Typography, Paper, Container, Alert, CircularProgress, IconButton } from '@mui/material';
 import { ArrowBack } from '@mui/icons-material';
 import { useNavigate, Link as RouterLink } from 'react-router-dom';
@@ -15,7 +17,7 @@ const DemandeReset = () => {
         setMessageErreur('');
 
         try {
-            const response = await fetch('http://localhost:8000/api/password_reset/', {
+            const response = await fetch(`${API_BASE_URL}/api/password_reset/`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email }),

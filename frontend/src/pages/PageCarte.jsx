@@ -1,4 +1,5 @@
 import React, { useState, useLayoutEffect, useEffect, useRef } from 'react';
+import API_BASE_URL from '../api';
 import { useLocation } from 'react-router-dom';
 import { Box } from '@mui/material';
 import Carte from '../components/Carte';
@@ -41,7 +42,7 @@ const PageCarte = () => {
             const token = localStorage.getItem('access_token');
             if (!token) return;
             try {
-                const res = await fetch('http://localhost:8000/api/me/', {
+                const res = await fetch(`${API_BASE_URL}/api/me/`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
                 if (res.ok) {
@@ -59,7 +60,7 @@ const PageCarte = () => {
     useEffect(() => {
         const fetchZones = async () => {
             try {
-                const res = await fetch('http://localhost:8000/api/map/zones/');
+                const res = await fetch(`${API_BASE_URL}/api/map/zones/`);
                 const data = await res.json();
                 setZones(Array.isArray(data) ? data : data.results || []);
             } catch (err) {
@@ -89,7 +90,7 @@ const PageCarte = () => {
 
         try {
             const endpoint = categorie === 'global' ? 'global' : categorie;
-            let url = `http://localhost:8000/api/map/${endpoint}/?search=${texte}&zone=${zoneId}`;
+            let url = `${API_BASE_URL}/api/map/${endpoint}/?search=${texte}&zone=${zoneId}`;
             const response = await fetch(url);
             const data = await response.json();
             const listeFinale = Array.isArray(data) ? data : data.results || [];
@@ -141,7 +142,7 @@ const PageCarte = () => {
 
         try {
             // --- 1. CRÉATION DU POINT GPS ---
-            const resPoint = await fetch('http://localhost:8000/api/map/points/', {
+            const resPoint = await fetch(`${API_BASE_URL}/api/map/points/`, {
                 method: 'POST',
                 headers: {
                     Authorization: `Bearer ${token}`,
@@ -193,7 +194,7 @@ const PageCarte = () => {
             }
 
             // --- 4. ENVOI À L'API FINALE ---
-            const res = await fetch(`http://localhost:8000/api/map/${nouveauObjet.type_api}/`, {
+            const res = await fetch(`${API_BASE_URL}/api/map/${nouveauObjet.type_api}/`, {
                 method: 'POST',
                 headers: {
                     Authorization: `Bearer ${token}`,

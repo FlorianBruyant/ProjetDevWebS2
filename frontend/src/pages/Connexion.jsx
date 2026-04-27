@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import API_BASE_URL from '../api';
 import {
     Box,
     TextField,
@@ -45,7 +46,7 @@ const Connexion = () => {
         setChargement(true);
 
         try {
-            const response = await fetch('http://localhost:8000/api/login/', {
+            const response = await fetch(`${API_BASE_URL}/api/login/`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(credentials),
@@ -63,7 +64,7 @@ const Connexion = () => {
                 localStorage.setItem('username', credentials.username);
 
                 // On stocke le rôle pour RouteProtegee
-                const resProfile = await fetch('http://localhost:8000/api/me/', {
+                const resProfile = await fetch(`${API_BASE_URL}/api/me/`, {
                     headers: { Authorization: `Bearer ${data.access}` },
                 });
                 if (resProfile.ok) {

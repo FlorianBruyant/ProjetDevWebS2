@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import API_BASE_URL from '../api';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
     Box,
@@ -79,7 +80,7 @@ export default function GestionObjet() {
 
             try {
                 // 1. Vérification du rôle
-                const resUser = await fetch('http://localhost:8000/api/me/', {
+                const resUser = await fetch(`${API_BASE_URL}/api/me/`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
                 if (resUser.ok) {
@@ -88,7 +89,7 @@ export default function GestionObjet() {
                 }
 
                 // 2. Récupération des Zones
-                const resZones = await fetch('http://localhost:8000/api/map/zones/', {
+                const resZones = await fetch(`${API_BASE_URL}/api/map/zones/`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
                 if (resZones.ok) {
@@ -97,7 +98,7 @@ export default function GestionObjet() {
                 }
 
                 // 3. Récupération de l'objet
-                const resObj = await fetch(`http://localhost:8000/api/map/${type_api}/${id}/`, {
+                const resObj = await fetch(`${API_BASE_URL}/api/map/${type_api}/${id}/`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
 
@@ -130,7 +131,7 @@ export default function GestionObjet() {
             if (!token || !id || !objet) return;
 
             try {
-                const res = await fetch(`http://localhost:8000/api/map/consulter/${id}/`, {
+                const res = await fetch(`${API_BASE_URL}/api/map/consulter/${id}/`, {
                     method: 'POST',
                     headers: {
                         Authorization: `Bearer ${token}`,
@@ -151,7 +152,7 @@ export default function GestionObjet() {
         const token = localStorage.getItem('access_token');
 
         try {
-            const res = await fetch(`http://localhost:8000/api/map/${type_api}/${id}/`, {
+            const res = await fetch(`${API_BASE_URL}/api/map/${type_api}/${id}/`, {
                 method: 'PATCH',
                 headers: {
                     Authorization: `Bearer ${token}`,
@@ -609,7 +610,7 @@ export default function GestionObjet() {
                         variant="contained"
                         onClick={async () => {
                             const token = localStorage.getItem('access_token');
-                            await fetch(`http://localhost:8000/api/map/${type_api}/${id}/`, {
+                            await fetch(`${API_BASE_URL}/api/map/${type_api}/${id}/`, {
                                 method: 'DELETE',
                                 headers: {
                                     Authorization: `Bearer ${token}`,

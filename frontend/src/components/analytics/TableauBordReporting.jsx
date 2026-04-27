@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import API_BASE_URL from '../api';
 import {
     Alert,
     Box,
@@ -24,7 +25,7 @@ import TimelineRoundedIcon from '@mui/icons-material/TimelineRounded';
 import ConstructionRoundedIcon from '@mui/icons-material/ConstructionRounded';
 import { Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 
-const API_BASE_URL = 'http://localhost:8000/api/map';
+const API_MAP_URL = `${API_BASE_URL}/api/map`;
 
 const FILTERS_PERIODS = [
     { value: '24', label: '24 heures' },
@@ -60,7 +61,7 @@ const TableauBordReporting = () => {
         const fetchZones = async () => {
             const token = localStorage.getItem('access_token');
             try {
-                const res = await fetch(`${API_BASE_URL}/zones/`, {
+                const res = await fetch(`${API_MAP_URL}/zones/`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
                 if (!res.ok) throw new Error('Impossible de charger les zones.');
@@ -85,11 +86,11 @@ const TableauBordReporting = () => {
             setError('');
 
             try {
-                const resAnalytics = await fetch(`${API_BASE_URL}/analytics/?${params.toString()}`, {
+                const resAnalytics = await fetch(`${API_MAP_URL}/analytics/?${params.toString()}`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
 
-                const resGlobal = await fetch(`${API_BASE_URL}/global/`, {
+                const resGlobal = await fetch(`${API_MAP_URL}/global/`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
 
